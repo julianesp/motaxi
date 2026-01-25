@@ -27,6 +27,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Verificar si hay usuario autenticado al cargar
   const checkAuth = useCallback(async () => {
+    // No verificar autenticación en páginas públicas de auth
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      const publicAuthPaths = ['/auth/login', '/auth/register', '/auth/role-selection', '/auth/forgot-password'];
+
+      if (publicAuthPaths.some(path => currentPath.startsWith(path))) {
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const userData = await authAPI.getCurrentUser();
       setUser(userData);

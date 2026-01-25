@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserRole } from '@/lib/types';
+import Navbar from '@/components/Navbar';
 
 export default function RoleSelectionPage() {
   const router = useRouter();
@@ -20,8 +21,10 @@ export default function RoleSelectionPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 px-4">
-      <div className="max-w-4xl w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
+      <Navbar />
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
+        <div className="max-w-4xl w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold text-indigo-600 mb-2">MoTaxi</h1>
@@ -177,6 +180,7 @@ export default function RoleSelectionPage() {
               Inicia sesión
             </Link>
           </p>
+        </div>
         </div>
       </div>
     </div>

@@ -12,6 +12,8 @@
     "db:migrate:local": "cd backend && npm run db:migrate:local"
   },
   "dependencies": {
+    "@clerk/localizations": "^3.35.2",
+    "@clerk/nextjs": "^6.36.10",
     "axios": "^1.7.9",
     "leaflet": "^1.9.4",
     "next": "^15.1.6",

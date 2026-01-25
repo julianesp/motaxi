@@ -68,13 +68,19 @@ apiClient.interceptors.response.use(
       // Token expirado o inválido
       removeAuthToken();
 
-      // Redirigir al login solo si estamos en el cliente Y no estamos ya en una página de autenticación
+      // Redirigir al login solo si estamos en el cliente Y no estamos en una página pública
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
-        const authPaths = ['/auth/login', '/auth/register', '/auth/role-selection', '/auth/forgot-password'];
+        const publicPaths = [
+          '/', // Página de inicio (landing page)
+          '/auth/login',
+          '/auth/register',
+          '/auth/role-selection',
+          '/auth/forgot-password'
+        ];
 
-        // Solo redirigir si NO estamos en una página de autenticación
-        if (!authPaths.some(path => currentPath.startsWith(path))) {
+        // Solo redirigir si NO estamos en una página pública
+        if (!publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
           window.location.href = '/auth/login';
         }
       }

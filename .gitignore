@@ -61,3 +61,6 @@ next-env.d.ts
 backend/node_modules
 backend/.wrangler
 backend/.dev.vars
+
+# File ocultos
+*.md

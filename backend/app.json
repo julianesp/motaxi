@@ -1,0 +1,15 @@
+{
+  "plugins": [
+    "expo-build-properties"
+  ],
+  "extra": {
+    "eas": {
+      "projectId": "84fd31fa-46ca-4b2f-b179-376cfa9a8330"
+    }
+  },
+  "expo": {
+    "android": {
+      "package": "com.neuraiapp.motaxiapi"
+    }
+  }
+}

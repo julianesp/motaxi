@@ -1,0 +1,30 @@
+name = "motaxi-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+account_id = "b85347650ec6de9ad5b2873c3389d0e6"
+
+# Variables de entorno
+[vars]
+JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
+CORS_ORIGIN = "*"
+
+# Configuración de D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "motaxi-db"
+database_id = "459371b9-0ba7-4864-9369-51ab7e461c08"
+
+# Configuración de R2 para almacenamiento de imágenes
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "motaxi-images"
+
+# KV para caché (opcional)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "1e9a1c3ce899496fa17cc038a8d43756"
+
+# Durable Objects para WebSockets en tiempo real (opcional)
+# [[durable_objects.bindings]]
+# name = "TRIPS"
+# class_name = "TripCoordinator"

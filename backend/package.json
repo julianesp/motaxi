@@ -1,0 +1,27 @@
+{
+  "name": "motaxi-api",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers API for MoTaxi",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev --host 0.0.0.0",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create motaxi-db",
+    "db:migrate": "wrangler d1 execute motaxi-db --file=../cloudflare_d1_schema.sql",
+    "db:migrate:local": "wrangler d1 execute motaxi-db --local --file=../cloudflare_d1_schema.sql",
+    "db:query": "wrangler d1 execute motaxi-db --command",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "expo-build-properties": "~1.0.10",
+    "hono": "^4.11.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.16",
+    "wrangler": "^4.54.0"
+  }
+}

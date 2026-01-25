@@ -2,8 +2,20 @@
 
 # dependencies
 node_modules/
+/.pnp
+.pnp.js
 
-# Expo
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# Expo (legacy)
 .expo/
 dist/
 web-build/
@@ -32,10 +44,20 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+
+# vercel
+.vercel
 
 # typescript
 *.tsbuildinfo
+next-env.d.ts
 
 # generated native folders
 /ios
 /android
+
+# Backend
+backend/node_modules
+backend/.wrangler
+backend/.dev.vars

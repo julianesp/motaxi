@@ -202,7 +202,7 @@ export default function DriverHomePage() {
         </div>
 
         {/* Status Card */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-2 z-20">
+        <div className="absolute top-1 left-20 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-2 z-20">
           <div className="flex items-center space-x-2">
             <button
               onClick={toggleAvailability}

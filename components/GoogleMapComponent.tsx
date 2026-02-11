@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, Polyline } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from '@react-google-maps/api';
 
 const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 
@@ -49,6 +49,8 @@ export default function GoogleMapComponent({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [initialCenter] = useState(center);
+  const [directionsToPickup, setDirectionsToPickup] = useState<google.maps.DirectionsResult | null>(null);
+  const [directionsToDestination, setDirectionsToDestination] = useState<google.maps.DirectionsResult | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -103,15 +105,64 @@ export default function GoogleMapComponent({
     }
   };
 
+  // Calcular ruta desde conductor hasta punto de recogida
+  useEffect(() => {
+    if (isLoaded && driverLocation && pickup) {
+      const directionsService = new google.maps.DirectionsService();
+      directionsService.route(
+        {
+          origin: driverLocation,
+          destination: pickup,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK && result) {
+            setDirectionsToPickup(result);
+          } else {
+            console.error('Error calculating route to pickup:', status);
+          }
+        }
+      );
+    } else {
+      setDirectionsToPickup(null);
+    }
+  }, [isLoaded, driverLocation, pickup]);
+
+  // Calcular ruta desde punto de recogida hasta destino
+  useEffect(() => {
+    if (isLoaded && pickup && destination) {
+      const directionsService = new google.maps.DirectionsService();
+      directionsService.route(
+        {
+          origin: pickup,
+          destination: destination,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK && result) {
+            setDirectionsToDestination(result);
+          } else {
+            console.error('Error calculating route to destination:', status);
+          }
+        }
+      );
+    } else {
+      setDirectionsToDestination(null);
+    }
+  }, [isLoaded, pickup, destination]);
+
   // Ajustar el mapa para mostrar ambos marcadores
   useEffect(() => {
     if (map && pickup && destination) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickup);
       bounds.extend(destination);
+      if (driverLocation) {
+        bounds.extend(driverLocation);
+      }
       map.fitBounds(bounds, { top: 100, bottom: 100, left: 100, right: 100 });
     }
-  }, [map, pickup, destination]);
+  }, [map, pickup, destination, driverLocation]);
 
   if (loadError) {
     return (
@@ -233,36 +284,32 @@ export default function GoogleMapComponent({
           />
         )}
 
-        {/* Línea desde el conductor hasta el punto de recogida (azul) */}
-        {driverLocation && pickup && (
-          <Polyline
-            path={[driverLocation, pickup]}
+        {/* Ruta desde el conductor hasta el punto de recogida (azul) */}
+        {directionsToPickup && (
+          <DirectionsRenderer
+            directions={directionsToPickup}
             options={{
-              strokeColor: '#3b82f6',
-              strokeOpacity: 0.8,
-              strokeWeight: 4,
-              geodesic: true,
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: '#3b82f6',
+                strokeOpacity: 0.8,
+                strokeWeight: 5,
+              },
             }}
           />
         )}
 
-        {/* Línea desde el punto de recogida hasta el destino (verde) */}
-        {pickup && destination && (
-          <Polyline
-            path={[pickup, destination]}
+        {/* Ruta desde el punto de recogida hasta el destino (verde) */}
+        {directionsToDestination && (
+          <DirectionsRenderer
+            directions={directionsToDestination}
             options={{
-              strokeColor: '#10b981',
-              strokeOpacity: 0.6,
-              strokeWeight: 4,
-              geodesic: true,
-              icons: [{
-                icon: {
-                  path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                  scale: 3,
-                  strokeColor: '#10b981',
-                },
-                offset: '100%',
-              }],
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: '#10b981',
+                strokeOpacity: 0.8,
+                strokeWeight: 5,
+              },
             }}
           />
         )}

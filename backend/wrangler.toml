@@ -18,20 +18,26 @@ CORS_ORIGIN = "https://motaxi.dev,https://www.motaxi.dev,http://localhost:3000"
 # y como secrets en producción con: wrangler secret put RESEND_API_KEY
 
 # Configuración de D1 Database
+# Usa la misma base de datos para desarrollo y producción
 [[d1_databases]]
 binding = "DB"
 database_name = "motaxi-db"
 database_id = "459371b9-0ba7-4864-9369-51ab7e461c08"
 
-# Configuración de R2 para almacenamiento de imágenes
+[dev]
+remote = true
+
+# Configuración de R2 para almacenamiento de imágenes (opcional - para futuro uso)
 [[r2_buckets]]
 binding = "IMAGES"
 bucket_name = "motaxi-images"
+preview_bucket_name = "motaxi-images-preview"
 
-# KV para caché (opcional)
+# KV para caché (opcional - para futuro uso)
 [[kv_namespaces]]
 binding = "CACHE"
 id = "1e9a1c3ce899496fa17cc038a8d43756"
+preview_id = "84bb680fe29f4ad9b3ab65d60124a6b5"
 
 # Durable Objects para WebSockets en tiempo real (opcional)
 # [[durable_objects.bindings]]

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, Polyline } from '@react-google-maps/api';
 
 const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 
@@ -10,6 +10,7 @@ interface GoogleMapComponentProps {
   zoom?: number;
   pickup?: { lat: number; lng: number } | null;
   destination?: { lat: number; lng: number } | null;
+  driverLocation?: { lat: number; lng: number } | null;
   onLocationChange?: (location: { lat: number; lng: number }) => void;
   onMapClick?: (location: { lat: number; lng: number }) => void;
   clickMode?: 'pickup' | 'destination' | null;
@@ -33,6 +34,7 @@ export default function GoogleMapComponent({
   zoom = 13,
   pickup,
   destination,
+  driverLocation,
   onLocationChange,
   onMapClick,
   clickMode = null,
@@ -214,6 +216,53 @@ export default function GoogleMapComponent({
               strokeWeight: 2,
             }}
             title="Tu ubicación"
+          />
+        )}
+
+        {/* Marcador del conductor (morado/naranja) */}
+        {driverLocation && (
+          <Marker
+            position={driverLocation}
+            icon={{
+              url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='%23f97316'%3E%3Cpath d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/%3E%3C/svg%3E",
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 20),
+            }}
+            title="Tu conductor"
+          />
+        )}
+
+        {/* Línea desde el conductor hasta el punto de recogida (azul) */}
+        {driverLocation && pickup && (
+          <Polyline
+            path={[driverLocation, pickup]}
+            options={{
+              strokeColor: '#3b82f6',
+              strokeOpacity: 0.8,
+              strokeWeight: 4,
+              geodesic: true,
+            }}
+          />
+        )}
+
+        {/* Línea desde el punto de recogida hasta el destino (verde) */}
+        {pickup && destination && (
+          <Polyline
+            path={[pickup, destination]}
+            options={{
+              strokeColor: '#10b981',
+              strokeOpacity: 0.6,
+              strokeWeight: 4,
+              geodesic: true,
+              icons: [{
+                icon: {
+                  path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                  scale: 3,
+                  strokeColor: '#10b981',
+                },
+                offset: '100%',
+              }],
+            }}
           />
         )}
       </GoogleMap>

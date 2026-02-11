@@ -14,8 +14,8 @@ import favoriteRoutes from './routes/favorites';
 
 export interface Env {
   DB: D1Database;
-  IMAGES: R2Bucket;
-  CACHE: KVNamespace;
+  IMAGES?: R2Bucket;
+  CACHE?: KVNamespace;
   JWT_SECRET: string;
   CORS_ORIGIN: string;
   WOMPI_PUBLIC_KEY?: string;

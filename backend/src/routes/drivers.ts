@@ -7,6 +7,167 @@ export const driverRoutes = new Hono<{ Bindings: Env }>();
 driverRoutes.use('*', authMiddleware);
 
 /**
+ * GET /drivers/profile
+ * Obtener perfil completo del conductor
+ */
+driverRoutes.get('/profile', async (c) => {
+  try {
+    const user = c.get('user');
+
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can access this endpoint' }, 403);
+    }
+
+    // Obtener información del conductor
+    const driver = await c.env.DB.prepare(
+      `SELECT
+        d.vehicle_model,
+        d.vehicle_color,
+        d.vehicle_plate,
+        d.license_number,
+        d.is_available,
+        d.verification_status,
+        d.rating,
+        d.total_trips,
+        d.current_latitude,
+        d.current_longitude,
+        d.last_location_update,
+        d.municipality,
+        d.accepts_intercity_trips,
+        d.accepts_rural_trips,
+        d.base_fare,
+        d.intercity_fare,
+        d.rural_fare,
+        d.per_km_fare
+      FROM drivers d
+      WHERE d.id = ?`
+    )
+      .bind(user.id)
+      .first();
+
+    if (!driver) {
+      return c.json({ error: 'Driver profile not found' }, 404);
+    }
+
+    return c.json({
+      driver,
+      user: {
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        full_name: user.full_name,
+        profile_image: user.profile_image,
+        created_at: user.created_at
+      }
+    });
+  } catch (error: any) {
+    console.error('Get driver profile error:', error);
+    return c.json({ error: error.message || 'Failed to get driver profile' }, 500);
+  }
+});
+
+/**
+ * PUT /drivers/profile
+ * Actualizar perfil del conductor
+ */
+driverRoutes.put('/profile', async (c) => {
+  try {
+    const user = c.get('user');
+    const body = await c.req.json();
+
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can update profile' }, 403);
+    }
+
+    const {
+      municipality,
+      accepts_intercity_trips,
+      accepts_rural_trips,
+      vehicle_model,
+      vehicle_color,
+      vehicle_plate,
+      license_number,
+      base_fare,
+      intercity_fare,
+      rural_fare,
+      per_km_fare
+    } = body;
+
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (municipality !== undefined) {
+      updates.push('municipality = ?');
+      values.push(municipality);
+    }
+    if (accepts_intercity_trips !== undefined) {
+      updates.push('accepts_intercity_trips = ?');
+      values.push(accepts_intercity_trips ? 1 : 0);
+    }
+    if (accepts_rural_trips !== undefined) {
+      updates.push('accepts_rural_trips = ?');
+      values.push(accepts_rural_trips ? 1 : 0);
+    }
+    if (vehicle_model !== undefined) {
+      updates.push('vehicle_model = ?');
+      values.push(vehicle_model);
+    }
+    if (vehicle_color !== undefined) {
+      updates.push('vehicle_color = ?');
+      values.push(vehicle_color);
+    }
+    if (vehicle_plate !== undefined) {
+      updates.push('vehicle_plate = ?');
+      values.push(vehicle_plate);
+    }
+    if (license_number !== undefined) {
+      updates.push('license_number = ?');
+      values.push(license_number);
+    }
+    if (base_fare !== undefined) {
+      updates.push('base_fare = ?');
+      values.push(base_fare);
+    }
+    if (intercity_fare !== undefined) {
+      updates.push('intercity_fare = ?');
+      values.push(intercity_fare);
+    }
+    if (rural_fare !== undefined) {
+      updates.push('rural_fare = ?');
+      values.push(rural_fare);
+    }
+    if (per_km_fare !== undefined) {
+      updates.push('per_km_fare = ?');
+      values.push(per_km_fare);
+    }
+
+    if (updates.length === 0) {
+      return c.json({ error: 'No fields to update' }, 400);
+    }
+
+    values.push(user.id);
+
+    await c.env.DB.prepare(
+      `UPDATE drivers SET ${updates.join(', ')} WHERE id = ?`
+    )
+      .bind(...values)
+      .run();
+
+    // Obtener el perfil actualizado
+    const driver = await c.env.DB.prepare(
+      `SELECT * FROM drivers WHERE id = ?`
+    )
+      .bind(user.id)
+      .first();
+
+    return c.json({ driver });
+  } catch (error: any) {
+    console.error('Update driver profile error:', error);
+    return c.json({ error: error.message || 'Failed to update profile' }, 500);
+  }
+});
+
+/**
  * PUT /drivers/location
  * Actualizar ubicación del conductor
  */

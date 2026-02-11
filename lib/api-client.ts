@@ -124,7 +124,7 @@ export const authAPI = {
 
   getCurrentUser: async () => {
     const response = await apiClient.get('/auth/me');
-    return response.data;
+    return response.data.user; // Retornar solo el user, no todo response.data
   },
 };
 
@@ -171,6 +171,58 @@ export const tripsAPI = {
 
   rateTrip: async (tripId: string, rating: number, comment?: string) => {
     const response = await apiClient.put(`/trips/${tripId}/rate`, { rating, comment });
+    return response.data;
+  },
+
+  getCurrentTrip: async () => {
+    const response = await apiClient.get('/trips/current');
+    return response.data;
+  },
+};
+
+// API de conductores
+export const driversAPI = {
+  getProfile: async () => {
+    const response = await apiClient.get('/drivers/profile');
+    return response.data;
+  },
+
+  updateProfile: async (data: {
+    municipality?: string;
+    accepts_intercity_trips?: boolean;
+    accepts_rural_trips?: boolean;
+    vehicle_model?: string;
+    vehicle_color?: string;
+    vehicle_plate?: string;
+    license_number?: string;
+    base_fare?: number;
+    intercity_fare?: number;
+    rural_fare?: number;
+    per_km_fare?: number;
+  }) => {
+    const response = await apiClient.put('/drivers/profile', data);
+    return response.data;
+  },
+
+  updateLocation: async (latitude: number, longitude: number) => {
+    const response = await apiClient.put('/drivers/location', { latitude, longitude });
+    return response.data;
+  },
+
+  updateAvailability: async (isAvailable: boolean) => {
+    const response = await apiClient.put('/drivers/availability', { isAvailable });
+    return response.data;
+  },
+
+  getNearbyDrivers: async (lat: number, lng: number) => {
+    const response = await apiClient.get('/drivers/nearby', {
+      params: { lat, lng }
+    });
+    return response.data;
+  },
+
+  getEarnings: async () => {
+    const response = await apiClient.get('/drivers/earnings');
     return response.data;
   },
 };

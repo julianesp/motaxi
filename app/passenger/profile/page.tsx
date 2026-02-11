@@ -182,7 +182,7 @@ export default function PassengerProfilePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span className="text-gray-900">
-                    {new Date(user.created_at).toLocaleDateString('es-ES', {
+                    {new Date(typeof user.created_at === 'number' ? user.created_at * 1000 : user.created_at).toLocaleDateString('es-ES', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',

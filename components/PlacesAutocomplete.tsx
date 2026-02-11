@@ -87,10 +87,10 @@ export default function PlacesAutocomplete({
   }, [isLoaded, onSelectPlace]);
 
   const handleFocus = () => {
+    // No mostrar sugerencias automáticas, solo usar Google Places Autocomplete
+    // Si hay favoritos, mostrarlos
     if (favorites && favorites.length > 0) {
       setShowFavorites(true);
-    } else {
-      setShowSuggestions(true);
     }
   };
 

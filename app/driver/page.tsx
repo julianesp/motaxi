@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import dynamic from 'next/dynamic';
 
-const MapComponent = dynamic(() => import('@/components/MapComponent'), {
+const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
@@ -22,8 +22,11 @@ export default function DriverHomePage() {
   const { user, loading } = useAuth();
 
   const [isAvailable, setIsAvailable] = useState(false);
+  const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState(null);
+  const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+  const [availableTrips, setAvailableTrips] = useState<any[]>([]);
   const [earnings, setEarnings] = useState({
     today: 0,
     week: 0,
@@ -37,22 +40,52 @@ export default function DriverHomePage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    // Obtener ubicación actual del conductor
-    if (navigator.geolocation) {
+    // Cargar estado de disponibilidad desde el backend
+    const loadDriverStatus = async () => {
+      try {
+        const { driversAPI } = await import('@/lib/api-client');
+        const response = await driversAPI.getProfile();
+        if (response.driver) {
+          setIsAvailable(response.driver.is_available === 1);
+        }
+      } catch (error) {
+        console.error('Error loading driver status:', error);
+      }
+    };
+
+    if (user?.role === 'driver') {
+      loadDriverStatus();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Obtener ubicación actual del conductor y enviarla al backend
+    if (navigator.geolocation && user?.role === 'driver') {
       const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          setCurrentLocation({
+        async (position) => {
+          const newLocation = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-          });
+          };
+          setCurrentLocation(newLocation);
+
+          // Actualizar ubicación en el backend
+          try {
+            const { driversAPI } = await import('@/lib/api-client');
+            await driversAPI.updateLocation(newLocation.lat, newLocation.lng);
+          } catch (error) {
+            console.error('Error updating location:', error);
+          }
         },
         (error) => {
           console.error('Error getting location:', error);
+          // Usar ubicación por defecto (Valle de Sibundoy)
+          setCurrentLocation({ lat: 1.1656, lng: -77.0 });
         },
         {
           enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0,
+          timeout: 10000,
+          maximumAge: 30000, // Cachear por 30 segundos
         }
       );
 
@@ -60,11 +93,48 @@ export default function DriverHomePage() {
         navigator.geolocation.clearWatch(watchId);
       };
     }
-  }, []);
+  }, [user]);
 
-  const toggleAvailability = () => {
-    setIsAvailable(!isAvailable);
-    // Aquí llamarías al API para actualizar la disponibilidad
+  useEffect(() => {
+    // Consultar viajes disponibles cada 5 segundos cuando el conductor esté disponible
+    if (!isAvailable || user?.role !== 'driver') {
+      setAvailableTrips([]);
+      return;
+    }
+
+    const fetchAvailableTrips = async () => {
+      try {
+        const { tripsAPI } = await import('@/lib/api-client');
+        const data = await tripsAPI.getActiveTrips();
+        setAvailableTrips(data.trips || []);
+      } catch (error) {
+        console.error('Error fetching available trips:', error);
+      }
+    };
+
+    // Consultar inmediatamente
+    fetchAvailableTrips();
+
+    // Consultar cada 5 segundos
+    const interval = setInterval(fetchAvailableTrips, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAvailable, user]);
+
+  const toggleAvailability = async () => {
+    setIsUpdatingAvailability(true);
+    const newAvailability = !isAvailable;
+
+    try {
+      const { driversAPI } = await import('@/lib/api-client');
+      await driversAPI.updateAvailability(newAvailability);
+      setIsAvailable(newAvailability);
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      alert('Error al actualizar disponibilidad. Intenta nuevamente.');
+    } finally {
+      setIsUpdatingAvailability(false);
+    }
   };
 
   if (loading) {
@@ -123,10 +193,11 @@ export default function DriverHomePage() {
       <div className="flex-1 relative">
         {/* Map */}
         <div className="absolute inset-0">
-          <MapComponent
-            center={currentLocation || { lat: 4.6097, lng: -74.0817 }}
+          <GoogleMapComponent
+            center={currentLocation || { lat: 1.1656, lng: -77.0 }}
             zoom={15}
             pickup={currentLocation}
+            onLocationChange={setCurrentLocation}
           />
         </div>
 
@@ -135,9 +206,10 @@ export default function DriverHomePage() {
           <div className="flex items-center space-x-4">
             <button
               onClick={toggleAvailability}
+              disabled={isUpdatingAvailability}
               className={`relative inline-flex h-10 w-20 items-center rounded-full transition-colors ${
                 isAvailable ? 'bg-green-500' : 'bg-gray-300'
-              }`}
+              } ${isUpdatingAvailability ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
                 className={`inline-block h-8 w-8 transform rounded-full bg-white transition-transform ${
@@ -146,51 +218,174 @@ export default function DriverHomePage() {
               />
             </button>
             <span className="text-gray-700 font-medium">
-              {isAvailable ? 'Conectado - Esperando viajes' : 'Desconectado'}
+              {isUpdatingAvailability
+                ? 'Actualizando...'
+                : isAvailable
+                ? 'Conectado - Esperando viajes'
+                : 'Desconectado'}
             </span>
           </div>
         </div>
 
+        {/* Botón de Contacto al Desarrollador */}
+        <a
+          href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
+          className={`absolute right-4 md:right-auto md:left-[26rem] md:bottom-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl flex items-center space-x-2 px-4 py-3 z-30 transition-all duration-200 hover:scale-105 active:scale-95 ${
+            isPanelMinimized ? 'bottom-20' : 'bottom-[calc(85vh+1rem)]'
+          }`}
+          title="Contactar Soporte"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span className="font-medium text-sm hidden md:inline">Contactar Soporte</span>
+          <span className="font-medium text-sm md:hidden">Soporte</span>
+        </a>
+
         {/* Earnings Summary */}
         {!activeTrip && (
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl p-6 z-20">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Resumen de Ganancias</h2>
-
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Hoy</p>
-                <p className="text-2xl font-bold text-indigo-600">${earnings.today.toLocaleString()}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Semana</p>
-                <p className="text-2xl font-bold text-indigo-600">${earnings.week.toLocaleString()}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Mes</p>
-                <p className="text-2xl font-bold text-indigo-600">${earnings.month.toLocaleString()}</p>
-              </div>
-            </div>
-
-            {!isAvailable && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                <p className="text-yellow-800">
-                  Activa tu disponibilidad para empezar a recibir solicitudes de viaje
-                </p>
-              </div>
-            )}
-
-            {isAvailable && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                <p className="text-green-800 font-medium">Esperando solicitudes de viaje...</p>
-                <div className="flex items-center justify-center mt-2">
-                  <div className="animate-pulse flex space-x-2">
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+          <div className={`absolute bottom-0 left-0 right-0 md:left-4 md:bottom-4 md:right-auto md:w-96 bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-20 pointer-events-auto overflow-y-auto transition-all duration-300 ${
+            isPanelMinimized
+              ? 'max-h-[60px] md:max-h-[70px]'
+              : 'max-h-[85vh] md:max-h-[calc(100vh-2rem)]'
+          }`}>
+            <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+              {/* Handle para arrastrar en móvil y botón de toggle */}
+              <div className="flex items-center justify-between -mt-2 mb-2">
+                {isPanelMinimized ? (
+                  <div className="flex items-center space-x-3 flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-gray-600">
+                        {isAvailable ? '🟢 Conectado' : '⚫ Desconectado'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">
+                        Hoy: <span className="font-bold text-indigo-600">${earnings.today.toLocaleString()}</span>
+                      </span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="md:hidden flex justify-center flex-1">
+                    <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+                  </div>
+                )}
+                <button
+                  onClick={() => setIsPanelMinimized(!isPanelMinimized)}
+                  className="ml-auto p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                  title={isPanelMinimized ? "Expandir panel" : "Minimizar panel"}
+                >
+                  <svg
+                    className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${
+                      isPanelMinimized ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
               </div>
-            )}
+
+              {!isPanelMinimized && (
+                <>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Resumen de Ganancias</h2>
+
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">Hoy</p>
+                      <p className="text-2xl font-bold text-indigo-600">${earnings.today.toLocaleString()}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">Semana</p>
+                      <p className="text-2xl font-bold text-indigo-600">${earnings.week.toLocaleString()}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">Mes</p>
+                      <p className="text-2xl font-bold text-indigo-600">${earnings.month.toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  {!isAvailable && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                      <p className="text-yellow-800">
+                        Activa tu disponibilidad para empezar a recibir solicitudes de viaje
+                      </p>
+                    </div>
+                  )}
+
+                  {isAvailable && availableTrips.length === 0 && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                      <p className="text-green-800 font-medium">Esperando solicitudes de viaje...</p>
+                      <div className="flex items-center justify-center mt-2">
+                        <div className="animate-pulse flex space-x-2">
+                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isAvailable && availableTrips.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-gray-800">Solicitudes Disponibles</h3>
+                        <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium">
+                          {availableTrips.length} {availableTrips.length === 1 ? 'viaje' : 'viajes'}
+                        </span>
+                      </div>
+                      <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                        {availableTrips.map((trip: any) => (
+                          <div key={trip.id} className="bg-white border-2 border-indigo-200 rounded-xl p-4 hover:border-indigo-400 transition-colors">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <div className="flex items-center mb-2">
+                                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                  <p className="text-sm text-gray-600 line-clamp-1">{trip.pickup_address}</p>
+                                </div>
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                                  <p className="text-sm text-gray-600 line-clamp-1">{trip.dropoff_address}</p>
+                                </div>
+                              </div>
+                              <div className="text-right ml-4">
+                                <p className="text-2xl font-bold text-green-600">${trip.fare.toLocaleString()}</p>
+                                <p className="text-xs text-gray-500">{trip.distance_km.toFixed(1)} km</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { tripsAPI } = await import('@/lib/api-client');
+                                  await tripsAPI.acceptTrip(trip.id);
+                                  alert('¡Viaje aceptado! Dirígete al punto de recogida.');
+                                  // Recargar viajes disponibles
+                                  const data = await tripsAPI.getActiveTrips();
+                                  setAvailableTrips(data.trips || []);
+                                } catch (error) {
+                                  console.error('Error accepting trip:', error);
+                                  alert('Error al aceptar el viaje. Intenta nuevamente.');
+                                }
+                              }}
+                              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                            >
+                              Aceptar Viaje
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>

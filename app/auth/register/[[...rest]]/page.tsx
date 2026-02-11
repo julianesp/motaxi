@@ -210,7 +210,7 @@ function RegisterForm() {
               <div>
                 <label
                   htmlFor="full_name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-300 mb-1"
                 >
                   Nombre Completo
                 </label>
@@ -221,7 +221,7 @@ function RegisterForm() {
                   value={formData.full_name}
                   onChange={handleChange}
                   required
-                  className="input"
+                  className="input text-black"
                   placeholder="Juan Pérez"
                 />
               </div>
@@ -229,7 +229,7 @@ function RegisterForm() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-300 mb-1"
                 >
                   Correo Electrónico
                 </label>
@@ -240,7 +240,7 @@ function RegisterForm() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="input"
+                  className="input text-black"
                   placeholder="tu@email.com"
                 />
               </div>
@@ -248,7 +248,7 @@ function RegisterForm() {
               <div>
                 <label
                   htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-300 mb-1"
                 >
                   Teléfono
                 </label>
@@ -259,7 +259,7 @@ function RegisterForm() {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="input"
+                  className="input text-black"
                   placeholder="3001234567"
                 />
               </div>
@@ -267,7 +267,7 @@ function RegisterForm() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-300 mb-1"
                 >
                   Contraseña
                 </label>
@@ -278,7 +278,7 @@ function RegisterForm() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="input"
+                  className="input text-black"
                   placeholder="••••••••"
                 />
               </div>
@@ -286,7 +286,7 @@ function RegisterForm() {
               <div>
                 <label
                   htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-gray-300 mb-1"
                 >
                   Confirmar Contraseña
                 </label>
@@ -297,7 +297,7 @@ function RegisterForm() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="input"
+                  className="input text-black"
                   placeholder="••••••••"
                 />
               </div>
@@ -311,7 +311,7 @@ function RegisterForm() {
                 />
                 <label
                   htmlFor="terms"
-                  className="ml-2 block text-sm text-gray-700"
+                  className="ml-2 block text-sm text-gray-300"
                 >
                   Acepto los{" "}
                   <a href="#" className="text-indigo-600 hover:text-indigo-500">

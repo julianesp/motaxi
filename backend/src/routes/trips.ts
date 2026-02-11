@@ -68,7 +68,6 @@ tripRoutes.post('/', async (c) => {
        JOIN drivers d ON u.id = d.id
        WHERE d.is_available = 1
          AND d.verification_status = 'approved'
-         AND u.push_token IS NOT NULL
          AND d.current_latitude IS NOT NULL
          AND d.current_longitude IS NOT NULL`
     ).all();
@@ -180,6 +179,46 @@ tripRoutes.get('/active', async (c) => {
   } catch (error: any) {
     console.error('Get active trips error:', error);
     return c.json({ error: error.message || 'Failed to get active trips' }, 500);
+  }
+});
+
+/**
+ * GET /trips/current
+ * Obtener viaje actual del pasajero (requested, accepted, in_progress)
+ */
+tripRoutes.get('/current', async (c) => {
+  try {
+    const user = c.get('user');
+
+    if (user.role !== 'passenger') {
+      return c.json({ error: 'Only passengers can view current trip' }, 403);
+    }
+
+    const trip = await c.env.DB.prepare(
+      `SELECT t.*,
+              u.full_name as driver_name,
+              u.phone as driver_phone,
+              d.vehicle_model,
+              d.vehicle_color,
+              d.vehicle_plate,
+              d.current_latitude as driver_latitude,
+              d.current_longitude as driver_longitude,
+              d.rating as driver_rating
+       FROM trips t
+       LEFT JOIN users u ON t.driver_id = u.id
+       LEFT JOIN drivers d ON t.driver_id = d.id
+       WHERE t.passenger_id = ?
+         AND t.status IN ('requested', 'accepted', 'in_progress')
+       ORDER BY t.created_at DESC
+       LIMIT 1`
+    )
+      .bind(user.id)
+      .first();
+
+    return c.json({ trip });
+  } catch (error: any) {
+    console.error('Get current trip error:', error);
+    return c.json({ error: error.message || 'Failed to get current trip' }, 500);
   }
 });
 

@@ -69,6 +69,7 @@ export default function PassengerHomePage() {
   >(null);
   const [isLocating, setIsLocating] = useState(false);
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+  const [isCheckingActiveTrip, setIsCheckingActiveTrip] = useState(false);
 
   useEffect(() => {
     // Solo verificar autenticación una vez que termine de cargar
@@ -84,6 +85,35 @@ export default function PassengerHomePage() {
       }
     }
   }, [user, loading, router, hasCheckedAuth]);
+
+  useEffect(() => {
+    // Verificar si hay un viaje activo y redirigir a la vista de tracking
+    const checkActiveTrip = async () => {
+      if (!user || user.role !== 'passenger') return;
+
+      try {
+        const { tripsAPI } = await import("@/lib/api-client");
+        const data = await tripsAPI.getCurrentTrip();
+
+        if (data.trip) {
+          // Hay un viaje activo, redirigir a tracking
+          router.push(`/passenger/trip/${data.trip.id}`);
+        }
+      } catch (error) {
+        console.error('Error checking active trip:', error);
+      }
+    };
+
+    if (user?.role === 'passenger') {
+      // Verificar inmediatamente
+      checkActiveTrip();
+
+      // Verificar cada 5 segundos
+      const interval = setInterval(checkActiveTrip, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [user, router]);
 
   useEffect(() => {
     // Obtener ubicación actual del usuario
@@ -483,6 +513,17 @@ export default function PassengerHomePage() {
           )}
         </button>
 
+        {/* Botón de Contacto al Desarrollador */}
+        <a
+          href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
+          className="absolute top-20 right-4 md:top-24 md:right-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center w-12 h-12 md:w-14 md:h-14 z-20 transition-all duration-200 hover:scale-110 active:scale-95"
+          title="Contactar Soporte"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </a>
+
         {/* Trip Request Card - Fija en la parte inferior con scroll */}
         <div className={`absolute bottom-0 left-0 right-0 md:left-4 md:bottom-4 md:right-auto md:w-96 bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-30 pointer-events-auto overflow-y-auto transition-all duration-300 ${
           isPanelMinimized
@@ -555,6 +596,7 @@ export default function PassengerHomePage() {
                     })
                   }
                   placeholder="Ubicación de recogida"
+                  className="text-black"
                   icon="pickup"
                   favorites={[]}
                 />
@@ -619,6 +661,7 @@ export default function PassengerHomePage() {
                     })
                   }
                   placeholder="¿A dónde vas?"
+                  className="text-black"
                   icon="destination"
                   favorites={favorites}
                   onSelectFavorite={(favorite) => {
@@ -719,7 +762,7 @@ export default function PassengerHomePage() {
               value={favoriteName}
               onChange={(e) => setFavoriteName(e.target.value)}
               placeholder="Ej: Casa, Trabajo, Gimnasio"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-4"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-4 text-black"
               maxLength={50}
             />
             <div className="flex space-x-3">

@@ -48,6 +48,7 @@ export default function GoogleMapComponent({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [initialCenter] = useState(center);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -161,7 +162,7 @@ export default function GoogleMapComponent({
     <div className="relative w-full h-full">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        center={center}
+        center={initialCenter}
         zoom={zoom}
         onLoad={onLoad}
         onUnmount={onUnmount}

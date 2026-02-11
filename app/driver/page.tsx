@@ -24,9 +24,10 @@ export default function DriverHomePage() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [activeTrip, setActiveTrip] = useState(null);
+  const [activeTrip, setActiveTrip] = useState<any>(null);
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
+  const [rejectedTripIds, setRejectedTripIds] = useState<Set<string>>(new Set());
   const [earnings, setEarnings] = useState({
     today: 0,
     week: 0,
@@ -106,7 +107,9 @@ export default function DriverHomePage() {
       try {
         const { tripsAPI } = await import('@/lib/api-client');
         const data = await tripsAPI.getActiveTrips();
-        setAvailableTrips(data.trips || []);
+        // Filtrar viajes rechazados localmente
+        const filteredTrips = (data.trips || []).filter((trip: any) => !rejectedTripIds.has(trip.id));
+        setAvailableTrips(filteredTrips);
       } catch (error) {
         console.error('Error fetching available trips:', error);
       }
@@ -119,7 +122,7 @@ export default function DriverHomePage() {
     const interval = setInterval(fetchAvailableTrips, 5000);
 
     return () => clearInterval(interval);
-  }, [isAvailable, user]);
+  }, [isAvailable, user, rejectedTripIds]);
 
   const toggleAvailability = async () => {
     setIsUpdatingAvailability(true);
@@ -196,7 +199,9 @@ export default function DriverHomePage() {
           <GoogleMapComponent
             center={currentLocation || { lat: 1.1656, lng: -77.0 }}
             zoom={15}
-            pickup={currentLocation}
+            pickup={activeTrip ? activeTrip.pickup : null}
+            destination={activeTrip ? activeTrip.destination : null}
+            driverLocation={activeTrip ? currentLocation : null}
             onLocationChange={setCurrentLocation}
           />
         </div>
@@ -351,10 +356,29 @@ export default function DriverHomePage() {
                                   try {
                                     const { tripsAPI } = await import('@/lib/api-client');
                                     await tripsAPI.acceptTrip(trip.id);
+
+                                    // Actualizar el viaje activo con los datos del viaje aceptado
+                                    setActiveTrip({
+                                      id: trip.id,
+                                      pickup: {
+                                        lat: trip.pickup_latitude,
+                                        lng: trip.pickup_longitude,
+                                        address: trip.pickup_address,
+                                      },
+                                      destination: {
+                                        lat: trip.dropoff_latitude,
+                                        lng: trip.dropoff_longitude,
+                                        address: trip.dropoff_address,
+                                      },
+                                      fare: trip.fare,
+                                      distance: trip.distance_km,
+                                      status: 'accepted',
+                                    });
+
+                                    // Limpiar lista de viajes disponibles
+                                    setAvailableTrips([]);
+
                                     alert('¡Viaje aceptado! Dirígete al punto de recogida.');
-                                    // Recargar viajes disponibles
-                                    const data = await tripsAPI.getActiveTrips();
-                                    setAvailableTrips(data.trips || []);
                                   } catch (error) {
                                     console.error('Error accepting trip:', error);
                                     alert('Error al aceptar el viaje. Intenta nuevamente.');
@@ -366,8 +390,8 @@ export default function DriverHomePage() {
                               </button>
                               <button
                                 onClick={() => {
-                                  // Remover el viaje de la lista local
-                                  setAvailableTrips(availableTrips.filter(t => t.id !== trip.id));
+                                  // Agregar a la lista de rechazados
+                                  setRejectedTripIds(prev => new Set([...prev, trip.id]));
                                 }}
                                 className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                                 title="Cancelar este viaje"

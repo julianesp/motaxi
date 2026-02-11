@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthUtils } from '../utils/auth';
+import { EmailService } from '../utils/email';
 import { Env } from '../index';
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
@@ -180,19 +181,46 @@ authRoutes.post('/forgot-password', async (c) => {
       .bind(user.id, resetCode, expiresAt)
       .run();
 
-    // En producción, aquí enviarías un SMS o email con el código
-    // Por ahora, lo devolvemos en la respuesta (solo para desarrollo)
+    // Inicializar servicio de email
+    const emailService = new EmailService(
+      c.env.RESEND_API_KEY,
+      c.env.RESEND_FROM_EMAIL
+    );
+
+    // Intentar enviar email si existe configuración de Resend
+    let emailSent = false;
+    if (user.email && c.env.RESEND_API_KEY) {
+      const result = await emailService.sendPasswordResetCode(
+        user.email as string,
+        resetCode,
+        user.full_name as string
+      );
+      emailSent = result.success;
+
+      if (!emailSent) {
+        console.error('Failed to send email:', result.error);
+      }
+    }
+
+    // Log para debugging (solo en desarrollo)
     console.log(`Reset code for ${user.email}: ${resetCode}`);
 
-    return c.json({
-      message: 'Si el correo o teléfono existe, recibirás instrucciones para recuperar tu cuenta.',
-      // Solo para desarrollo - ELIMINAR EN PRODUCCIÓN
-      debug: {
+    // Respuesta base
+    const response: any = {
+      message: 'Si el correo o teléfono existe, recibirás instrucciones para recuperar tu cuenta.'
+    };
+
+    // Solo incluir debug info si NO se envió el email (modo desarrollo)
+    if (!emailSent) {
+      response.debug = {
         resetCode,
         email: user.email,
-        phone: user.phone
-      }
-    });
+        phone: user.phone,
+        note: 'Configure RESEND_API_KEY en .dev.vars para enviar emails reales'
+      };
+    }
+
+    return c.json(response);
   } catch (error: any) {
     console.error('Forgot password error:', error);
     return c.json({ error: error.message || 'Request failed' }, 500);

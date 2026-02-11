@@ -10,6 +10,7 @@ import { emergencyRoutes } from './routes/emergency';
 import { paymentRoutes } from './routes/payments';
 import { chatRoutes } from './routes/chat';
 import { analyticsRoutes } from './routes/analytics';
+import favoriteRoutes from './routes/favorites';
 
 export interface Env {
   DB: D1Database;
@@ -19,16 +20,31 @@ export interface Env {
   CORS_ORIGIN: string;
   WOMPI_PUBLIC_KEY?: string;
   WOMPI_PRIVATE_KEY?: string;
+  RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Middleware
-app.use('*', cors({
-  origin: '*',
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-}));
+// Middleware CORS - usar variable de entorno o permitir todos en desarrollo
+app.use('*', async (c, next) => {
+  const corsOrigin = c.env.CORS_ORIGIN || '*';
+  const allowedOrigins = corsOrigin.split(',').map(o => o.trim());
+
+  return cors({
+    origin: (origin) => {
+      // Si es '*', permitir todos
+      if (corsOrigin === '*') return '*';
+      // Si el origin está en la lista de permitidos
+      if (allowedOrigins.includes(origin)) return origin;
+      // Por defecto, permitir el primer origen configurado
+      return allowedOrigins[0];
+    },
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })(c, next);
+});
 
 // Health check
 app.get('/', (c) => {
@@ -50,6 +66,7 @@ app.route('/emergency', emergencyRoutes);
 app.route('/payments', paymentRoutes);
 app.route('/chat', chatRoutes);
 app.route('/analytics', analyticsRoutes);
+app.route('/favorites', favoriteRoutes);
 
 // Error handler
 app.onError((err, c) => {

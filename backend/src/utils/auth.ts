@@ -103,5 +103,7 @@ export async function authMiddleware(c: any, next: any) {
   }
 
   c.set('user', user);
+  c.set('userId', user.id);
+  c.set('userRole', user.role);
   await next();
 }

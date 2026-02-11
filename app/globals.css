@@ -3,16 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --primary: #4f46e5;
-  --primary-dark: #4338ca;
+  --primary: #0f9b0f;
+  --primary-dark: #0a6b0a;
   --secondary: #10b981;
   --error: #ef4444;
   --warning: #f59e0b;
-  --background: #ffffff;
-  --surface: #f9fafb;
-  --text: #111827;
-  --text-secondary: #6b7280;
-  --border: #e5e7eb;
+  --background: #000000;
+  --surface: #1a1a1a;
+  --text: #ffffff;
+  --text-secondary: #9ca3af;
+  --border: #2d2d2d;
+  --gradient-start: #0f9b0f;
+  --gradient-end: #000000;
 }
 
 * {
@@ -29,7 +31,10 @@ body {
 
 body {
   color: var(--text);
-  background: var(--background);
+  background: #000000;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to top, #0f9b0f, #000000);  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to top, #0f9b0f, #000000); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+  min-height: 100vh;
 }
 
 a {
@@ -53,7 +58,7 @@ select {
   }
 
   .btn-primary {
-    @apply bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800;
+    @apply bg-green-600 text-white hover:bg-green-700 active:bg-green-800;
   }
 
   .btn-secondary {

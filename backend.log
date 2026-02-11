@@ -1,0 +1,26 @@
+
+> motaxi-api@1.0.0 dev
+> wrangler dev --host 0.0.0.0
+
+
+ ⛅️ wrangler 4.54.0 (update available 4.61.1)
+─────────────────────────────────────────────
+Using vars defined in .dev.vars
+Your Worker has access to the following bindings:
+Binding                                                                 Resource                  Mode
+env.CACHE (1e9a1c3ce899496fa17cc038a8d43756)                            KV Namespace              local
+env.DB (motaxi-db)                                                      D1 Database               local
+env.IMAGES (motaxi-images)                                              R2 Bucket                 local
+env.JWT_SECRET ("your-super-secret-jwt-key-change-this...")             Environment Variable      local
+env.CORS_ORIGIN ("*")                                                   Environment Variable      local
+env.RESEND_API_KEY ("(hidden)")                                         Environment Variable      local
+env.RESEND_FROM_EMAIL ("(hidden)")                                      Environment Variable      local
+
+⎔ Starting local server...
+[wrangler:info] Ready on http://localhost:8787
+[wrangler:info] GET / 200 OK (13ms)
+[wrangler:info] OPTIONS /auth/forgot-password 204 No Content (7ms)
+[wrangler:info] POST /auth/forgot-password 200 OK (34ms)
+[wrangler:info] GET /auth/me 401 Unauthorized (4ms)
+[wrangler:info] OPTIONS /auth/forgot-password 204 No Content (6ms)
+[wrangler:info] POST /auth/forgot-password 200 OK (34ms)

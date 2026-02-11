@@ -1,44 +1,44 @@
-'use client';
+"use client";
 
-import { useState, FormEvent, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import { apiClient } from '@/lib/api-client';
+import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import Navbar from "@/components/Navbar/Navbar";
+import { apiClient } from "@/lib/api-client";
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const identifierParam = searchParams.get('identifier');
+  const identifierParam = searchParams.get("identifier");
 
-  const [emailOrPhone, setEmailOrPhone] = useState(identifierParam || '');
-  const [resetCode, setResetCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [emailOrPhone, setEmailOrPhone] = useState(identifierParam || "");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setSuccess(false);
 
     // Validaciones
     if (newPassword.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+      setError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+      setError("Las contraseñas no coinciden");
       return;
     }
 
     setLoading(true);
 
     try {
-      await apiClient.post('/auth/reset-password', {
+      await apiClient.post("/auth/reset-password", {
         emailOrPhone,
         resetCode,
         newPassword,
@@ -48,26 +48,34 @@ function ResetPasswordForm() {
 
       // Redirigir al login después de 2 segundos
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push("/auth/login");
       }, 2000);
     } catch (err: any) {
-      console.error('Reset password error:', err);
+      console.error("Reset password error:", err);
 
       if (err.response?.status === 400) {
-        const errorMsg = err.response?.data?.error || '';
-        if (errorMsg.includes('expired')) {
-          setError('El código de recuperación ha expirado. Por favor, solicita uno nuevo.');
-        } else if (errorMsg.includes('Invalid reset code')) {
-          setError('Código de recuperación inválido. Verifica que esté correcto.');
-        } else if (errorMsg.includes('Password must be')) {
-          setError('La contraseña debe tener al menos 6 caracteres');
+        const errorMsg = err.response?.data?.error || "";
+        if (errorMsg.includes("expired")) {
+          setError(
+            "El código de recuperación ha expirado. Por favor, solicita uno nuevo.",
+          );
+        } else if (errorMsg.includes("Invalid reset code")) {
+          setError(
+            "Código de recuperación inválido. Verifica que esté correcto.",
+          );
+        } else if (errorMsg.includes("Password must be")) {
+          setError("La contraseña debe tener al menos 6 caracteres");
         } else {
-          setError('Código de recuperación inválido o expirado.');
+          setError("Código de recuperación inválido o expirado.");
         }
       } else if (err.response?.status === 500) {
-        setError('Error del servidor. Por favor, intenta nuevamente más tarde.');
+        setError(
+          "Error del servidor. Por favor, intenta nuevamente más tarde.",
+        );
       } else {
-        setError('Error al restablecer la contraseña. Por favor, intenta nuevamente.');
+        setError(
+          "Error al restablecer la contraseña. Por favor, intenta nuevamente.",
+        );
       }
     } finally {
       setLoading(false);
@@ -97,8 +105,12 @@ function ResetPasswordForm() {
               </svg>
             </div>
             <h1 className="text-4xl font-bold text-indigo-600 mb-2">MoTaxi</h1>
-            <h2 className="text-2xl font-semibold text-gray-800">Restablecer Contraseña</h2>
-            <p className="mt-2 text-gray-600">Ingresa el código que recibiste y tu nueva contraseña</p>
+            <h2 className="text-2xl font-semibold text-gray-800">
+              Restablecer Contraseña
+            </h2>
+            <p className="mt-2 text-gray-600">
+              Ingresa el código que recibiste y tu nueva contraseña
+            </p>
           </div>
 
           {/* Success Message */}
@@ -117,8 +129,12 @@ function ResetPasswordForm() {
                   />
                 </svg>
                 <div>
-                  <p className="font-medium">¡Contraseña restablecida exitosamente!</p>
-                  <p className="text-sm mt-1">Redirigiendo al inicio de sesión...</p>
+                  <p className="font-medium">
+                    ¡Contraseña restablecida exitosamente!
+                  </p>
+                  <p className="text-sm mt-1">
+                    Redirigiendo al inicio de sesión...
+                  </p>
                 </div>
               </div>
             </div>
@@ -166,7 +182,10 @@ function ResetPasswordForm() {
               </div>
 
               <div>
-                <label htmlFor="resetCode" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="resetCode"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Código de Recuperación
                 </label>
                 <input
@@ -180,11 +199,16 @@ function ResetPasswordForm() {
                   maxLength={6}
                   pattern="[0-9]{6}"
                 />
-                <p className="mt-1 text-xs text-gray-500">Código de 6 dígitos</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Código de 6 dígitos
+                </p>
               </div>
 
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="newPassword"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Nueva Contraseña
                 </label>
                 <input
@@ -223,7 +247,7 @@ function ResetPasswordForm() {
                 disabled={loading}
                 className="btn btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Restableciendo...' : 'Restablecer Contraseña'}
+                {loading ? "Restableciendo..." : "Restablecer Contraseña"}
               </button>
             </form>
           )}
@@ -244,7 +268,12 @@ function ResetPasswordForm() {
                 href="/auth/login"
                 className="inline-flex items-center text-sm text-gray-600 hover:text-gray-800 transition-colors"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

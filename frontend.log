@@ -1,0 +1,46 @@
+
+> motaxi@2.0.0 dev
+> next dev
+
+   ▲ Next.js 15.5.9
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.160:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1055ms (219 modules)
+ ○ Compiling /passenger ...
+ ✓ Compiled /passenger in 4.3s (1133 modules)
+ GET /passenger 200 in 6006ms
+ ✓ Compiled in 1682ms (400 modules)
+ GET /passenger 200 in 156ms
+ POST /passenger 200 in 57ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1778ms (1135 modules)
+ GET / 200 in 2341ms
+ ○ Compiling /driver ...
+ ✓ Compiled /driver in 1173ms (1144 modules)
+ GET /driver 200 in 1492ms
+ GET / 200 in 70ms
+ GET / 200 in 49ms
+ GET /driver 200 in 36ms
+ GET / 200 in 53ms
+ GET / 200 in 58ms
+ GET /driver 200 in 34ms
+ GET / 200 in 54ms
+ GET / 200 in 43ms
+ GET /driver 200 in 37ms
+ GET / 200 in 66ms
+ GET / 200 in 50ms
+ GET /driver 200 in 27ms
+ GET / 200 in 62ms
+ GET / 200 in 44ms
+ GET /driver 200 in 32ms
+ GET / 200 in 30ms
+ GET / 200 in 61ms
+ GET /driver 200 in 37ms
+ GET / 200 in 42ms
+ GET / 200 in 37ms
+[?25h

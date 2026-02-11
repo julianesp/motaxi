@@ -1,21 +1,14 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Definir rutas públicas que NO requieren autenticación
+// Definir rutas públicas que NO requieren autenticación de Clerk
+// IMPORTANTE: Hacemos todas las rutas públicas para Clerk porque usamos autenticación personalizada
 const isPublicRoute = createRouteMatcher([
-  '/',
-  '/auth/login(.*)',
-  '/auth/register(.*)',
-  '/auth/role-selection(.*)',
-  '/auth/forgot-password(.*)',
-  '/auth/reset-password(.*)',
-  '/api/webhooks(.*)',
+  '/(.*)', // Todas las rutas son públicas para Clerk
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  // Si la ruta no es pública, protegerla
-  if (!isPublicRoute(request)) {
-    await auth.protect();
-  }
+  // No proteger ninguna ruta con Clerk, ya que usamos autenticación personalizada
+  // El AuthContext se encarga de la protección de rutas
 });
 
 export const config = {

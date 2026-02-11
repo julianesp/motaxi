@@ -1,12 +1,21 @@
 name = "motaxi-api"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 account_id = "b85347650ec6de9ad5b2873c3389d0e6"
+
+# Configuración de dominio personalizado
+# El custom domain se debe configurar después del despliegue
+# usando el dashboard de Cloudflare Workers
 
 # Variables de entorno
 [vars]
 JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
-CORS_ORIGIN = "*"
+# CORS_ORIGIN permite requests desde el dominio principal
+# En desarrollo permite localhost, en producción usa motaxi.dev
+CORS_ORIGIN = "https://motaxi.dev,https://www.motaxi.dev,http://localhost:3000"
+# RESEND_API_KEY y RESEND_FROM_EMAIL se configuran en .dev.vars para desarrollo
+# y como secrets en producción con: wrangler secret put RESEND_API_KEY
 
 # Configuración de D1 Database
 [[d1_databases]]

@@ -3,7 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" --names \"frontend,backend\" --prefix-colors \"cyan,magenta\"",
+    "dev:frontend": "next dev",
+    "dev:backend": "cd backend && npm run dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -13,10 +15,12 @@
   },
   "dependencies": {
     "@clerk/localizations": "^3.35.2",
-    "@clerk/nextjs": "^6.36.10",
+    "@clerk/nextjs": "^6.37.1",
+    "@googlemaps/js-api-loader": "^2.0.2",
+    "@react-google-maps/api": "^2.20.8",
     "axios": "^1.7.9",
     "leaflet": "^1.9.4",
-    "next": "^15.1.6",
+    "next": "^16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -26,6 +30,7 @@
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.1",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.6",
     "postcss": "^8.4.49",

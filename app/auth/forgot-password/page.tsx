@@ -1,27 +1,29 @@
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import { apiClient } from '@/lib/api-client';
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Navbar from "@/components/Navbar/Navbar";
+import { apiClient } from "@/lib/api-client";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [emailOrPhone, setEmailOrPhone] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resetCode, setResetCode] = useState('');
+  const [resetCode, setResetCode] = useState("");
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setDebugInfo(null);
     setLoading(true);
 
     try {
-      const response = await apiClient.post('/auth/forgot-password', { emailOrPhone });
+      const response = await apiClient.post("/auth/forgot-password", {
+        emailOrPhone,
+      });
 
       // Mostrar información de debug (el código de recuperación)
       if (response.data.debug) {
@@ -30,16 +32,24 @@ export default function ForgotPasswordPage() {
       }
 
       // Redirigir a la página de reset con el email/phone
-      router.push(`/auth/reset-password?identifier=${encodeURIComponent(emailOrPhone)}`);
+      router.push(
+        `/auth/reset-password?identifier=${encodeURIComponent(emailOrPhone)}`,
+      );
     } catch (err: any) {
-      console.error('Forgot password error:', err);
+      console.error("Forgot password error:", err);
 
       if (err.response?.status === 400) {
-        setError('Por favor, ingresa un correo electrónico o número de teléfono válido.');
+        setError(
+          "Por favor, ingresa un correo electrónico o número de teléfono válido.",
+        );
       } else if (err.response?.status === 500) {
-        setError('Error del servidor. Por favor, intenta nuevamente más tarde.');
+        setError(
+          "Error del servidor. Por favor, intenta nuevamente más tarde.",
+        );
       } else {
-        setError('Error al procesar la solicitud. Por favor, intenta nuevamente.');
+        setError(
+          "Error al procesar la solicitud. Por favor, intenta nuevamente.",
+        );
       }
     } finally {
       setLoading(false);
@@ -69,9 +79,12 @@ export default function ForgotPasswordPage() {
               </svg>
             </div>
             <h1 className="text-4xl font-bold text-indigo-600 mb-2">MoTaxi</h1>
-            <h2 className="text-2xl font-semibold text-gray-800">¿Olvidaste tu contraseña?</h2>
+            <h2 className="text-2xl font-semibold text-gray-800">
+              ¿Olvidaste tu contraseña?
+            </h2>
             <p className="mt-2 text-gray-600">
-              Ingresa tu correo electrónico y te ayudaremos a recuperar el acceso
+              Ingresa tu correo electrónico y te ayudaremos a recuperar el
+              acceso
             </p>
           </div>
 
@@ -91,9 +104,13 @@ export default function ForgotPasswordPage() {
                   />
                 </svg>
                 <div>
-                  <p className="font-medium mb-2">Código de recuperación generado:</p>
+                  <p className="font-medium mb-2">
+                    Código de recuperación generado:
+                  </p>
                   <p className="text-2xl font-bold">{debugInfo.resetCode}</p>
-                  <p className="text-sm mt-2">Para: {debugInfo.email || debugInfo.phone}</p>
+                  <p className="text-sm mt-2">
+                    Para: {debugInfo.email || debugInfo.phone}
+                  </p>
                   <p className="text-xs mt-2 text-green-600">
                     (Este código expira en 15 minutos)
                   </p>
@@ -125,7 +142,10 @@ export default function ForgotPasswordPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div>
-              <label htmlFor="emailOrPhone" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="emailOrPhone"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Correo Electrónico o Teléfono
               </label>
               <input
@@ -134,7 +154,7 @@ export default function ForgotPasswordPage() {
                 value={emailOrPhone}
                 onChange={(e) => setEmailOrPhone(e.target.value)}
                 required
-                className="input"
+                className="input text-black"
                 placeholder="tu@email.com o 3001234567"
                 autoComplete="email"
               />
@@ -148,16 +168,16 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="btn btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Procesando...' : 'Enviar código de recuperación'}
+              {loading ? "Procesando..." : "Enviar código de recuperación"}
             </button>
           </form>
 
           {/* Ya tienes el código? */}
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              ¿Ya tienes un código de recuperación?{' '}
+              ¿Ya tienes un código de recuperación?{" "}
               <Link
-                href={`/auth/reset-password${emailOrPhone ? `?identifier=${encodeURIComponent(emailOrPhone)}` : ''}`}
+                href={`/auth/reset-password${emailOrPhone ? `?identifier=${encodeURIComponent(emailOrPhone)}` : ""}`}
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
                 Ingresar código

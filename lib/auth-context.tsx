@@ -27,29 +27,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Verificar si hay usuario autenticado al cargar
   const checkAuth = useCallback(async () => {
-    // No verificar autenticación en páginas públicas
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      const publicPaths = [
-        '/', // Página de inicio (landing page)
-        '/auth/login',
-        '/auth/register',
-        '/auth/role-selection',
-        '/auth/forgot-password'
-      ];
-
-      if (publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
-        setLoading(false);
-        return;
-      }
-    }
-
     try {
-      const userData = await authAPI.getCurrentUser();
-      setUser(userData);
+      // Solo intentar obtener el usuario si hay un token
+      if (typeof window !== 'undefined') {
+        const cookies = document.cookie.split(';');
+        const authCookie = cookies.find(cookie => cookie.trim().startsWith('authToken='));
+
+        if (authCookie && authCookie.split('=')[1]) {
+          try {
+            const userData = await authAPI.getCurrentUser();
+            setUser(userData);
+          } catch (apiError) {
+            // Si falla la llamada API, solo establecer null si no hay usuario previo
+            console.error('Error getting current user:', apiError);
+            // No establecer null aquí para evitar perder el usuario temporalmente
+          }
+        } else {
+          // No hay token, definitivamente no hay usuario
+          setUser(null);
+        }
+      }
     } catch (error) {
       console.error('Error checking auth:', error);
-      setUser(null);
+      // No establecer null aquí para evitar perder el usuario temporalmente
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
     } catch (error) {
       console.error('Error refreshing user:', error);
-      setUser(null);
+      // No establecer null aquí, solo loguear el error
+      // El usuario puede seguir siendo válido aunque falle el refresh
     }
   };
 

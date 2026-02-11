@@ -65,10 +65,9 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Token expirado o inválido
-      removeAuthToken();
+      // Verificar si es un checkAuth fallido (no debería remover token ni redirigir)
+      const isCheckingAuth = error.config?.url === '/auth/me';
 
-      // Redirigir al login solo si estamos en el cliente Y no estamos en una página pública
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
         const publicPaths = [
@@ -76,12 +75,20 @@ apiClient.interceptors.response.use(
           '/auth/login',
           '/auth/register',
           '/auth/role-selection',
-          '/auth/forgot-password'
+          '/auth/forgot-password',
+          '/auth/reset-password'
         ];
 
-        // Solo redirigir si NO estamos en una página pública
-        if (!publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'))) {
+        const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));
+
+        // Solo remover token y redirigir si NO es checkAuth y NO estamos en página pública
+        if (!isCheckingAuth && !isPublicPath) {
+          // Token expirado o inválido en una página protegida
+          removeAuthToken();
           window.location.href = '/auth/login';
+        } else if (isCheckingAuth && !isPublicPath) {
+          // checkAuth falló en página protegida, solo remover token (no redirigir aquí)
+          removeAuthToken();
         }
       }
     }
@@ -117,6 +124,53 @@ export const authAPI = {
 
   getCurrentUser: async () => {
     const response = await apiClient.get('/auth/me');
+    return response.data;
+  },
+};
+
+// API de viajes
+export const tripsAPI = {
+  createTrip: async (tripData: {
+    pickup_latitude: number;
+    pickup_longitude: number;
+    pickup_address: string;
+    dropoff_latitude: number;
+    dropoff_longitude: number;
+    dropoff_address: string;
+    fare: number;
+    distance_km: number;
+  }) => {
+    const response = await apiClient.post('/trips', tripData);
+    return response.data;
+  },
+
+  getActiveTrips: async () => {
+    const response = await apiClient.get('/trips/active');
+    return response.data;
+  },
+
+  getTripHistory: async () => {
+    const response = await apiClient.get('/trips/history');
+    return response.data;
+  },
+
+  acceptTrip: async (tripId: string) => {
+    const response = await apiClient.put(`/trips/${tripId}/accept`);
+    return response.data;
+  },
+
+  updateTripStatus: async (tripId: string, status: string) => {
+    const response = await apiClient.put(`/trips/${tripId}/status`, { status });
+    return response.data;
+  },
+
+  getTrip: async (tripId: string) => {
+    const response = await apiClient.get(`/trips/${tripId}`);
+    return response.data;
+  },
+
+  rateTrip: async (tripId: string, rating: number, comment?: string) => {
+    const response = await apiClient.put(`/trips/${tripId}/rate`, { rating, comment });
     return response.data;
   },
 };

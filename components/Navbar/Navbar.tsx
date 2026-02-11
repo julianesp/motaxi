@@ -22,14 +22,14 @@ export default function Navbar() {
   const isHomePage = pathname === '/';
 
   return (
-    <nav className={`${isHomePage ? 'absolute top-0 left-0 right-0 z-50' : 'bg-white shadow-md'}`}>
+    <nav className={`fixed top-0 left-0 right-0 backdrop-blur-sm z-50 ${isHomePage ? 'bg-transparent' : 'bg-white shadow-md'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
             <button
               onClick={() => router.push('/')}
-              className={`text-2xl font-bold ${
+              className={`text-2xl shadow-2xl font-bold ${
                 isHomePage ? 'text-white' : 'text-indigo-600'
               } hover:opacity-80 transition-opacity`}
             >

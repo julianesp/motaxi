@@ -16,6 +16,7 @@
     "bcryptjs": "^2.4.3",
     "expo-build-properties": "~1.0.10",
     "hono": "^4.11.2",
+    "resend": "^6.9.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
-import dynamic from 'next/dynamic';
-import { MUNICIPALITIES } from '@/lib/constants/municipalities';
-import Navbar from '@/components/Navbar';
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import dynamic from "next/dynamic";
+import { MUNICIPALITIES } from "@/lib/constants/municipalities";
+import Navbar from "@/components/Navbar/Navbar";
 
 // Cargar el mapa dinámicamente para evitar problemas de SSR
-const LandingMap = dynamic(() => import('@/components/LandingMap'), {
+const LandingMap = dynamic(() => import("@/components/LandingMap"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl">
@@ -28,44 +28,61 @@ export default function HomePage() {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto"></div>
-          <p className="mt-4 text-white text-lg font-medium">Cargando MoTaxi...</p>
+          <p className="mt-4 text-white text-lg font-medium">
+            Cargando MoTaxi...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div
+      className="min-h-screen"
+      style={{
+        background: "#000000",
+        backgroundImage: "linear-gradient(to top, #0f9b0f, #000000)",
+      }}
+    >
       {/* Navbar */}
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+      <section
+        className="relative overflow-hidden"
+        style={{
+          background: "linear-gradient(to bottom right, #0f9b0f, #000000)",
+        }}
+      >
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Contenido */}
             <div className="text-white space-y-8">
               <div className="inline-block">
-                <span className="px-4 py-2 bg-white bg-opacity-20 rounded-full text-sm font-semibold backdrop-blur-sm">
+                <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
                   Valle de Sibundoy
                 </span>
               </div>
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+              <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
                 Tu transporte,
                 <br />
-                <span className="text-yellow-300">a un toque</span>
+                <span className="text-green-400">a un toque</span>
               </h1>
-              <p className="text-xl lg:text-2xl text-indigo-100 max-w-xl">
-                Conectando los 4 municipios del Valle de Sibundoy: Santiago, Colón, Sibundoy y
-                San Francisco
+              <p className="text-xl lg:text-2xl text-gray-200 max-w-xl">
+                Conectando los 4 municipios del Valle de Sibundoy: Santiago,
+                Colón, Sibundoy y San Francisco
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 {user ? (
                   // Usuario autenticado - mostrar botón para ir a su dashboard
                   <button
-                    onClick={() => router.push(user.role === 'passenger' ? '/passenger' : '/driver')}
-                    className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
+                    onClick={() =>
+                      router.push(
+                        user.role === "passenger" ? "/passenger" : "/driver",
+                      )
+                    }
+                    className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                   >
                     Ir a mi Dashboard
                   </button>
@@ -73,14 +90,14 @@ export default function HomePage() {
                   // Usuario no autenticado - mostrar botones de registro e inicio de sesión
                   <>
                     <button
-                      onClick={() => router.push('/auth/register')}
-                      className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
+                      onClick={() => router.push("/auth/register")}
+                      className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                     >
                       Comenzar ahora
                     </button>
                     <button
-                      onClick={() => router.push('/auth/login')}
-                      className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-indigo-600 transition-all duration-200"
+                      onClick={() => router.push("/auth/login")}
+                      className="px-8 py-4 bg-transparent border-2 border-green-400 text-white font-bold rounded-xl hover:bg-green-500 hover:border-green-500 transition-all duration-200"
                     >
                       Iniciar sesión
                     </button>
@@ -91,15 +108,21 @@ export default function HomePage() {
               {/* Estadísticas */}
               <div className="grid grid-cols-3 gap-6 pt-8">
                 <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">4</div>
+                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">
+                    4
+                  </div>
                   <div className="text-sm text-indigo-100">Municipios</div>
                 </div>
                 <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">24/7</div>
+                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">
+                    24/7
+                  </div>
                   <div className="text-sm text-indigo-100">Disponible</div>
                 </div>
                 <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">35k+</div>
+                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">
+                    35k+
+                  </div>
                   <div className="text-sm text-indigo-100">Habitantes</div>
                 </div>
               </div>
@@ -149,7 +172,9 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
                   {municipality.name[0]}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{municipality.name}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  {municipality.name}
+                </h3>
                 <p className="text-gray-600 mb-4">{municipality.description}</p>
                 {municipality.population && (
                   <div className="flex items-center text-sm text-gray-500">
@@ -205,10 +230,12 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Rápido y Confiable</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Rápido y Confiable
+              </h3>
               <p className="text-gray-600">
-                Encuentra un conductor en minutos. Sistema de geolocalización en tiempo real para
-                conexiones instantáneas.
+                Encuentra un conductor en minutos. Sistema de geolocalización en
+                tiempo real para conexiones instantáneas.
               </p>
             </div>
 
@@ -231,8 +258,8 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Seguro</h3>
               <p className="text-gray-600">
-                Conductores verificados y sistema de calificaciones. Tu seguridad es nuestra
-                prioridad.
+                Conductores verificados y sistema de calificaciones. Tu
+                seguridad es nuestra prioridad.
               </p>
             </div>
 
@@ -253,9 +280,12 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Tarifas Justas</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Tarifas Justas
+              </h3>
               <p className="text-gray-600">
-                Precios transparentes y competitivos. Sabe cuánto pagarás antes de viajar.
+                Precios transparentes y competitivos. Sabe cuánto pagarás antes
+                de viajar.
               </p>
             </div>
           </div>
@@ -274,13 +304,13 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => router.push('/auth/role-selection')}
+                onClick={() => router.push("/auth/role-selection")}
                 className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
               >
                 Registrarse como Pasajero
               </button>
               <button
-                onClick={() => router.push('/auth/role-selection')}
+                onClick={() => router.push("/auth/role-selection")}
                 className="px-8 py-4 bg-yellow-400 text-gray-900 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
               >
                 Registrarse como Conductor
@@ -289,36 +319,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-4">MoTaxi</h3>
-              <p className="text-gray-400">
-                Conectando el Valle de Sibundoy, un viaje a la vez.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Municipios</h4>
-              <ul className="space-y-2 text-gray-400">
-                {MUNICIPALITIES.map((m) => (
-                  <li key={m.id}>{m.name}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Contacto</h4>
-              <p className="text-gray-400">Valle de Sibundoy, Putumayo</p>
-              <p className="text-gray-400">Colombia</p>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2026 MoTaxi. Todos los derechos reservados.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

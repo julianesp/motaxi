@@ -761,6 +761,21 @@ export default function DriverProfilePage() {
               </svg>
             </button>
 
+            <a
+              href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-md p-4 flex items-center justify-between hover:from-purple-700 hover:to-indigo-700 transition-all"
+            >
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span className="font-medium text-white">Contactar Soporte</span>
+              </div>
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+
             <button
               onClick={handleLogout}
               className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors"

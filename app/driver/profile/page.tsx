@@ -42,10 +42,10 @@ export default function DriverProfilePage() {
     vehicle_color: '',
     vehicle_plate: '',
     license_number: '',
-    base_fare: 5000,
-    intercity_fare: 10000,
-    rural_fare: 8000,
-    per_km_fare: 2000,
+    base_fare: '' as number | string,
+    intercity_fare: '' as number | string,
+    rural_fare: '' as number | string,
+    per_km_fare: '' as number | string,
   });
 
   useEffect(() => {
@@ -99,10 +99,10 @@ export default function DriverProfilePage() {
           vehicle_color: driver.vehicle_color || '',
           vehicle_plate: driver.vehicle_plate || '',
           license_number: driver.license_number || '',
-          base_fare: driver.base_fare || 5000,
-          intercity_fare: driver.intercity_fare || 10000,
-          rural_fare: driver.rural_fare || 8000,
-          per_km_fare: driver.per_km_fare || 2000,
+          base_fare: driver.base_fare || '',
+          intercity_fare: driver.intercity_fare || '',
+          rural_fare: driver.rural_fare || '',
+          per_km_fare: driver.per_km_fare || '',
         });
       }
     } catch (error) {
@@ -135,8 +135,17 @@ export default function DriverProfilePage() {
     try {
       const { driversAPI } = await import('@/lib/api-client');
 
+      // Preparar datos con valores por defecto para campos vacíos
+      const dataToSend = {
+        ...driverFormData,
+        base_fare: driverFormData.base_fare === '' ? 5000 : driverFormData.base_fare,
+        intercity_fare: driverFormData.intercity_fare === '' ? 10000 : driverFormData.intercity_fare,
+        rural_fare: driverFormData.rural_fare === '' ? 8000 : driverFormData.rural_fare,
+        per_km_fare: driverFormData.per_km_fare === '' ? 2000 : driverFormData.per_km_fare,
+      };
+
       // Actualizar perfil del conductor
-      await driversAPI.updateProfile(driverFormData);
+      await driversAPI.updateProfile(dataToSend);
 
       // Recargar información
       await fetchDriverInfo();
@@ -549,7 +558,8 @@ export default function DriverProfilePage() {
                             <input
                               type="number"
                               value={driverFormData.base_fare}
-                              onChange={(e) => setDriverFormData({ ...driverFormData, base_fare: parseInt(e.target.value) || 0 })}
+                              onChange={(e) => setDriverFormData({ ...driverFormData, base_fare: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                              placeholder="2000"
                               className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
                               min="0"
                               step="1000"
@@ -576,7 +586,8 @@ export default function DriverProfilePage() {
                             <input
                               type="number"
                               value={driverFormData.intercity_fare}
-                              onChange={(e) => setDriverFormData({ ...driverFormData, intercity_fare: parseInt(e.target.value) || 0 })}
+                              onChange={(e) => setDriverFormData({ ...driverFormData, intercity_fare: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                              placeholder="10000"
                               className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
                               min="0"
                               step="1000"
@@ -603,7 +614,8 @@ export default function DriverProfilePage() {
                             <input
                               type="number"
                               value={driverFormData.rural_fare}
-                              onChange={(e) => setDriverFormData({ ...driverFormData, rural_fare: parseInt(e.target.value) || 0 })}
+                              onChange={(e) => setDriverFormData({ ...driverFormData, rural_fare: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                              placeholder="8000"
                               className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                               min="0"
                               step="1000"
@@ -630,7 +642,8 @@ export default function DriverProfilePage() {
                             <input
                               type="number"
                               value={driverFormData.per_km_fare}
-                              onChange={(e) => setDriverFormData({ ...driverFormData, per_km_fare: parseInt(e.target.value) || 0 })}
+                              onChange={(e) => setDriverFormData({ ...driverFormData, per_km_fare: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                              placeholder="2000"
                               className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
                               min="0"
                               step="500"

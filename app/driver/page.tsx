@@ -360,24 +360,36 @@ export default function DriverHomePage() {
                                 <p className="text-xs text-gray-500">{trip.distance_km.toFixed(1)} km</p>
                               </div>
                             </div>
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const { tripsAPI } = await import('@/lib/api-client');
-                                  await tripsAPI.acceptTrip(trip.id);
-                                  alert('¡Viaje aceptado! Dirígete al punto de recogida.');
-                                  // Recargar viajes disponibles
-                                  const data = await tripsAPI.getActiveTrips();
-                                  setAvailableTrips(data.trips || []);
-                                } catch (error) {
-                                  console.error('Error accepting trip:', error);
-                                  alert('Error al aceptar el viaje. Intenta nuevamente.');
-                                }
-                              }}
-                              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-                            >
-                              Aceptar Viaje
-                            </button>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const { tripsAPI } = await import('@/lib/api-client');
+                                    await tripsAPI.acceptTrip(trip.id);
+                                    alert('¡Viaje aceptado! Dirígete al punto de recogida.');
+                                    // Recargar viajes disponibles
+                                    const data = await tripsAPI.getActiveTrips();
+                                    setAvailableTrips(data.trips || []);
+                                  } catch (error) {
+                                    console.error('Error accepting trip:', error);
+                                    alert('Error al aceptar el viaje. Intenta nuevamente.');
+                                  }
+                                }}
+                                className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                              >
+                                Aceptar Viaje
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // Remover el viaje de la lista local
+                                  setAvailableTrips(availableTrips.filter(t => t.id !== trip.id));
+                                }}
+                                className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                                title="Cancelar este viaje"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

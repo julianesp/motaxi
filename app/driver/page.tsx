@@ -202,26 +202,26 @@ export default function DriverHomePage() {
         </div>
 
         {/* Status Card */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg p-4 z-20">
-          <div className="flex items-center space-x-4">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-2 z-20">
+          <div className="flex items-center space-x-2">
             <button
               onClick={toggleAvailability}
               disabled={isUpdatingAvailability}
-              className={`relative inline-flex h-10 w-20 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
                 isAvailable ? 'bg-green-500' : 'bg-gray-300'
               } ${isUpdatingAvailability ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
-                className={`inline-block h-8 w-8 transform rounded-full bg-white transition-transform ${
-                  isAvailable ? 'translate-x-11' : 'translate-x-1'
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  isAvailable ? 'translate-x-6' : 'translate-x-0.5'
                 }`}
               />
             </button>
-            <span className="text-gray-700 font-medium">
+            <span className="text-gray-700 text-sm">
               {isUpdatingAvailability
                 ? 'Actualizando...'
                 : isAvailable
-                ? 'Conectado - Esperando viajes'
+                ? 'Conectado'
                 : 'Desconectado'}
             </span>
           </div>

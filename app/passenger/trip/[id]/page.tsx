@@ -30,7 +30,9 @@ interface TripData {
   distance_km: number;
   driver_name?: string;
   driver_phone?: string;
-  driver_rating?: number;
+  driver_rating?: number; // Rating promedio del conductor
+  passenger_rating?: number; // Calificación que el conductor le dio al pasajero
+  driver_comment?: string; // Comentario del pasajero sobre el conductor
   vehicle_model?: string;
   vehicle_color?: string;
   vehicle_plate?: string;
@@ -45,6 +47,10 @@ export default function TripTrackingPage() {
   const [trip, setTrip] = useState<TripData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [isRated, setIsRated] = useState(false);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
 
   // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
@@ -98,11 +104,17 @@ export default function TripTrackingPage() {
         if (data.trip) {
           setTrip(data.trip);
 
-          // Si el viaje se completó o canceló, redirigir después de 3 segundos
-          if (data.trip.status === 'completed' || data.trip.status === 'cancelled') {
+          // Si el viaje fue cancelado, redirigir después de 3 segundos
+          if (data.trip.status === 'cancelled') {
             setTimeout(() => {
               router.push('/passenger');
             }, 3000);
+          }
+
+          // Si el viaje fue completado y ya fue calificado, redirigir inmediatamente
+          if (data.trip.status === 'completed' && data.trip.driver_comment !== null && data.trip.driver_comment !== undefined) {
+            // Ya fue calificado, redirigir
+            router.push('/passenger');
           }
         }
       } catch (error) {
@@ -249,9 +261,9 @@ export default function TripTrackingPage() {
               <div className={`flex-1 bg-gradient-to-r from-${statusInfo.color}-50 to-${statusInfo.color}-100 border border-${statusInfo.color}-200 rounded-xl p-3 flex items-center space-x-3`}>
                 <span className="text-2xl">{statusInfo.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <h2 className={`text-base font-bold text-${statusInfo.color}-900 truncate`}>{statusInfo.title}</h2>
+                  <h2 className={`text-base font-bold text-${statusInfo.color}-900 truncate text-black`}>{statusInfo.title}</h2>
                   {!isPanelMinimized && (
-                    <p className={`text-sm text-${statusInfo.color}-700`}>{statusInfo.message}</p>
+                    <p className={`text-sm text-${statusInfo.color}-700 text-black`}>{statusInfo.message}</p>
                   )}
                 </div>
               </div>
@@ -397,17 +409,6 @@ export default function TripTrackingPage() {
                       </svg>
                       <span className="font-semibold">WhatsApp</span>
                     </a>
-
-                    {/* SMS */}
-                    <a
-                      href={`sms:${trip.driver_phone}?body=Hola,%20soy%20tu%20pasajero%20en%20MoTaxi.%20Viaje%20%23${trip.id.slice(0, 8)}`}
-                      className="flex items-center justify-center space-x-2 py-2.5 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-5 5v-5z" />
-                      </svg>
-                      <span>Enviar SMS</span>
-                    </a>
                   </div>
                   <div className="mt-3 flex items-center justify-center text-xs text-indigo-600">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,7 +458,7 @@ export default function TripTrackingPage() {
                       await tripsAPI.updateTripStatus(trip.id, 'completed');
                       // Actualizar estado local
                       setTrip({ ...trip, status: 'completed' });
-                      alert('✅ ¡Viaje completado! Gracias por usar MoTaxi.');
+                      alert('✅ ¡Viaje completado! Por favor califica tu experiencia.');
                     } catch (error) {
                       console.error('Error completing trip:', error);
                       alert('Error al completar el viaje. Intenta nuevamente.');
@@ -470,6 +471,110 @@ export default function TripTrackingPage() {
                   </svg>
                   <span>Llegué a mi destino - Finalizar viaje</span>
                 </button>
+              </div>
+            )}
+
+            {/* Calificación del conductor */}
+            {trip.status === 'completed' && !isRated && (
+              <div className="pt-4 border-t border-gray-200">
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl p-6">
+                  <div className="text-center mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">¡Viaje Completado!</h3>
+                    <p className="text-gray-700">¿Cómo fue tu experiencia con {trip.driver_name}?</p>
+                  </div>
+
+                  {/* Estrellas de calificación */}
+                  <div className="flex justify-center space-x-2 mb-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setRating(star)}
+                        className="transition-all transform hover:scale-110 focus:outline-none"
+                      >
+                        <svg
+                          className={`w-10 h-10 ${
+                            star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+                          }`}
+                          fill={star <= rating ? 'currentColor' : 'none'}
+                          stroke="currentColor"
+                          strokeWidth={1.5}
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                          />
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Texto de la calificación */}
+                  {rating > 0 && (
+                    <p className="text-center text-sm font-semibold text-gray-700 mb-4">
+                      {rating === 5 && '⭐ ¡Excelente!'}
+                      {rating === 4 && '⭐ Muy bueno'}
+                      {rating === 3 && '⭐ Bueno'}
+                      {rating === 2 && '⭐ Regular'}
+                      {rating === 1 && '⭐ Necesita mejorar'}
+                    </p>
+                  )}
+
+                  {/* Comentario opcional */}
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Cuéntanos sobre tu experiencia (opcional)"
+                    className="w-full p-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent mb-4"
+                    rows={3}
+                  />
+
+                  {/* Botones */}
+                  <div className="space-y-3">
+                    <button
+                      onClick={async () => {
+                        if (rating === 0) {
+                          alert('Por favor selecciona una calificación');
+                          return;
+                        }
+
+                        setIsSubmittingRating(true);
+                        try {
+                          const { tripsAPI } = await import('@/lib/api-client');
+                          await tripsAPI.rateTrip(trip.id, rating, comment || undefined);
+                          setIsRated(true);
+                          alert('✅ ¡Gracias por tu calificación!');
+                          // Redirigir inmediatamente con parámetro para evitar polling
+                          router.push('/passenger?justCompleted=true');
+                        } catch (error) {
+                          console.error('Error rating trip:', error);
+                          alert('Error al enviar la calificación. Intenta nuevamente.');
+                        } finally {
+                          setIsSubmittingRating(false);
+                        }
+                      }}
+                      disabled={rating === 0 || isSubmittingRating}
+                      className={`w-full py-3 px-6 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-xl font-bold hover:from-yellow-600 hover:to-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2 ${
+                        (rating === 0 || isSubmittingRating) ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>{isSubmittingRating ? 'Enviando...' : 'Enviar Calificación'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        router.push('/passenger?justCompleted=true');
+                      }}
+                      className="w-full py-2 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-all duration-200"
+                    >
+                      Omitir por ahora
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
             </>

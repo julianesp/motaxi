@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import dynamic from "next/dynamic";
@@ -35,6 +35,66 @@ interface LocationInput {
   latitude: number | null;
   longitude: number | null;
   place_id?: string;
+}
+
+// Componente separado que maneja el polling de viajes activos
+function ActiveTripChecker({ user, router }: { user: any; router: any }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Verificar si acabamos de completar un viaje
+    const justCompleted = searchParams.get('justCompleted') === 'true';
+
+    // Verificar si hay un viaje activo y redirigir a la vista de tracking
+    const checkActiveTrip = async () => {
+      if (!user || user.role !== 'passenger') return;
+
+      try {
+        const { tripsAPI } = await import("@/lib/api-client");
+        const data = await tripsAPI.getCurrentTrip();
+
+        if (data.trip) {
+          // Hay un viaje activo, redirigir a tracking
+          router.push(`/passenger/trip/${data.trip.id}`);
+        }
+      } catch (error) {
+        console.error('Error checking active trip:', error);
+      }
+    };
+
+    if (user?.role === 'passenger') {
+      let interval: NodeJS.Timeout | null = null;
+      let initialDelay: NodeJS.Timeout | null = null;
+
+      // Si acabamos de completar un viaje, esperar 3 segundos antes de iniciar polling
+      // Esto da tiempo a que la BD se actualice completamente
+      if (justCompleted) {
+        // Limpiar el parámetro de la URL
+        router.replace('/passenger');
+
+        // Esperar 3 segundos antes de iniciar el polling
+        initialDelay = setTimeout(() => {
+          checkActiveTrip();
+          // Después de la primera verificación, continuar cada 5 segundos
+          interval = setInterval(checkActiveTrip, 5000);
+        }, 3000);
+      } else {
+        // Comportamiento normal: verificar inmediatamente
+        checkActiveTrip();
+
+        // Verificar cada 5 segundos
+        interval = setInterval(checkActiveTrip, 5000);
+      }
+
+      // Cleanup function
+      return () => {
+        if (interval) clearInterval(interval);
+        if (initialDelay) clearTimeout(initialDelay);
+      };
+    }
+  }, [user, router, searchParams]);
+
+  return null;
 }
 
 export default function PassengerHomePage() {
@@ -85,35 +145,6 @@ export default function PassengerHomePage() {
       }
     }
   }, [user, loading, router, hasCheckedAuth]);
-
-  useEffect(() => {
-    // Verificar si hay un viaje activo y redirigir a la vista de tracking
-    const checkActiveTrip = async () => {
-      if (!user || user.role !== 'passenger') return;
-
-      try {
-        const { tripsAPI } = await import("@/lib/api-client");
-        const data = await tripsAPI.getCurrentTrip();
-
-        if (data.trip) {
-          // Hay un viaje activo, redirigir a tracking
-          router.push(`/passenger/trip/${data.trip.id}`);
-        }
-      } catch (error) {
-        console.error('Error checking active trip:', error);
-      }
-    };
-
-    if (user?.role === 'passenger') {
-      // Verificar inmediatamente
-      checkActiveTrip();
-
-      // Verificar cada 5 segundos
-      const interval = setInterval(checkActiveTrip, 5000);
-
-      return () => clearInterval(interval);
-    }
-  }, [user, router]);
 
   useEffect(() => {
     // Obtener ubicación actual del usuario
@@ -427,6 +458,11 @@ export default function PassengerHomePage() {
 
   return (
     <div className="h-screen flex flex-col">
+      {/* Componente para verificar viajes activos con Suspense */}
+      <Suspense fallback={null}>
+        <ActiveTripChecker user={user} router={router} />
+      </Suspense>
+
       {/* Header */}
       <header className="bg-white shadow-sm z-10 sticky top-0">
         <div className="px-4 md:px-6 py-3 md:py-4">

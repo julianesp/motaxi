@@ -38,7 +38,8 @@ driverRoutes.get('/profile', async (c) => {
         d.base_fare,
         d.intercity_fare,
         d.rural_fare,
-        d.per_km_fare
+        d.per_km_fare,
+        d.profile_completed
       FROM drivers d
       WHERE d.id = ?`
     )
@@ -145,6 +146,12 @@ driverRoutes.put('/profile', async (c) => {
       return c.json({ error: 'No fields to update' }, 400);
     }
 
+    // Verificar si se completaron todos los campos obligatorios para marcar perfil como completo
+    if (vehicle_model && vehicle_color && vehicle_plate && license_number) {
+      updates.push('profile_completed = ?');
+      values.push(1);
+    }
+
     values.push(user.id);
 
     await c.env.DB.prepare(
@@ -207,6 +214,33 @@ driverRoutes.put('/availability', async (c) => {
 
     if (user.role !== 'driver') {
       return c.json({ error: 'Only drivers can update availability' }, 403);
+    }
+
+    // Verificar si el perfil está completo antes de permitir activarse
+    if (isAvailable) {
+      const driver = await c.env.DB.prepare(
+        'SELECT profile_completed, verification_status FROM drivers WHERE id = ?'
+      )
+        .bind(user.id)
+        .first();
+
+      if (!driver) {
+        return c.json({ error: 'Driver profile not found' }, 404);
+      }
+
+      if (!driver.profile_completed) {
+        return c.json({
+          error: 'Debes completar tu perfil antes de activarte',
+          profileIncomplete: true
+        }, 400);
+      }
+
+      if (driver.verification_status !== 'approved') {
+        return c.json({
+          error: 'Tu cuenta debe estar verificada para activarte',
+          notVerified: true
+        }, 400);
+      }
     }
 
     await c.env.DB.prepare('UPDATE drivers SET is_available = ? WHERE id = ?')

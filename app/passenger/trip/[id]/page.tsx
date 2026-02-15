@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import dynamic from 'next/dynamic';
@@ -44,6 +44,42 @@ export default function TripTrackingPage() {
   const { user, loading } = useAuth();
   const [trip, setTrip] = useState<TripData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+  const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
+
+  // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
+  if (!initialMapCenter.current && trip) {
+    initialMapCenter.current = trip.driver_latitude && trip.driver_longitude
+      ? { lat: trip.driver_latitude, lng: trip.driver_longitude }
+      : { lat: trip.pickup_latitude, lng: trip.pickup_longitude };
+  }
+
+  // TODOS LOS HOOKS DEBEN IR AQUÍ, ANTES DE CUALQUIER RETURN
+  // Memoizar los props del mapa para evitar re-renders innecesarios
+  const mapCenter = useMemo(() => {
+    return initialMapCenter.current || { lat: 1.1656, lng: -77.0 };
+  }, []); // Solo calcular una vez
+
+  const pickupLocation = useMemo(() => {
+    if (!trip) return null;
+    return trip.pickup_latitude && trip.pickup_longitude
+      ? { lat: trip.pickup_latitude, lng: trip.pickup_longitude }
+      : null;
+  }, [trip?.pickup_latitude, trip?.pickup_longitude]);
+
+  const destinationLocation = useMemo(() => {
+    if (!trip) return null;
+    return trip.dropoff_latitude && trip.dropoff_longitude
+      ? { lat: trip.dropoff_latitude, lng: trip.dropoff_longitude }
+      : null;
+  }, [trip?.dropoff_latitude, trip?.dropoff_longitude]);
+
+  const driverLocation = useMemo(() => {
+    if (!trip) return null;
+    return trip.driver_latitude && trip.driver_longitude
+      ? { lat: trip.driver_latitude, lng: trip.driver_longitude }
+      : null;
+  }, [trip?.driver_latitude, trip?.driver_longitude]);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'passenger')) {
@@ -85,6 +121,7 @@ export default function TripTrackingPage() {
     return () => clearInterval(interval);
   }, [params.id, router]);
 
+  // AHORA SÍ PODEMOS HACER RETURNS CONDICIONALES
   if (loading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -193,43 +230,59 @@ export default function TripTrackingPage() {
         {/* Map */}
         <div className="absolute inset-0">
           <GoogleMapComponent
-            center={
-              trip.driver_latitude && trip.driver_longitude
-                ? { lat: trip.driver_latitude, lng: trip.driver_longitude }
-                : { lat: trip.pickup_latitude, lng: trip.pickup_longitude }
-            }
+            center={mapCenter}
             zoom={15}
-            pickup={
-              trip.pickup_latitude && trip.pickup_longitude
-                ? { lat: trip.pickup_latitude, lng: trip.pickup_longitude }
-                : null
-            }
-            destination={
-              trip.dropoff_latitude && trip.dropoff_longitude
-                ? { lat: trip.dropoff_latitude, lng: trip.dropoff_longitude }
-                : null
-            }
-            driverLocation={
-              trip.driver_latitude && trip.driver_longitude
-                ? { lat: trip.driver_latitude, lng: trip.driver_longitude }
-                : null
-            }
+            pickup={pickupLocation}
+            destination={destinationLocation}
+            driverLocation={driverLocation}
+            disableAutoFit={true}
           />
         </div>
 
         {/* Trip Info Card */}
-        <div className="absolute bottom-0 left-0 right-0 md:left-4 md:bottom-4 md:right-auto md:w-96 bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-20 pointer-events-auto max-h-[70vh] overflow-y-auto">
+        <div className={`absolute bottom-0 left-0 right-0 md:left-4 md:bottom-4 md:right-auto md:w-96 bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-20 pointer-events-auto overflow-y-auto transition-all duration-300 ${
+          isPanelMinimized ? 'max-h-[80px]' : 'max-h-[70vh]'
+        }`}>
           <div className="p-4 md:p-6 space-y-4">
-            {/* Status */}
-            <div className={`bg-gradient-to-r from-${statusInfo.color}-50 to-${statusInfo.color}-100 border border-${statusInfo.color}-200 rounded-xl p-4`}>
-              <div className="flex items-center space-x-3">
-                <span className="text-3xl">{statusInfo.icon}</span>
-                <div>
-                  <h2 className={`text-lg font-bold text-${statusInfo.color}-900`}>{statusInfo.title}</h2>
-                  <p className={`text-sm text-${statusInfo.color}-700`}>{statusInfo.message}</p>
+            {/* Botón de minimizar/expandir y Status compacto */}
+            <div className="flex items-center justify-between">
+              <div className={`flex-1 bg-gradient-to-r from-${statusInfo.color}-50 to-${statusInfo.color}-100 border border-${statusInfo.color}-200 rounded-xl p-3 flex items-center space-x-3`}>
+                <span className="text-2xl">{statusInfo.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <h2 className={`text-base font-bold text-${statusInfo.color}-900 truncate`}>{statusInfo.title}</h2>
+                  {!isPanelMinimized && (
+                    <p className={`text-sm text-${statusInfo.color}-700`}>{statusInfo.message}</p>
+                  )}
                 </div>
               </div>
+
+              {/* Botón minimizar/expandir */}
+              <button
+                onClick={() => setIsPanelMinimized(!isPanelMinimized)}
+                className="ml-3 p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                title={isPanelMinimized ? "Expandir panel" : "Minimizar panel"}
+              >
+                <svg
+                  className={`w-6 h-6 text-gray-600 transition-transform duration-300 ${
+                    isPanelMinimized ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
             </div>
+
+            {/* Contenido completo (oculto cuando está minimizado) */}
+            {!isPanelMinimized && (
+              <>
 
             {/* Driver Info */}
             {trip.driver_name && (
@@ -259,17 +312,17 @@ export default function TripTrackingPage() {
                       <span className="font-semibold text-gray-900">{trip.vehicle_plate}</span>
                     </div>
                   )}
-                  {trip.driver_rating && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Calificación:</span>
-                      <div className="flex items-center">
-                        <svg className="w-5 h-5 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span className="font-semibold text-gray-900">{trip.driver_rating.toFixed(1)}</span>
-                      </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Calificación:</span>
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="font-semibold text-gray-900">
+                        {trip.driver_rating ? trip.driver_rating.toFixed(1) : 'Sin calificar'}
+                      </span>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
@@ -364,6 +417,62 @@ export default function TripTrackingPage() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Botones de acción según el estado del viaje */}
+            {trip.status === 'accepted' && (
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={async () => {
+                    try {
+                      const { tripsAPI } = await import('@/lib/api-client');
+                      await tripsAPI.updateTripStatus(trip.id, 'in_progress');
+                      // Actualizar estado local
+                      setTrip({ ...trip, status: 'in_progress' });
+                      alert('✅ Viaje iniciado. ¡Disfruta tu viaje!');
+                    } catch (error) {
+                      console.error('Error starting trip:', error);
+                      alert('Error al iniciar el viaje. Intenta nuevamente.');
+                    }
+                  }}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>El conductor ya llegó - Iniciar viaje</span>
+                </button>
+              </div>
+            )}
+
+            {trip.status === 'in_progress' && (
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={async () => {
+                    const confirmed = confirm('¿Confirmas que has llegado a tu destino?');
+                    if (!confirmed) return;
+
+                    try {
+                      const { tripsAPI } = await import('@/lib/api-client');
+                      await tripsAPI.updateTripStatus(trip.id, 'completed');
+                      // Actualizar estado local
+                      setTrip({ ...trip, status: 'completed' });
+                      alert('✅ ¡Viaje completado! Gracias por usar MoTaxi.');
+                    } catch (error) {
+                      console.error('Error completing trip:', error);
+                      alert('Error al completar el viaje. Intenta nuevamente.');
+                    }
+                  }}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Llegué a mi destino - Finalizar viaje</span>
+                </button>
+              </div>
+            )}
+            </>
             )}
           </div>
         </div>

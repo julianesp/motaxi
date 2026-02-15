@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from '@react-google-maps/api';
 
 const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
@@ -14,6 +14,7 @@ interface GoogleMapComponentProps {
   onLocationChange?: (location: { lat: number; lng: number }) => void;
   onMapClick?: (location: { lat: number; lng: number }) => void;
   clickMode?: 'pickup' | 'destination' | null;
+  disableAutoFit?: boolean; // Desactiva el auto-ajuste del mapa cuando cambian las ubicaciones
 }
 
 const mapContainerStyle = {
@@ -29,7 +30,7 @@ const defaultOptions = {
   fullscreenControl: false,
 };
 
-export default function GoogleMapComponent({
+function GoogleMapComponent({
   center,
   zoom = 13,
   pickup,
@@ -38,6 +39,7 @@ export default function GoogleMapComponent({
   onLocationChange,
   onMapClick,
   clickMode = null,
+  disableAutoFit = false,
 }: GoogleMapComponentProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -51,6 +53,11 @@ export default function GoogleMapComponent({
   const [initialCenter] = useState(center);
   const [directionsToPickup, setDirectionsToPickup] = useState<google.maps.DirectionsResult | null>(null);
   const [directionsToDestination, setDirectionsToDestination] = useState<google.maps.DirectionsResult | null>(null);
+
+  // Referencias para evitar recalcular rutas innecesariamente
+  const lastPickupRef = useRef<{ lat: number; lng: number } | null>(null);
+  const lastDestinationRef = useRef<{ lat: number; lng: number } | null>(null);
+  const lastDriverLocationRef = useRef<{ lat: number; lng: number } | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -107,52 +114,91 @@ export default function GoogleMapComponent({
 
   // Calcular ruta desde conductor hasta punto de recogida
   useEffect(() => {
-    if (isLoaded && driverLocation && pickup) {
-      const directionsService = new google.maps.DirectionsService();
-      directionsService.route(
-        {
-          origin: driverLocation,
-          destination: pickup,
-          travelMode: google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK && result) {
-            setDirectionsToPickup(result);
-          } else {
-            console.error('Error calculating route to pickup:', status);
-          }
-        }
-      );
-    } else {
+    if (!isLoaded || !driverLocation || !pickup) {
       setDirectionsToPickup(null);
+      lastDriverLocationRef.current = null;
+      lastPickupRef.current = null;
+      return;
     }
+
+    // Solo recalcular si las coordenadas cambiaron significativamente (más de ~10 metros)
+    const hasDriverMoved = !lastDriverLocationRef.current ||
+      Math.abs(lastDriverLocationRef.current.lat - driverLocation.lat) > 0.0001 ||
+      Math.abs(lastDriverLocationRef.current.lng - driverLocation.lng) > 0.0001;
+
+    const hasPickupChanged = !lastPickupRef.current ||
+      Math.abs(lastPickupRef.current.lat - pickup.lat) > 0.0001 ||
+      Math.abs(lastPickupRef.current.lng - pickup.lng) > 0.0001;
+
+    if (!hasDriverMoved && !hasPickupChanged) {
+      return; // No recalcular si no hay cambios significativos
+    }
+
+    lastDriverLocationRef.current = driverLocation;
+    lastPickupRef.current = pickup;
+
+    const directionsService = new google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: driverLocation,
+        destination: pickup,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          setDirectionsToPickup(result);
+        } else {
+          console.error('Error calculating route to pickup:', status);
+        }
+      }
+    );
   }, [isLoaded, driverLocation, pickup]);
 
   // Calcular ruta desde punto de recogida hasta destino
   useEffect(() => {
-    if (isLoaded && pickup && destination) {
-      const directionsService = new google.maps.DirectionsService();
-      directionsService.route(
-        {
-          origin: pickup,
-          destination: destination,
-          travelMode: google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK && result) {
-            setDirectionsToDestination(result);
-          } else {
-            console.error('Error calculating route to destination:', status);
-          }
-        }
-      );
-    } else {
+    if (!isLoaded || !pickup || !destination) {
       setDirectionsToDestination(null);
+      lastDestinationRef.current = null;
+      return;
     }
+
+    // Solo recalcular si las coordenadas cambiaron (pickup o destination)
+    const hasPickupChanged = !lastPickupRef.current ||
+      Math.abs(lastPickupRef.current.lat - pickup.lat) > 0.0001 ||
+      Math.abs(lastPickupRef.current.lng - pickup.lng) > 0.0001;
+
+    const hasDestinationChanged = !lastDestinationRef.current ||
+      Math.abs(lastDestinationRef.current.lat - destination.lat) > 0.0001 ||
+      Math.abs(lastDestinationRef.current.lng - destination.lng) > 0.0001;
+
+    if (!hasPickupChanged && !hasDestinationChanged) {
+      return; // No recalcular si no hay cambios
+    }
+
+    lastPickupRef.current = pickup;
+    lastDestinationRef.current = destination;
+
+    const directionsService = new google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: pickup,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          setDirectionsToDestination(result);
+        } else {
+          console.error('Error calculating route to destination:', status);
+        }
+      }
+    );
   }, [isLoaded, pickup, destination]);
 
-  // Ajustar el mapa para mostrar ambos marcadores
+  // Ajustar el mapa para mostrar ambos marcadores (solo si no está desactivado)
   useEffect(() => {
+    if (disableAutoFit) return; // No auto-ajustar si está desactivado
+
     if (map && pickup && destination) {
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(pickup);
@@ -162,7 +208,7 @@ export default function GoogleMapComponent({
       }
       map.fitBounds(bounds, { top: 100, bottom: 100, left: 100, right: 100 });
     }
-  }, [map, pickup, destination, driverLocation]);
+  }, [map, pickup, destination, driverLocation, disableAutoFit]);
 
   if (loadError) {
     return (
@@ -361,3 +407,21 @@ export default function GoogleMapComponent({
     </div>
   );
 }
+
+// Memoizar el componente para evitar re-renders innecesarios
+export default memo(GoogleMapComponent, (prevProps, nextProps) => {
+  // Solo re-renderizar si hay cambios significativos en las props
+  return (
+    prevProps.zoom === nextProps.zoom &&
+    prevProps.clickMode === nextProps.clickMode &&
+    prevProps.disableAutoFit === nextProps.disableAutoFit &&
+    prevProps.center?.lat === nextProps.center?.lat &&
+    prevProps.center?.lng === nextProps.center?.lng &&
+    prevProps.pickup?.lat === nextProps.pickup?.lat &&
+    prevProps.pickup?.lng === nextProps.pickup?.lng &&
+    prevProps.destination?.lat === nextProps.destination?.lat &&
+    prevProps.destination?.lng === nextProps.destination?.lng &&
+    prevProps.driverLocation?.lat === nextProps.driverLocation?.lat &&
+    prevProps.driverLocation?.lng === nextProps.driverLocation?.lng
+  );
+});

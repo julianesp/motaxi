@@ -277,21 +277,15 @@ export default function PassengerHomePage() {
         distance_km: parseFloat(distance.toFixed(2)),
       });
 
-      if (response.driversNotified === 0) {
-        alert(
-          "⚠️ No hay conductores disponibles en este momento.\n\n" +
-            "Por favor, intenta nuevamente en unos minutos o contacta directamente con un conductor.",
-        );
-        setShowTripRequest(false);
-      } else {
-        alert(
-          `✅ ¡Solicitud enviada!\n\n` +
-            `Se ha notificado a ${response.driversNotified} conductor(es) cercano(s).\n` +
-            `Espera mientras un conductor acepta tu viaje.`,
-        );
-        // Aquí podrías redirigir a una página de "esperando conductor"
-        // router.push(`/passenger/trip/${response.trip.id}`);
-      }
+      // Éxito: solicitud creada
+      alert(
+        `✅ ¡Solicitud creada exitosamente!\n\n` +
+          `Tu solicitud está ahora visible en el tablero de conductores.\n` +
+          `Espera mientras un conductor acepta tu viaje.`,
+      );
+
+      // Redirigir a la página de tracking del viaje
+      router.push(`/passenger/trip/${response.trip.id}`);
     } catch (error: any) {
       console.error("Error requesting trip:", error);
       setShowTripRequest(false);

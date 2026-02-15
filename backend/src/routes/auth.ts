@@ -62,9 +62,9 @@ authRoutes.post('/register', async (c) => {
       const tempLicense = `PENDING-${userId.substring(0, 8)}`;
 
       await c.env.DB.prepare(
-        'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color) VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, rating) VALUES (?, ?, ?, ?, ?, ?)'
       )
-        .bind(userId, tempLicense, tempPlate, 'PENDING', 'PENDING')
+        .bind(userId, tempLicense, tempPlate, 'PENDING', 'PENDING', null)
         .run();
     }
 

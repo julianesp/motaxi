@@ -59,83 +59,14 @@ tripRoutes.post('/', async (c) => {
       .bind(tripId)
       .first();
 
-    // Buscar conductores disponibles cercanos (radio de 10km)
-    // Usamos la fórmula de Haversine simplificada para calcular distancia
-    const SEARCH_RADIUS_KM = 10;
-    const nearbyDrivers = await c.env.DB.prepare(
-      `SELECT u.id, u.full_name, u.push_token, d.current_latitude, d.current_longitude
-       FROM users u
-       JOIN drivers d ON u.id = d.id
-       WHERE d.is_available = 1
-         AND d.verification_status = 'approved'
-         AND d.current_latitude IS NOT NULL
-         AND d.current_longitude IS NOT NULL`
-    ).all();
-
-    // Calcular distancia y filtrar conductores dentro del radio
-    const availableDrivers = (nearbyDrivers.results || []).filter((driver: any) => {
-      const lat1 = pickup_latitude;
-      const lon1 = pickup_longitude;
-      const lat2 = driver.current_latitude;
-      const lon2 = driver.current_longitude;
-
-      // Fórmula de Haversine
-      const R = 6371; // Radio de la Tierra en km
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = R * c;
-
-      return distance <= SEARCH_RADIUS_KM;
-    });
-
-    console.log(`Found ${availableDrivers.length} available drivers within ${SEARCH_RADIUS_KM}km`);
-
-    // Enviar notificaciones a todos los conductores cercanos
-    const notificationPromises = availableDrivers.map(async (driver: any) => {
-      try {
-        // Crear notificación en la base de datos
-        await c.env.DB.prepare(
-          `INSERT INTO notifications (id, user_id, title, message, type, data)
-           VALUES (?, ?, ?, ?, ?, ?)`
-        )
-          .bind(
-            uuidv4(),
-            driver.id,
-            '¡Nuevo viaje disponible!',
-            `${pickup_address} - $${fare.toLocaleString()}`,
-            'trip_request',
-            JSON.stringify({ trip_id: tripId })
-          )
-          .run();
-
-        // Enviar push notification
-        if (driver.push_token) {
-          await PushNotificationService.notifyDriverAboutTrip(
-            driver.push_token,
-            {
-              tripId,
-              pickupAddress: pickup_address || 'Ubicación del pasajero',
-              fare,
-            }
-          );
-        }
-      } catch (notifError) {
-        console.error(`Failed to notify driver ${driver.id}:`, notifError);
-        // No fallar la creación del viaje si una notificación falla
-      }
-    });
-
-    // Esperar a que se envíen todas las notificaciones (pero no bloquear si alguna falla)
-    await Promise.allSettled(notificationPromises);
+    // NUEVO FLUJO: Los conductores verán la solicitud en su tablero
+    // y ellos decidirán si aceptarla o no.
+    // Ya NO se envían notificaciones automáticas.
 
     return c.json({
+      success: true,
       trip,
-      driversNotified: availableDrivers.length,
+      message: 'Viaje creado. Los conductores podrán ver tu solicitud en su tablero.',
     }, 201);
   } catch (error: any) {
     console.error('Create trip error:', error);
@@ -145,7 +76,8 @@ tripRoutes.post('/', async (c) => {
 
 /**
  * GET /trips/active
- * Obtener viajes activos/solicitados (para conductores)
+ * Obtener viajes activos/solicitados (TABLERO para conductores)
+ * Muestra todas las solicitudes disponibles que pueden aceptar
  */
 tripRoutes.get('/active', async (c) => {
   try {
@@ -155,9 +87,9 @@ tripRoutes.get('/active', async (c) => {
       return c.json({ error: 'Only drivers can view active trips' }, 403);
     }
 
-    // Verificar que el conductor esté aprobado
+    // Obtener información del conductor (incluyendo ubicación)
     const driver = await c.env.DB.prepare(
-      'SELECT verification_status FROM drivers WHERE id = ?'
+      'SELECT * FROM drivers WHERE id = ?'
     )
       .bind(user.id)
       .first();
@@ -165,17 +97,61 @@ tripRoutes.get('/active', async (c) => {
     if (!driver || driver.verification_status !== 'approved') {
       return c.json({
         trips: [],
-        message: 'Your account must be verified to see trip requests'
+        message: 'Tu cuenta debe estar verificada para ver solicitudes de viajes'
       });
     }
 
-    const trips = await c.env.DB.prepare(
-      'SELECT * FROM trips WHERE status = ? ORDER BY requested_at ASC'
-    )
-      .bind('requested')
-      .all();
+    // Obtener solicitudes disponibles (estado 'requested' sin conductor asignado)
+    const availableTrips = await c.env.DB.prepare(
+      `SELECT
+        t.*,
+        u.full_name as passenger_name,
+        u.phone as passenger_phone
+       FROM trips t
+       JOIN users u ON t.passenger_id = u.id
+       WHERE t.status = 'requested'
+         AND t.driver_id IS NULL
+       ORDER BY t.created_at DESC
+       LIMIT 50`
+    ).all();
 
-    return c.json({ trips: trips.results || [] });
+    // Calcular distancia del conductor a cada punto de recogida
+    const tripsWithDistance = (availableTrips.results || []).map((trip: any) => {
+      let distance = null;
+
+      if (driver.current_latitude && driver.current_longitude &&
+          trip.pickup_latitude && trip.pickup_longitude) {
+        // Fórmula de Haversine para calcular distancia
+        const R = 6371; // Radio de la Tierra en km
+        const dLat = (trip.pickup_latitude - driver.current_latitude) * Math.PI / 180;
+        const dLon = (trip.pickup_longitude - driver.current_longitude) * Math.PI / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(driver.current_latitude * Math.PI / 180) *
+          Math.cos(trip.pickup_latitude * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        distance = R * c; // distancia en km
+      }
+
+      return {
+        ...trip,
+        distance_to_pickup: distance ? parseFloat(distance.toFixed(2)) : null,
+      };
+    });
+
+    // Ordenar por distancia (los más cercanos primero)
+    tripsWithDistance.sort((a: any, b: any) => {
+      if (a.distance_to_pickup === null) return 1;
+      if (b.distance_to_pickup === null) return -1;
+      return a.distance_to_pickup - b.distance_to_pickup;
+    });
+
+    return c.json({
+      success: true,
+      trips: tripsWithDistance,
+      count: tripsWithDistance.length,
+    });
   } catch (error: any) {
     console.error('Get active trips error:', error);
     return c.json({ error: error.message || 'Failed to get active trips' }, 500);
@@ -431,7 +407,35 @@ tripRoutes.get('/:id', async (c) => {
       return c.json({ error: 'Unauthorized' }, 403);
     }
 
-    return c.json({ trip });
+    // Si el viaje tiene conductor asignado, obtener información del conductor
+    let tripWithDetails: any = { ...trip };
+
+    if (trip.driver_id) {
+      // Obtener información del conductor (nombre, teléfono, rating, ubicación)
+      const driver = await c.env.DB.prepare(
+        `SELECT u.full_name, u.phone, d.rating, d.vehicle_model, d.vehicle_color, d.vehicle_plate,
+                d.current_latitude, d.current_longitude
+         FROM users u
+         LEFT JOIN drivers d ON d.id = u.id
+         WHERE u.id = ?`
+      )
+        .bind(trip.driver_id)
+        .first();
+
+      if (driver) {
+        tripWithDetails.driver_name = driver.full_name;
+        tripWithDetails.driver_phone = driver.phone;
+        tripWithDetails.driver_rating = driver.rating;
+        tripWithDetails.vehicle_model = driver.vehicle_model;
+        tripWithDetails.vehicle_color = driver.vehicle_color;
+        tripWithDetails.vehicle_plate = driver.vehicle_plate;
+        // AGREGAR UBICACIÓN EN TIEMPO REAL DEL CONDUCTOR
+        tripWithDetails.driver_latitude = driver.current_latitude;
+        tripWithDetails.driver_longitude = driver.current_longitude;
+      }
+    }
+
+    return c.json({ trip: tripWithDetails });
   } catch (error: any) {
     console.error('Get trip error:', error);
     return c.json({ error: error.message || 'Failed to get trip' }, 500);
@@ -505,7 +509,7 @@ tripRoutes.put('/:id/rate', async (c) => {
         .first();
 
       await c.env.DB.prepare('UPDATE drivers SET rating = ? WHERE id = ?')
-        .bind(avgRating?.avg || 5.0, ratedUserId)
+        .bind(avgRating?.avg || null, ratedUserId)
         .run();
     } else {
       // Actualizar rating del pasajero
@@ -516,7 +520,7 @@ tripRoutes.put('/:id/rate', async (c) => {
         .first();
 
       await c.env.DB.prepare('UPDATE passengers SET rating = ? WHERE id = ?')
-        .bind(avgRating?.avg || 5.0, ratedUserId)
+        .bind(avgRating?.avg || null, ratedUserId)
         .run();
     }
 

@@ -334,6 +334,23 @@ export default function DriverHomePage() {
                       <div className="space-y-3 max-h-[400px] overflow-y-auto">
                         {availableTrips.map((trip: any) => (
                           <div key={trip.id} className="bg-white border-2 border-indigo-200 rounded-xl p-4 hover:border-indigo-400 transition-colors">
+                            {/* Mostrar pasajero y distancia al pickup */}
+                            {trip.passenger_name && (
+                              <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
+                                <div className="flex items-center text-sm text-gray-600">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                  <span className="font-medium">{trip.passenger_name}</span>
+                                </div>
+                                {trip.distance_to_pickup && (
+                                  <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                    📍 {trip.distance_to_pickup} km de ti
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center mb-2">
@@ -347,7 +364,7 @@ export default function DriverHomePage() {
                               </div>
                               <div className="text-right ml-4">
                                 <p className="text-2xl font-bold text-green-600">${trip.fare.toLocaleString()}</p>
-                                <p className="text-xs text-gray-500">{trip.distance_km.toFixed(1)} km</p>
+                                <p className="text-xs text-gray-500">Recorrido: {trip.distance_km.toFixed(1)} km</p>
                               </div>
                             </div>
                             <div className="flex gap-3">

@@ -268,6 +268,7 @@ export default function DriverHomePage() {
             destination={activeTrip ? activeTrip.destination : null}
             driverLocation={activeTrip ? currentLocation : null}
             onLocationChange={setCurrentLocation}
+            disableAutoFit={!!activeTrip}
           />
         </div>
 

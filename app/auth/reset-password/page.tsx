@@ -191,6 +191,7 @@ function ResetPasswordForm() {
                 <input
                   id="resetCode"
                   type="text"
+                  inputMode="numeric"
                   value={resetCode}
                   onChange={(e) => setResetCode(e.target.value)}
                   required

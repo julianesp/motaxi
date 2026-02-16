@@ -196,6 +196,8 @@ function GoogleMapComponent({
   }, [isLoaded, pickup, destination]);
 
   // Ajustar el mapa para mostrar ambos marcadores (solo si no está desactivado)
+  // IMPORTANTE: Solo ajustar cuando pickup o destination cambien, NO cuando driverLocation cambie
+  // para evitar el auto-refresh constante
   useEffect(() => {
     if (disableAutoFit) return; // No auto-ajustar si está desactivado
 
@@ -208,7 +210,7 @@ function GoogleMapComponent({
       }
       map.fitBounds(bounds, { top: 100, bottom: 100, left: 100, right: 100 });
     }
-  }, [map, pickup, destination, driverLocation, disableAutoFit]);
+  }, [map, pickup, destination, disableAutoFit]); // Removido driverLocation de las dependencias
 
   if (loadError) {
     return (

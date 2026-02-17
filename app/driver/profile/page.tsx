@@ -84,10 +84,10 @@ export default function DriverProfilePage() {
           municipality: driver.municipality || '',
           accepts_intercity_trips: driver.accepts_intercity_trips || 1,
           accepts_rural_trips: driver.accepts_rural_trips || 1,
-          base_fare: driver.base_fare || 5000,
-          intercity_fare: driver.intercity_fare || 10000,
-          rural_fare: driver.rural_fare || 8000,
-          per_km_fare: driver.per_km_fare || 2000,
+          base_fare: driver.base_fare || 2000,
+          intercity_fare: driver.intercity_fare || 5000,
+          rural_fare: driver.rural_fare || 4000,
+          per_km_fare: driver.per_km_fare || 500,
         });
 
         // Inicializar formData del conductor
@@ -138,10 +138,10 @@ export default function DriverProfilePage() {
       // Preparar datos con valores por defecto para campos vacíos
       const dataToSend = {
         ...driverFormData,
-        base_fare: (typeof driverFormData.base_fare === 'number' ? driverFormData.base_fare : (driverFormData.base_fare === '' ? 5000 : parseInt(driverFormData.base_fare))) as number,
-        intercity_fare: (typeof driverFormData.intercity_fare === 'number' ? driverFormData.intercity_fare : (driverFormData.intercity_fare === '' ? 10000 : parseInt(driverFormData.intercity_fare))) as number,
-        rural_fare: (typeof driverFormData.rural_fare === 'number' ? driverFormData.rural_fare : (driverFormData.rural_fare === '' ? 8000 : parseInt(driverFormData.rural_fare))) as number,
-        per_km_fare: (typeof driverFormData.per_km_fare === 'number' ? driverFormData.per_km_fare : (driverFormData.per_km_fare === '' ? 2000 : parseInt(driverFormData.per_km_fare))) as number,
+        base_fare: (typeof driverFormData.base_fare === 'number' ? driverFormData.base_fare : (driverFormData.base_fare === '' ? 2000 : parseInt(driverFormData.base_fare))) as number,
+        intercity_fare: (typeof driverFormData.intercity_fare === 'number' ? driverFormData.intercity_fare : (driverFormData.intercity_fare === '' ? 5000 : parseInt(driverFormData.intercity_fare))) as number,
+        rural_fare: (typeof driverFormData.rural_fare === 'number' ? driverFormData.rural_fare : (driverFormData.rural_fare === '' ? 4000 : parseInt(driverFormData.rural_fare))) as number,
+        per_km_fare: (typeof driverFormData.per_km_fare === 'number' ? driverFormData.per_km_fare : (driverFormData.per_km_fare === '' ? 500 : parseInt(driverFormData.per_km_fare))) as number,
       };
 
       // Actualizar perfil del conductor

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import dynamic from 'next/dynamic';
+import Swal from 'sweetalert2';
 
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
   ssr: false,
@@ -154,7 +155,12 @@ export default function DriverHomePage() {
     // Validar campos obligatorios
     if (!profileData.vehicle_model || !profileData.vehicle_color ||
         !profileData.vehicle_plate || !profileData.license_number) {
-      alert('⚠️ Por favor completa todos los campos obligatorios');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor completa todos los campos obligatorios.',
+        confirmButtonColor: '#4f46e5',
+      });
       return;
     }
 
@@ -164,7 +170,14 @@ export default function DriverHomePage() {
       const { driversAPI } = await import('@/lib/api-client');
       await driversAPI.updateProfile(profileData);
 
-      alert('✅ ¡Perfil completado exitosamente! Ahora puedes activarte como conductor.');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Perfil completado!',
+        text: 'Ahora puedes activarte como conductor.',
+        confirmButtonColor: '#4f46e5',
+        timer: 3000,
+        timerProgressBar: true,
+      });
       setShowProfileModal(false);
 
       // Recargar el perfil
@@ -174,7 +187,12 @@ export default function DriverHomePage() {
       }
     } catch (error) {
       console.error('Error completing profile:', error);
-      alert('Error al guardar el perfil. Intenta nuevamente.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo guardar el perfil. Intenta nuevamente.',
+        confirmButtonColor: '#4f46e5',
+      });
     } finally {
       setIsSubmittingProfile(false);
     }
@@ -193,12 +211,27 @@ export default function DriverHomePage() {
 
       // Verificar si el error es por perfil incompleto
       if (error.response?.data?.profileIncomplete) {
-        alert('⚠️ Debes completar tu perfil antes de activarte como conductor');
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Perfil incompleto',
+          text: 'Debes completar tu perfil antes de activarte como conductor.',
+          confirmButtonColor: '#4f46e5',
+        });
         setShowProfileModal(true);
       } else if (error.response?.data?.notVerified) {
-        alert('⚠️ Tu cuenta debe estar verificada antes de poder prestar servicio');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Cuenta no verificada',
+          text: 'Tu cuenta debe estar verificada antes de poder prestar servicio.',
+          confirmButtonColor: '#4f46e5',
+        });
       } else {
-        alert('Error al actualizar disponibilidad. Intenta nuevamente.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo actualizar la disponibilidad. Intenta nuevamente.',
+          confirmButtonColor: '#4f46e5',
+        });
       }
     } finally {
       setIsUpdatingAvailability(false);
@@ -266,7 +299,7 @@ export default function DriverHomePage() {
             zoom={15}
             pickup={activeTrip ? activeTrip.pickup : null}
             destination={activeTrip ? activeTrip.destination : null}
-            driverLocation={activeTrip ? currentLocation : null}
+            driverLocation={currentLocation}
             onLocationChange={setCurrentLocation}
             disableAutoFit={!!activeTrip}
           />
@@ -466,10 +499,22 @@ export default function DriverHomePage() {
                                     // Limpiar lista de viajes disponibles
                                     setAvailableTrips([]);
 
-                                    alert('¡Viaje aceptado! Dirígete al punto de recogida.');
+                                    Swal.fire({
+                                      icon: 'success',
+                                      title: '¡Viaje aceptado!',
+                                      text: 'Dirígete al punto de recogida.',
+                                      confirmButtonColor: '#4f46e5',
+                                      timer: 3000,
+                                      timerProgressBar: true,
+                                    });
                                   } catch (error) {
                                     console.error('Error accepting trip:', error);
-                                    alert('Error al aceptar el viaje. Intenta nuevamente.');
+                                    Swal.fire({
+                                      icon: 'error',
+                                      title: 'Error',
+                                      text: 'No se pudo aceptar el viaje. Intenta nuevamente.',
+                                      confirmButtonColor: '#4f46e5',
+                                    });
                                   }
                                 }}
                                 className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
@@ -606,10 +651,22 @@ export default function DriverHomePage() {
                       const { tripsAPI } = await import('@/lib/api-client');
                       await tripsAPI.updateTripStatus(activeTrip.id, 'in_progress');
                       setActiveTrip({ ...activeTrip, status: 'in_progress' });
-                      alert('✅ Viaje iniciado. ¡Buen viaje!');
+                      Swal.fire({
+                        icon: 'success',
+                        title: 'Viaje iniciado',
+                        text: '¡Buen viaje! Lleva al pasajero a su destino.',
+                        confirmButtonColor: '#4f46e5',
+                        timer: 3000,
+                        timerProgressBar: true,
+                      });
                     } catch (error) {
                       console.error('Error starting trip:', error);
-                      alert('Error al iniciar el viaje. Intenta nuevamente.');
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo iniciar el viaje. Intenta nuevamente.',
+                        confirmButtonColor: '#4f46e5',
+                      });
                     }
                   }}
                   className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"
@@ -623,17 +680,38 @@ export default function DriverHomePage() {
                 {activeTrip.status === 'in_progress' && (
                   <button
                     onClick={async () => {
-                      const confirmed = confirm('¿Confirmas que has llegado al destino?');
-                      if (!confirmed) return;
+                      const result = await Swal.fire({
+                        icon: 'question',
+                        title: '¿Finalizar viaje?',
+                        text: '¿Confirmas que has llegado al destino?',
+                        showCancelButton: true,
+                        confirmButtonColor: '#16a34a',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Sí, finalizar',
+                        cancelButtonText: 'Cancelar',
+                      });
+                      if (!result.isConfirmed) return;
 
                       try {
                         const { tripsAPI } = await import('@/lib/api-client');
                         await tripsAPI.updateTripStatus(activeTrip.id, 'completed');
-                        alert('✅ ¡Viaje completado! Gracias por usar MoTaxi.');
+                        await Swal.fire({
+                          icon: 'success',
+                          title: '¡Viaje completado!',
+                          text: 'Gracias por usar MoTaxi.',
+                          confirmButtonColor: '#4f46e5',
+                          timer: 3000,
+                          timerProgressBar: true,
+                        });
                         setActiveTrip(null);
                       } catch (error) {
                         console.error('Error completing trip:', error);
-                        alert('Error al completar el viaje. Intenta nuevamente.');
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: 'No se pudo completar el viaje. Intenta nuevamente.',
+                          confirmButtonColor: '#4f46e5',
+                        });
                       }
                     }}
                     className="w-full py-4 px-6 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"

@@ -5,6 +5,15 @@ import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from '@react-go
 
 const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 
+interface NearbyDriverMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  name: string;
+  vehicle: string;
+  rating: number;
+}
+
 interface GoogleMapComponentProps {
   center: { lat: number; lng: number };
   zoom?: number;
@@ -14,7 +23,9 @@ interface GoogleMapComponentProps {
   onLocationChange?: (location: { lat: number; lng: number }) => void;
   onMapClick?: (location: { lat: number; lng: number }) => void;
   clickMode?: 'pickup' | 'destination' | null;
-  disableAutoFit?: boolean; // Desactiva el auto-ajuste del mapa cuando cambian las ubicaciones
+  disableAutoFit?: boolean;
+  nearbyDrivers?: NearbyDriverMarker[]; // Conductores disponibles para mostrar en el mapa
+  onDriverClick?: (driverId: string) => void; // Callback al hacer clic en un conductor
 }
 
 const mapContainerStyle = {
@@ -40,6 +51,8 @@ function GoogleMapComponent({
   onMapClick,
   clickMode = null,
   disableAutoFit = false,
+  nearbyDrivers = [],
+  onDriverClick,
 }: GoogleMapComponentProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -97,7 +110,6 @@ function GoogleMapComponent({
         },
         (error) => {
           console.error('Error getting location:', error);
-          alert('No se pudo obtener tu ubicación. Por favor, verifica los permisos del navegador.');
           setIsGettingLocation(false);
         },
         {
@@ -107,7 +119,7 @@ function GoogleMapComponent({
         }
       );
     } else {
-      alert('Tu navegador no soporta geolocalización.');
+      console.warn('Tu navegador no soporta geolocalización.');
       setIsGettingLocation(false);
     }
   };
@@ -332,6 +344,26 @@ function GoogleMapComponent({
           />
         )}
 
+        {/* Marcadores de conductores disponibles cercanos (mototaxi naranja) */}
+        {nearbyDrivers.map((driver) => (
+          <Marker
+            key={`nearby-${driver.id}`}
+            position={{ lat: driver.lat, lng: driver.lng }}
+            icon={{
+              url: "data:image/svg+xml," + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#f97316">
+                  <circle cx="12" cy="12" r="11" fill="white" stroke="#f97316" stroke-width="1.5"/>
+                  <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(36, 36),
+              anchor: new google.maps.Point(18, 18),
+            }}
+            title={`${driver.name} — ${driver.vehicle} ⭐ ${driver.rating}`}
+            onClick={() => onDriverClick && onDriverClick(driver.id)}
+          />
+        ))}
+
         {/* Ruta desde el conductor hasta el punto de recogida (azul) */}
         {directionsToPickup && (
           <DirectionsRenderer
@@ -413,6 +445,13 @@ function GoogleMapComponent({
 // Memoizar el componente para evitar re-renders innecesarios
 export default memo(GoogleMapComponent, (prevProps, nextProps) => {
   // Solo re-renderizar si hay cambios significativos en las props
+  const driversUnchanged =
+    prevProps.nearbyDrivers?.length === nextProps.nearbyDrivers?.length &&
+    (nextProps.nearbyDrivers || []).every((d, i) => {
+      const p = (prevProps.nearbyDrivers || [])[i];
+      return p?.id === d.id && p?.lat === d.lat && p?.lng === d.lng;
+    });
+
   return (
     prevProps.zoom === nextProps.zoom &&
     prevProps.clickMode === nextProps.clickMode &&
@@ -424,6 +463,7 @@ export default memo(GoogleMapComponent, (prevProps, nextProps) => {
     prevProps.destination?.lat === nextProps.destination?.lat &&
     prevProps.destination?.lng === nextProps.destination?.lng &&
     prevProps.driverLocation?.lat === nextProps.driverLocation?.lat &&
-    prevProps.driverLocation?.lng === nextProps.driverLocation?.lng
+    prevProps.driverLocation?.lng === nextProps.driverLocation?.lng &&
+    driversUnchanged
   );
 });

@@ -263,15 +263,35 @@ driverRoutes.get('/nearby', async (c) => {
     const lng = parseFloat(c.req.query('lng') || '0');
 
     const drivers = await c.env.DB.prepare(
-      `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips, d.verification_status,
-              u.full_name, d.vehicle_model, d.vehicle_color
+      `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
+              d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
+              COALESCE(d.base_fare, 2000) AS base_fare,
+              COALESCE(d.per_km_fare, 500) AS per_km_fare,
+              u.full_name, u.phone
        FROM drivers d
        JOIN users u ON d.id = u.id
-       WHERE d.is_available = 1 AND d.verification_status = 'approved'`
+       WHERE d.is_available = 1 AND d.verification_status = 'approved'
+         AND d.current_latitude IS NOT NULL AND d.current_longitude IS NOT NULL`
     )
       .all();
 
-    return c.json({ drivers: drivers.results || [] });
+    // Calcular distancia y ordenar por proximidad (fórmula Haversine simplificada)
+    const driversWithDistance = (drivers.results || []).map((driver: any) => {
+      const dLat = ((driver.current_latitude - lat) * Math.PI) / 180;
+      const dLng = ((driver.current_longitude - lng) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat * Math.PI) / 180) *
+          Math.cos((driver.current_latitude * Math.PI) / 180) *
+          Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const distance_km = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return { ...driver, distance_km: parseFloat(distance_km.toFixed(2)) };
+    });
+
+    // Ordenar por distancia ascendente y limitar a 20 conductores
+    driversWithDistance.sort((a: any, b: any) => a.distance_km - b.distance_km);
+
+    return c.json({ drivers: driversWithDistance.slice(0, 20) });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to get nearby drivers' }, 500);
   }

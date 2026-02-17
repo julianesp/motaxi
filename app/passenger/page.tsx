@@ -5,6 +5,41 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useFavorites } from "@/lib/hooks/useFavorites";
 import dynamic from "next/dynamic";
+import Swal from "sweetalert2";
+
+// Tipos para conductores
+interface NearbyDriver {
+  id: string;
+  full_name: string;
+  vehicle_model: string;
+  vehicle_color: string;
+  vehicle_plate?: string;
+  phone?: string;
+  rating: number;
+  total_trips: number;
+  current_latitude: number;
+  current_longitude: number;
+  is_available: number;
+  base_fare: number;
+  per_km_fare: number;
+  distance_km?: number;
+}
+
+interface FavoriteDriver {
+  id: string;
+  driver_id: string;
+  nickname: string | null;
+  full_name: string;
+  phone: string;
+  vehicle_model: string;
+  vehicle_color: string;
+  vehicle_plate: string;
+  rating: number;
+  total_trips: number;
+  is_available: number;
+  current_latitude: number | null;
+  current_longitude: number | null;
+}
 
 // Importar componentes dinámicamente para evitar problemas con SSR
 const GoogleMapComponent = dynamic(
@@ -131,6 +166,13 @@ export default function PassengerHomePage() {
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
   const [isCheckingActiveTrip, setIsCheckingActiveTrip] = useState(false);
 
+  // Estado para conductores disponibles y favoritos
+  const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
+  const [selectedDriver, setSelectedDriver] = useState<NearbyDriver | null>(null);
+  const [favoriteDrivers, setFavoriteDrivers] = useState<FavoriteDriver[]>([]);
+  const [showFavoriteDriversPanel, setShowFavoriteDriversPanel] = useState(false);
+  const [loadingFavoriteDrivers, setLoadingFavoriteDrivers] = useState(false);
+
   useEffect(() => {
     // Solo verificar autenticación una vez que termine de cargar
     if (!loading && !hasCheckedAuth) {
@@ -197,9 +239,12 @@ export default function PassengerHomePage() {
           console.error("Error getting location:", error);
           // Si no se puede obtener la ubicación, usar el centro del Valle de Sibundoy
           setCurrentLocation({ lat: 1.1656, lng: -77.0 });
-          alert(
-            "No se pudo obtener tu ubicación. Por favor, activa el GPS o selecciona manualmente tu ubicación de recogida.",
-          );
+          Swal.fire({
+            icon: "warning",
+            title: "GPS no disponible",
+            text: "No se pudo obtener tu ubicación. Por favor, activa el GPS o selecciona manualmente tu ubicación de recogida.",
+            confirmButtonColor: "#4f46e5",
+          });
         },
         {
           enableHighAccuracy: true,
@@ -210,11 +255,105 @@ export default function PassengerHomePage() {
     } else {
       // Si no hay geolocalización, usar el centro del Valle de Sibundoy
       setCurrentLocation({ lat: 1.1656, lng: -77.0 });
-      alert(
-        "Tu navegador no soporta geolocalización. Por favor, selecciona manualmente tu ubicación de recogida.",
-      );
+      Swal.fire({
+        icon: "info",
+        title: "Geolocalización no soportada",
+        text: "Tu navegador no soporta geolocalización. Por favor, selecciona manualmente tu ubicación de recogida.",
+        confirmButtonColor: "#4f46e5",
+      });
     }
   }, []);
+
+  // Cargar conductores cercanos disponibles cada 15 segundos
+  useEffect(() => {
+    if (!user || user.role !== "passenger") return;
+
+    const fetchNearbyDrivers = async () => {
+      try {
+        const { driversAPI } = await import("@/lib/api-client");
+        const lat = currentLocation?.lat || 1.1656;
+        const lng = currentLocation?.lng || -77.0;
+        const data = await driversAPI.getNearbyDrivers(lat, lng);
+        setNearbyDrivers(data.drivers || []);
+      } catch (error) {
+        // Silencioso - no interrumpir la experiencia
+      }
+    };
+
+    fetchNearbyDrivers();
+    const interval = setInterval(fetchNearbyDrivers, 15000);
+    return () => clearInterval(interval);
+  }, [user, currentLocation?.lat, currentLocation?.lng]);
+
+  // Cargar conductores favoritos
+  const loadFavoriteDrivers = async () => {
+    setLoadingFavoriteDrivers(true);
+    try {
+      const { favoriteDriversAPI } = await import("@/lib/api-client");
+      const data = await favoriteDriversAPI.getAll();
+      setFavoriteDrivers(data.favoriteDrivers || []);
+    } catch (error) {
+      console.error("Error loading favorite drivers:", error);
+    } finally {
+      setLoadingFavoriteDrivers(false);
+    }
+  };
+
+  const handleAddFavoriteDriver = async (driver: NearbyDriver) => {
+    const { value: nickname } = await Swal.fire({
+      title: `Agregar a ${driver.full_name}`,
+      text: "¿Quieres darle un apodo a este conductor? (opcional)",
+      input: "text",
+      inputPlaceholder: "Ej: El de la Boxer roja",
+      inputAttributes: { maxlength: "40" },
+      showCancelButton: true,
+      confirmButtonColor: "#4f46e5",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Agregar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (nickname === undefined) return; // Canceló
+
+    try {
+      const { favoriteDriversAPI } = await import("@/lib/api-client");
+      await favoriteDriversAPI.add(driver.id, nickname || undefined);
+      await loadFavoriteDrivers();
+      Swal.fire({
+        icon: "success",
+        title: "¡Agregado!",
+        text: `${driver.full_name} es ahora un conductor favorito.`,
+        confirmButtonColor: "#4f46e5",
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    } catch (error: any) {
+      const msg = error.response?.data?.error || "No se pudo agregar el favorito.";
+      Swal.fire({ icon: "error", title: "Error", text: msg, confirmButtonColor: "#4f46e5" });
+    }
+  };
+
+  const handleRemoveFavoriteDriver = async (driverId: string, name: string) => {
+    const result = await Swal.fire({
+      icon: "question",
+      title: "¿Eliminar favorito?",
+      text: `¿Quieres quitar a ${name} de tus conductores favoritos?`,
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
+    try {
+      const { favoriteDriversAPI } = await import("@/lib/api-client");
+      await favoriteDriversAPI.remove(driverId);
+      setFavoriteDrivers((prev) => prev.filter((d) => d.driver_id !== driverId));
+    } catch (error) {
+      Swal.fire({ icon: "error", title: "Error", text: "No se pudo eliminar.", confirmButtonColor: "#4f46e5" });
+    }
+  };
 
   const handleLocationChange = (newLocation: { lat: number; lng: number }) => {
     setCurrentLocation(newLocation);
@@ -275,7 +414,12 @@ export default function PassengerHomePage() {
       !destination.latitude ||
       !destination.longitude
     ) {
-      alert("Por favor, selecciona la ubicación de recogida y el destino.");
+      Swal.fire({
+        icon: "warning",
+        title: "Faltan datos",
+        text: "Por favor, selecciona la ubicación de recogida y el destino.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
@@ -287,8 +431,13 @@ export default function PassengerHomePage() {
       destination.longitude,
     );
 
+    // Usar tarifas del conductor más cercano, o valores por defecto del sistema
+    const nearestDriver = nearbyDrivers.length > 0 ? nearbyDrivers[0] : null;
+    const baseFare = nearestDriver?.base_fare ?? 2000;
+    const perKmFare = nearestDriver?.per_km_fare ?? 500;
+
     // Calcular tarifa estimada
-    const fare = Math.round(5000 + distance * 2000); // Tarifa base + 2000 por km
+    const fare = Math.round(baseFare + distance * perKmFare);
     setEstimatedFare(fare);
 
     try {
@@ -309,11 +458,15 @@ export default function PassengerHomePage() {
       });
 
       // Éxito: solicitud creada
-      alert(
-        `✅ ¡Solicitud creada exitosamente!\n\n` +
-          `Tu solicitud está ahora visible en el tablero de conductores.\n` +
-          `Espera mientras un conductor acepta tu viaje.`,
-      );
+      await Swal.fire({
+        icon: "success",
+        title: "¡Solicitud enviada!",
+        text: "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
+        confirmButtonColor: "#4f46e5",
+        confirmButtonText: "Seguir viaje",
+        timer: 3000,
+        timerProgressBar: true,
+      });
 
       // Redirigir a la página de tracking del viaje
       router.push(`/passenger/trip/${response.trip.id}`);
@@ -322,12 +475,27 @@ export default function PassengerHomePage() {
       setShowTripRequest(false);
 
       if (error.response?.status === 401) {
-        alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+        await Swal.fire({
+          icon: "error",
+          title: "Sesión expirada",
+          text: "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
+          confirmButtonColor: "#4f46e5",
+        });
         router.push("/auth/login");
       } else if (error.response?.data?.error) {
-        alert(`Error: ${error.response.data.error}`);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: error.response.data.error,
+          confirmButtonColor: "#4f46e5",
+        });
       } else {
-        alert("Error al solicitar el viaje. Por favor, intenta nuevamente.");
+        Swal.fire({
+          icon: "error",
+          title: "Error al solicitar el viaje",
+          text: "No se pudo crear la solicitud. Por favor, intenta nuevamente.",
+          confirmButtonColor: "#4f46e5",
+        });
       }
     }
   };
@@ -353,7 +521,12 @@ export default function PassengerHomePage() {
 
   const handleGetCurrentLocation = async () => {
     if (!navigator.geolocation) {
-      alert("Tu navegador no soporta geolocalización");
+      Swal.fire({
+        icon: "info",
+        title: "No disponible",
+        text: "Tu navegador no soporta geolocalización.",
+        confirmButtonColor: "#4f46e5",
+      });
       return;
     }
 
@@ -389,7 +562,12 @@ export default function PassengerHomePage() {
           }
         } catch (error) {
           console.error("Error geocoding location:", error);
-          alert("Error al obtener la dirección de tu ubicación");
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Error al obtener la dirección de tu ubicación.",
+            confirmButtonColor: "#4f46e5",
+          });
         } finally {
           setIsLocating(false);
         }
@@ -406,7 +584,12 @@ export default function PassengerHomePage() {
         } else if (error.code === error.TIMEOUT) {
           errorMessage += "La solicitud de ubicación ha caducado.";
         }
-        alert(errorMessage);
+        Swal.fire({
+          icon: "warning",
+          title: "GPS no disponible",
+          text: errorMessage,
+          confirmButtonColor: "#4f46e5",
+        });
       },
       {
         enableHighAccuracy: true,
@@ -436,10 +619,23 @@ export default function PassengerHomePage() {
       });
       setShowSaveFavoriteDialog(false);
       setFavoriteName("");
-      alert("¡Ubicación guardada en favoritos!");
+      Swal.fire({
+        icon: "success",
+        title: "¡Guardado!",
+        text: "Ubicación guardada en favoritos.",
+        confirmButtonColor: "#4f46e5",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
     } catch (error) {
       console.error("Error saving favorite:", error);
-      alert("Error al guardar en favoritos");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo guardar en favoritos. Intenta nuevamente.",
+        confirmButtonColor: "#4f46e5",
+      });
     } finally {
       setIsSavingFavorite(false);
     }
@@ -477,6 +673,26 @@ export default function PassengerHomePage() {
               <span className="text-sm md:text-base text-gray-700 hidden sm:inline">
                 Hola, {user?.full_name?.split(" ")[0] || "Usuario"}
               </span>
+              {/* Botón de conductores disponibles */}
+              {nearbyDrivers.length > 0 && (
+                <div className="flex items-center space-x-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  <span>{nearbyDrivers.length} disponible{nearbyDrivers.length !== 1 ? "s" : ""}</span>
+                </div>
+              )}
+              {/* Botón de conductores favoritos */}
+              <button
+                onClick={() => {
+                  setShowFavoriteDriversPanel(true);
+                  loadFavoriteDrivers();
+                }}
+                className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-full flex items-center justify-center hover:shadow-md transition-shadow"
+                title="Mis conductores favoritos"
+              >
+                <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </button>
               <button
                 onClick={() => router.push("/passenger/profile")}
                 className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-full flex items-center justify-center hover:shadow-md transition-shadow"
@@ -520,6 +736,20 @@ export default function PassengerHomePage() {
             onLocationChange={handleLocationChange}
             onMapClick={handleMapClick}
             clickMode={mapClickMode}
+            nearbyDrivers={nearbyDrivers
+              .filter((d) => d.current_latitude && d.current_longitude)
+              .map((d) => ({
+                id: d.id,
+                lat: d.current_latitude,
+                lng: d.current_longitude,
+                name: d.full_name,
+                vehicle: `${d.vehicle_color} ${d.vehicle_model}`,
+                rating: d.rating,
+              }))}
+            onDriverClick={(driverId) => {
+              const driver = nearbyDrivers.find((d) => d.id === driverId);
+              if (driver) setSelectedDriver(driver);
+            }}
           />
         </div>
 
@@ -741,7 +971,7 @@ export default function PassengerHomePage() {
             {/* Estimated Fare */}
             {estimatedFare && (
               <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-4 border border-indigo-200 shadow-sm">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-2">
                     <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -752,6 +982,15 @@ export default function PassengerHomePage() {
                     ${estimatedFare.toLocaleString()}
                   </span>
                 </div>
+                {nearbyDrivers.length > 0 ? (
+                  <p className="text-xs text-gray-500">
+                    Según tarifas de {nearbyDrivers[0].full_name} (más cercano) · ${nearbyDrivers[0].base_fare?.toLocaleString()} base + ${nearbyDrivers[0].per_km_fare?.toLocaleString()}/km
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400">
+                    Tarifa base del sistema · $2,000 base + $500/km
+                  </p>
+                )}
               </div>
             )}
 
@@ -778,6 +1017,175 @@ export default function PassengerHomePage() {
           </div>
         </div>
       </div>
+
+      {/* Popup de conductor seleccionado en el mapa */}
+      {selectedDriver && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4 sm:items-center">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <svg className="w-7 h-7 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">{selectedDriver.full_name}</h3>
+                  <p className="text-sm text-gray-500">{selectedDriver.vehicle_color} {selectedDriver.vehicle_model}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedDriver(null)} className="text-gray-400 hover:text-gray-600 p-1">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4 text-center">
+              <div className="bg-yellow-50 rounded-xl p-2">
+                <p className="text-xs text-gray-500">Calificación</p>
+                <p className="font-bold text-yellow-600">⭐ {selectedDriver.rating?.toFixed(1) || "5.0"}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-2">
+                <p className="text-xs text-gray-500">Viajes</p>
+                <p className="font-bold text-blue-600">{selectedDriver.total_trips || 0}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              {selectedDriver.phone && (
+                <a
+                  href={`tel:${selectedDriver.phone}`}
+                  className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-medium text-sm text-center hover:bg-green-700 transition-colors flex items-center justify-center space-x-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span>Llamar</span>
+                </a>
+              )}
+              <button
+                onClick={() => { handleAddFavoriteDriver(selectedDriver); setSelectedDriver(null); }}
+                className="flex-1 py-2.5 bg-yellow-500 text-white rounded-xl font-medium text-sm hover:bg-yellow-600 transition-colors flex items-center justify-center space-x-1"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span>Favorito</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Panel lateral de conductores favoritos */}
+      {showFavoriteDriversPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <h2 className="text-xl font-bold text-gray-800">Mis conductores favoritos</h2>
+              </div>
+              <button onClick={() => setShowFavoriteDriversPanel(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Lista */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {loadingFavoriteDrivers ? (
+                <div className="text-center py-10">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="mt-3 text-gray-500 text-sm">Cargando...</p>
+                </div>
+              ) : favoriteDrivers.length === 0 ? (
+                <div className="text-center py-10">
+                  <svg className="w-16 h-16 mx-auto text-gray-300 mb-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <p className="text-gray-500 font-medium">Aún no tienes conductores favoritos</p>
+                  <p className="text-gray-400 text-sm mt-1">Toca un conductor en el mapa para agregarlo</p>
+                </div>
+              ) : (
+                favoriteDrivers.map((driver) => (
+                  <div key={driver.driver_id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          driver.is_available ? "bg-green-100" : "bg-gray-100"
+                        }`}>
+                          <svg className={`w-6 h-6 ${driver.is_available ? "text-orange-500" : "text-gray-400"}`} fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <p className="font-semibold text-gray-900 text-sm truncate">{driver.full_name}</p>
+                            <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                              driver.is_available
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-500"
+                            }`}>
+                              {driver.is_available ? "🟢 Disponible" : "⚫ No disponible"}
+                            </span>
+                          </div>
+                          {driver.nickname && (
+                            <p className="text-xs text-indigo-600 font-medium">"{driver.nickname}"</p>
+                          )}
+                          <p className="text-xs text-gray-500 truncate">{driver.vehicle_color} {driver.vehicle_model}</p>
+                          <p className="text-xs text-yellow-600">⭐ {driver.rating?.toFixed(1)} · {driver.total_trips} viajes</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-3">
+                      {driver.phone && (
+                        <>
+                          <a
+                            href={`tel:${driver.phone}`}
+                            className="flex-1 py-2 bg-green-600 text-white rounded-lg font-medium text-xs text-center hover:bg-green-700 transition-colors flex items-center justify-center space-x-1"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <span>Llamar</span>
+                          </a>
+                          <a
+                            href={`https://wa.me/${driver.phone.replace(/\D/g, "")}?text=Hola%20${encodeURIComponent(driver.full_name)},%20quiero%20un%20servicio%20de%20MoTaxi`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-2 bg-emerald-500 text-white rounded-lg font-medium text-xs text-center hover:bg-emerald-600 transition-colors flex items-center justify-center space-x-1"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            <span>WhatsApp</span>
+                          </a>
+                        </>
+                      )}
+                      <button
+                        onClick={() => handleRemoveFavoriteDriver(driver.driver_id, driver.full_name)}
+                        className="w-9 py-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
+                        title="Quitar de favoritos"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dialog para guardar favorito */}
       {showSaveFavoriteDialog && (

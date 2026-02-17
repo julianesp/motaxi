@@ -287,4 +287,121 @@ favorites.delete('/:id', async (c) => {
   }
 });
 
+// ─── CONDUCTORES FAVORITOS ───────────────────────────────────────────────────
+
+// Listar conductores favoritos con su estado actual (disponible/no disponible)
+favorites.get('/drivers', async (c) => {
+  const userId = c.get('userId');
+  const userRole = c.get('userRole');
+
+  if (userRole !== 'passenger') {
+    return c.json({ success: false, error: 'Solo los pasajeros pueden tener conductores favoritos' }, 403);
+  }
+
+  try {
+    const result = await c.env.DB.prepare(
+      `SELECT
+         fd.id,
+         fd.driver_id,
+         fd.nickname,
+         fd.created_at,
+         u.full_name,
+         u.phone,
+         d.vehicle_model,
+         d.vehicle_color,
+         d.vehicle_plate,
+         d.rating,
+         d.total_trips,
+         d.is_available,
+         d.current_latitude,
+         d.current_longitude
+       FROM favorite_drivers fd
+       JOIN users u ON fd.driver_id = u.id
+       JOIN drivers d ON fd.driver_id = d.id
+       WHERE fd.passenger_id = ?
+       ORDER BY fd.created_at DESC`
+    )
+      .bind(userId)
+      .all();
+
+    return c.json({ success: true, favoriteDrivers: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching favorite drivers:', error);
+    return c.json({ success: false, error: 'Error al obtener conductores favoritos' }, 500);
+  }
+});
+
+// Agregar conductor a favoritos
+favorites.post('/drivers', async (c) => {
+  const userId = c.get('userId');
+  const userRole = c.get('userRole');
+
+  if (userRole !== 'passenger') {
+    return c.json({ success: false, error: 'Solo los pasajeros pueden agregar conductores favoritos' }, 403);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { driver_id, nickname } = body;
+
+    if (!driver_id) {
+      return c.json({ success: false, error: 'Se requiere el ID del conductor' }, 400);
+    }
+
+    // Verificar que el conductor existe
+    const driver = await c.env.DB.prepare(
+      `SELECT u.id, u.full_name FROM users u JOIN drivers d ON u.id = d.id WHERE u.id = ?`
+    ).bind(driver_id).first();
+
+    if (!driver) {
+      return c.json({ success: false, error: 'Conductor no encontrado' }, 404);
+    }
+
+    const favoriteId = nanoid();
+    const now = Math.floor(Date.now() / 1000);
+
+    await c.env.DB.prepare(
+      `INSERT INTO favorite_drivers (id, passenger_id, driver_id, nickname, created_at)
+       VALUES (?, ?, ?, ?, ?)`
+    ).bind(favoriteId, userId, driver_id, nickname || null, now).run();
+
+    return c.json({
+      success: true,
+      message: `${(driver as any).full_name} agregado a tus conductores favoritos`,
+    }, 201);
+  } catch (error: any) {
+    // Manejar duplicado (UNIQUE constraint)
+    if (error.message?.includes('UNIQUE constraint failed')) {
+      return c.json({ success: false, error: 'Este conductor ya está en tus favoritos' }, 409);
+    }
+    console.error('Error adding favorite driver:', error);
+    return c.json({ success: false, error: 'Error al agregar conductor favorito' }, 500);
+  }
+});
+
+// Eliminar conductor de favoritos
+favorites.delete('/drivers/:driverId', async (c) => {
+  const userId = c.get('userId');
+  const driverId = c.req.param('driverId');
+
+  try {
+    const existing = await c.env.DB.prepare(
+      `SELECT id FROM favorite_drivers WHERE passenger_id = ? AND driver_id = ?`
+    ).bind(userId, driverId).first();
+
+    if (!existing) {
+      return c.json({ success: false, error: 'Conductor favorito no encontrado' }, 404);
+    }
+
+    await c.env.DB.prepare(
+      `DELETE FROM favorite_drivers WHERE passenger_id = ? AND driver_id = ?`
+    ).bind(userId, driverId).run();
+
+    return c.json({ success: true, message: 'Conductor eliminado de favoritos' });
+  } catch (error: any) {
+    console.error('Error deleting favorite driver:', error);
+    return c.json({ success: false, error: 'Error al eliminar conductor favorito' }, 500);
+  }
+});
+
 export default favorites;

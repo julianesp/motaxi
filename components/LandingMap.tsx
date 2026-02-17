@@ -29,7 +29,7 @@ const defaultOptions = {
 
 export default function LandingMap() {
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script-landing',
+    id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     libraries,
   });

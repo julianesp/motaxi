@@ -261,7 +261,7 @@ export default function TripTrackingPage() {
               <div className={`flex-1 bg-gradient-to-r from-${statusInfo.color}-50 to-${statusInfo.color}-100 border border-${statusInfo.color}-200 rounded-xl p-3 flex items-center space-x-3`}>
                 <span className="text-2xl">{statusInfo.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <h2 className={`text-base font-bold text-${statusInfo.color}-900 truncate text-black`}>{statusInfo.title}</h2>
+                  <h2 className={`text-base font-bold truncate text-black`}>{statusInfo.title}</h2>
                   {!isPanelMinimized && (
                     <p className={`text-sm text-${statusInfo.color}-700 text-black`}>{statusInfo.message}</p>
                   )}

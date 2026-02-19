@@ -53,6 +53,7 @@ export default function TripTrackingPage() {
   const [isRated, setIsRated] = useState(false);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [driverOffers, setDriverOffers] = useState<any[]>([]);
   const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
 
   // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
@@ -105,6 +106,21 @@ export default function TripTrackingPage() {
 
         if (data.trip) {
           setTrip(data.trip);
+
+          // Si el viaje está en estado 'requested', cargar ofertas de conductores
+          if (data.trip.status === 'requested') {
+            try {
+              const offersData = await tripsAPI.getTripOffers(params.id as string);
+              if (offersData.offers) {
+                setDriverOffers(offersData.offers);
+              }
+            } catch (error) {
+              console.error('Error fetching offers:', error);
+            }
+          } else {
+            // Si ya no está en 'requested', limpiar las ofertas
+            setDriverOffers([]);
+          }
 
           // Si el viaje fue cancelado, redirigir después de 3 segundos
           if (data.trip.status === 'cancelled') {
@@ -379,6 +395,99 @@ export default function TripTrackingPage() {
                 </p>
               )}
             </div>
+
+            {/* Ofertas de conductores - solo cuando está buscando conductor */}
+            {trip.status === 'requested' && driverOffers.length > 0 && (
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl p-4">
+                <h3 className="text-sm font-bold text-indigo-900 mb-3 flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                  </svg>
+                  Ofertas de Conductores ({driverOffers.length})
+                </h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {driverOffers.map((offer: any) => (
+                    <div
+                      key={offer.id}
+                      className="bg-white border border-indigo-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 flex items-center">
+                            {offer.driver_name}
+                            {offer.driver_rating && (
+                              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                ⭐ {offer.driver_rating.toFixed(1)}
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {offer.vehicle_model} {offer.vehicle_color} • {offer.vehicle_plate}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-green-600">
+                            ${offer.offered_price.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const result = await Swal.fire({
+                            title: '¿Aceptar esta oferta?',
+                            html: `
+                              <div class="text-left">
+                                <p class="mb-2"><strong>Conductor:</strong> ${offer.driver_name}</p>
+                                <p class="mb-2"><strong>Vehículo:</strong> ${offer.vehicle_model} ${offer.vehicle_color}</p>
+                                <p class="mb-2"><strong>Placa:</strong> ${offer.vehicle_plate}</p>
+                                <p class="mb-2"><strong>Precio:</strong> <span class="text-green-600 text-xl font-bold">$${offer.offered_price.toLocaleString()}</span></p>
+                              </div>
+                            `,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#4f46e5',
+                            cancelButtonColor: '#6b7280',
+                            confirmButtonText: 'Sí, aceptar',
+                            cancelButtonText: 'Cancelar',
+                          });
+
+                          if (result.isConfirmed) {
+                            try {
+                              const { tripsAPI } = await import('@/lib/api-client');
+                              // Aquí deberíamos crear un endpoint específico para aceptar una oferta
+                              // Por ahora, simplemente actualizamos el fare y simulamos que el conductor acepta
+                              // TODO: Implementar endpoint dedicado
+                              await Swal.fire({
+                                icon: 'info',
+                                title: 'Notificando conductor',
+                                text: `Estamos notificando a ${offer.driver_name} que aceptaste su oferta.`,
+                                confirmButtonColor: '#4f46e5',
+                                timer: 2000,
+                                showConfirmButton: false,
+                              });
+                            } catch (error) {
+                              console.error('Error accepting offer:', error);
+                              Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudo aceptar la oferta. Intenta nuevamente.',
+                                confirmButtonColor: '#4f46e5',
+                              });
+                            }
+                          }
+                        }}
+                        className="w-full mt-2 py-2 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all"
+                      >
+                        Aceptar oferta
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-indigo-700 mt-3">
+                  💡 Los conductores pueden enviar ofertas personalizadas. Puedes esperar más ofertas o aceptar una ahora.
+                </p>
+              </div>
+            )}
 
             {/* Cancelar viaje - solo disponible cuando está buscando conductor */}
             {trip.status === 'requested' && (

@@ -171,4 +171,29 @@ export class PushNotificationService {
       sound: 'default',
     });
   }
+
+  /**
+   * Notifica a un pasajero sobre una nueva oferta de precio de un conductor
+   */
+  static async notifyPassengerNewOffer(
+    passengerPushToken: string,
+    offerData: {
+      driverName: string;
+      offeredPrice: number;
+      tripId: string;
+    }
+  ): Promise<boolean> {
+    return this.sendPushNotification({
+      to: passengerPushToken,
+      title: '¡Nueva oferta de conductor!',
+      body: `${offerData.driverName} te ofrece el viaje por $${offerData.offeredPrice.toLocaleString()}`,
+      data: {
+        type: 'price_offer',
+        tripId: offerData.tripId,
+        offeredPrice: offerData.offeredPrice,
+      },
+      sound: 'default',
+      priority: 'high',
+    });
+  }
 }

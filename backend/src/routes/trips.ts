@@ -347,6 +347,123 @@ tripRoutes.put('/:id/accept', async (c) => {
 });
 
 /**
+ * PUT /trips/:id/offer-price
+ * Conductor envía una oferta de precio personalizada
+ */
+tripRoutes.put('/:id/offer-price', async (c) => {
+  try {
+    const user = c.get('user');
+    const tripId = c.req.param('id');
+    const body = await c.req.json();
+    const { custom_price } = body;
+
+    // Solo conductores pueden enviar ofertas
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can send price offers' }, 403);
+    }
+
+    // Validar precio
+    if (!custom_price || custom_price <= 0) {
+      return c.json({ error: 'Invalid price' }, 400);
+    }
+
+    if (custom_price < 1000) {
+      return c.json({ error: 'Minimum price is $1,000' }, 400);
+    }
+
+    // Verificar que el viaje existe y está en estado 'requested'
+    const trip = await c.env.DB.prepare('SELECT * FROM trips WHERE id = ?')
+      .bind(tripId)
+      .first();
+
+    if (!trip) {
+      return c.json({ error: 'Trip not found' }, 404);
+    }
+
+    if (trip.status !== 'requested') {
+      return c.json({ error: 'Trip is no longer available for offers' }, 400);
+    }
+
+    // Verificar que el conductor tiene perfil completo
+    const driver = await c.env.DB.prepare(
+      'SELECT profile_completed FROM drivers WHERE id = ?'
+    )
+      .bind(user.id)
+      .first() as any;
+
+    if (!driver || !driver.profile_completed) {
+      return c.json({ error: 'Please complete your driver profile first' }, 400);
+    }
+
+    // Insertar o actualizar la oferta del conductor
+    const offerId = uuidv4();
+    await c.env.DB.prepare(
+      `INSERT INTO driver_price_offers (id, trip_id, driver_id, offered_price)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(trip_id, driver_id)
+       DO UPDATE SET offered_price = ?, created_at = strftime('%s', 'now')`
+    )
+      .bind(offerId, tripId, user.id, custom_price, custom_price)
+      .run();
+
+    // Obtener información del conductor para notificar al pasajero
+    const driverInfo = await c.env.DB.prepare(
+      `SELECT u.full_name, u.push_token,
+              d.vehicle_model, d.vehicle_color, d.vehicle_plate
+       FROM users u
+       JOIN drivers d ON u.id = d.id
+       WHERE u.id = ?`
+    )
+      .bind(user.id)
+      .first() as any;
+
+    // Crear notificación para el pasajero
+    await c.env.DB.prepare(
+      `INSERT INTO notifications (id, user_id, title, message, type, data)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        uuidv4(),
+        trip.passenger_id,
+        'Nueva oferta de conductor',
+        `${driverInfo?.full_name || 'Un conductor'} te ofrece el viaje por $${custom_price.toLocaleString()}`,
+        'price_offer',
+        JSON.stringify({ trip_id: tripId, driver_id: user.id, offered_price: custom_price })
+      )
+      .run();
+
+    // Enviar push notification al pasajero si tiene token
+    const passenger = await c.env.DB.prepare('SELECT push_token FROM users WHERE id = ?')
+      .bind(trip.passenger_id)
+      .first() as any;
+
+    if (passenger?.push_token && driverInfo) {
+      await PushNotificationService.notifyPassengerNewOffer(
+        passenger.push_token,
+        {
+          driverName: driverInfo.full_name,
+          offeredPrice: custom_price,
+          tripId: tripId,
+        }
+      );
+    }
+
+    return c.json({
+      message: 'Offer sent successfully',
+      offer: {
+        id: offerId,
+        trip_id: tripId,
+        driver_id: user.id,
+        offered_price: custom_price,
+      }
+    });
+  } catch (error: any) {
+    console.error('Offer price error:', error);
+    return c.json({ error: error.message || 'Failed to send offer' }, 500);
+  }
+});
+
+/**
  * PUT /trips/:id/status
  * Actualizar estado del viaje
  */
@@ -581,5 +698,58 @@ tripRoutes.put('/:id/rate', async (c) => {
   } catch (error: any) {
     console.error('Rate trip error:', error);
     return c.json({ error: error.message || 'Failed to rate trip' }, 500);
+  }
+});
+
+/**
+ * GET /trips/:id/offers
+ * Obtener todas las ofertas de precio de conductores para un viaje
+ */
+tripRoutes.get('/:id/offers', async (c) => {
+  try {
+    const user = c.get('user');
+    const tripId = c.req.param('id');
+
+    // Verificar que el viaje existe
+    const trip = await c.env.DB.prepare('SELECT * FROM trips WHERE id = ?')
+      .bind(tripId)
+      .first();
+
+    if (!trip) {
+      return c.json({ error: 'Trip not found' }, 404);
+    }
+
+    // Solo el pasajero del viaje puede ver las ofertas
+    if (user.role === 'passenger' && trip.passenger_id !== user.id) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+
+    // Obtener todas las ofertas con información del conductor
+    const offers = await c.env.DB.prepare(
+      `SELECT
+        dpo.id,
+        dpo.driver_id,
+        dpo.offered_price,
+        dpo.created_at,
+        u.full_name as driver_name,
+        d.vehicle_model,
+        d.vehicle_color,
+        d.vehicle_plate,
+        d.rating as driver_rating,
+        d.current_latitude,
+        d.current_longitude
+       FROM driver_price_offers dpo
+       JOIN users u ON dpo.driver_id = u.id
+       JOIN drivers d ON dpo.driver_id = d.id
+       WHERE dpo.trip_id = ?
+       ORDER BY dpo.created_at DESC`
+    )
+      .bind(tripId)
+      .all();
+
+    return c.json({ offers: offers.results || [] });
+  } catch (error: any) {
+    console.error('Get offers error:', error);
+    return c.json({ error: error.message || 'Failed to get offers' }, 500);
   }
 });

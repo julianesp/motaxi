@@ -466,70 +466,135 @@ export default function DriverHomePage() {
                                 <p className="text-xs text-gray-500">Recorrido: {trip.distance_km.toFixed(1)} km</p>
                               </div>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex flex-col gap-3">
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const { tripsAPI } = await import('@/lib/api-client');
+                                      await tripsAPI.acceptTrip(trip.id);
+
+                                      // Obtener información completa del viaje incluyendo datos del pasajero
+                                      const tripData = await tripsAPI.getTrip(trip.id);
+
+                                      // Actualizar el viaje activo con los datos completos del viaje aceptado
+                                      setActiveTrip({
+                                        id: trip.id,
+                                        pickup: {
+                                          lat: trip.pickup_latitude,
+                                          lng: trip.pickup_longitude,
+                                          address: trip.pickup_address,
+                                        },
+                                        destination: {
+                                          lat: trip.dropoff_latitude,
+                                          lng: trip.dropoff_longitude,
+                                          address: trip.dropoff_address,
+                                        },
+                                        fare: trip.fare,
+                                        distance: trip.distance_km,
+                                        passengerName: trip.passenger_name,
+                                        passengerPhone: trip.passenger_phone,
+                                        status: 'accepted',
+                                      });
+
+                                      // Limpiar lista de viajes disponibles
+                                      setAvailableTrips([]);
+
+                                      Swal.fire({
+                                        icon: 'success',
+                                        title: '¡Viaje aceptado!',
+                                        text: 'Dirígete al punto de recogida.',
+                                        confirmButtonColor: '#4f46e5',
+                                        timer: 3000,
+                                        timerProgressBar: true,
+                                      });
+                                    } catch (error) {
+                                      console.error('Error accepting trip:', error);
+                                      Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'No se pudo aceptar el viaje. Intenta nuevamente.',
+                                        confirmButtonColor: '#4f46e5',
+                                      });
+                                    }
+                                  }}
+                                  className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                  Aceptar Viaje
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    // Agregar a la lista de rechazados
+                                    setRejectedTripIds(prev => new Set([...prev, trip.id]));
+                                  }}
+                                  className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                                  title="Cancelar este viaje"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
                               <button
                                 onClick={async () => {
-                                  try {
-                                    const { tripsAPI } = await import('@/lib/api-client');
-                                    await tripsAPI.acceptTrip(trip.id);
+                                  const result = await Swal.fire({
+                                    title: 'Modificar precio',
+                                    html: `
+                                      <p class="text-gray-600 mb-4">Precio actual: <span class="font-bold text-green-600">$${trip.fare.toLocaleString()}</span></p>
+                                      <p class="text-sm text-gray-500 mb-2">Ingresa tu oferta personalizada:</p>
+                                    `,
+                                    input: 'number',
+                                    inputValue: trip.fare,
+                                    inputPlaceholder: 'Precio en pesos',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Enviar oferta',
+                                    cancelButtonText: 'Cancelar',
+                                    confirmButtonColor: '#10b981',
+                                    cancelButtonColor: '#6b7280',
+                                    inputValidator: (value) => {
+                                      if (!value || parseFloat(value) <= 0) {
+                                        return 'Debes ingresar un precio válido';
+                                      }
+                                      if (parseFloat(value) < 1000) {
+                                        return 'El precio mínimo es $1,000';
+                                      }
+                                    }
+                                  });
 
-                                    // Obtener información completa del viaje incluyendo datos del pasajero
-                                    const tripData = await tripsAPI.getTrip(trip.id);
+                                  if (result.isConfirmed) {
+                                    try {
+                                      const customPrice = parseFloat(result.value);
+                                      const { tripsAPI } = await import('@/lib/api-client');
+                                      await tripsAPI.offerCustomPrice(trip.id, customPrice);
 
-                                    // Actualizar el viaje activo con los datos completos del viaje aceptado
-                                    setActiveTrip({
-                                      id: trip.id,
-                                      pickup: {
-                                        lat: trip.pickup_latitude,
-                                        lng: trip.pickup_longitude,
-                                        address: trip.pickup_address,
-                                      },
-                                      destination: {
-                                        lat: trip.dropoff_latitude,
-                                        lng: trip.dropoff_longitude,
-                                        address: trip.dropoff_address,
-                                      },
-                                      fare: trip.fare,
-                                      distance: trip.distance_km,
-                                      passengerName: trip.passenger_name,
-                                      passengerPhone: trip.passenger_phone,
-                                      status: 'accepted',
-                                    });
+                                      await Swal.fire({
+                                        icon: 'success',
+                                        title: 'Oferta enviada',
+                                        text: `Tu oferta de $${customPrice.toLocaleString()} ha sido enviada al pasajero.`,
+                                        confirmButtonColor: '#10b981',
+                                        timer: 3000,
+                                        timerProgressBar: true,
+                                      });
 
-                                    // Limpiar lista de viajes disponibles
-                                    setAvailableTrips([]);
-
-                                    Swal.fire({
-                                      icon: 'success',
-                                      title: '¡Viaje aceptado!',
-                                      text: 'Dirígete al punto de recogida.',
-                                      confirmButtonColor: '#4f46e5',
-                                      timer: 3000,
-                                      timerProgressBar: true,
-                                    });
-                                  } catch (error) {
-                                    console.error('Error accepting trip:', error);
-                                    Swal.fire({
-                                      icon: 'error',
-                                      title: 'Error',
-                                      text: 'No se pudo aceptar el viaje. Intenta nuevamente.',
-                                      confirmButtonColor: '#4f46e5',
-                                    });
+                                      // Actualizar el precio en la lista local
+                                      setAvailableTrips(prev => prev.map(t =>
+                                        t.id === trip.id ? { ...t, fare: customPrice, hasCustomOffer: true } : t
+                                      ));
+                                    } catch (error) {
+                                      console.error('Error sending custom price:', error);
+                                      Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'No se pudo enviar la oferta. Intenta nuevamente.',
+                                        confirmButtonColor: '#4f46e5',
+                                      });
+                                    }
                                   }
                                 }}
-                                className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                               >
-                                Aceptar Viaje
-                              </button>
-                              <button
-                                onClick={() => {
-                                  // Agregar a la lista de rechazados
-                                  setRejectedTripIds(prev => new Set([...prev, trip.id]));
-                                }}
-                                className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-                                title="Cancelar este viaje"
-                              >
-                                Cancelar
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Modificar precio
                               </button>
                             </div>
                           </div>

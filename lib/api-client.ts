@@ -178,6 +178,16 @@ export const tripsAPI = {
     const response = await apiClient.get('/trips/current');
     return response.data;
   },
+
+  offerCustomPrice: async (tripId: string, customPrice: number) => {
+    const response = await apiClient.put(`/trips/${tripId}/offer-price`, { custom_price: customPrice });
+    return response.data;
+  },
+
+  getTripOffers: async (tripId: string) => {
+    const response = await apiClient.get(`/trips/${tripId}/offers`);
+    return response.data;
+  },
 };
 
 // API de conductores

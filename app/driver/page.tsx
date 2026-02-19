@@ -252,7 +252,7 @@ export default function DriverHomePage() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm z-10">
+      <header className="bg-white shadow-sm z-50 fixed top-0 left-0 right-0">
         <div className="container-app py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -291,7 +291,7 @@ export default function DriverHomePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative pt-16 md:pt-20">
         {/* Map */}
         <div className="absolute inset-0">
           <GoogleMapComponent

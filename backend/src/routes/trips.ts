@@ -25,8 +25,8 @@ tripRoutes.post('/', async (c) => {
       dropoff_latitude,
       dropoff_longitude,
       dropoff_address,
-      fare,
       distance_km,
+      estimated_fare, // Precio estimado calculado por el frontend
     } = body;
 
     if (user.role !== 'passenger') {
@@ -35,6 +35,7 @@ tripRoutes.post('/', async (c) => {
 
     const tripId = uuidv4();
 
+    // Guardar el fare estimado. Cuando el conductor acepta, se recalculará con sus tarifas.
     await c.env.DB.prepare(
       `INSERT INTO trips (
         id, passenger_id, pickup_latitude, pickup_longitude, pickup_address,
@@ -50,7 +51,7 @@ tripRoutes.post('/', async (c) => {
         dropoff_latitude,
         dropoff_longitude,
         dropoff_address,
-        fare,
+        estimated_fare || 0, // Usar estimated_fare o 0 si no viene
         distance_km
       )
       .run();
@@ -102,11 +103,13 @@ tripRoutes.get('/active', async (c) => {
     }
 
     // Obtener solicitudes disponibles (estado 'requested' sin conductor asignado)
+    // Incluye ubicación y género del pasajero para mostrar en el mapa del conductor
     const availableTrips = await c.env.DB.prepare(
       `SELECT
         t.*,
         u.full_name as passenger_name,
-        u.phone as passenger_phone
+        u.phone as passenger_phone,
+        u.gender as passenger_gender
        FROM trips t
        JOIN users u ON t.passenger_id = u.id
        WHERE t.status = 'requested'
@@ -244,22 +247,60 @@ tripRoutes.put('/:id/accept', async (c) => {
       return c.json({ error: 'Trip not found or already accepted' }, 404);
     }
 
-    // Actualizar viaje
-    await c.env.DB.prepare(
-      'UPDATE trips SET driver_id = ?, status = ?, accepted_at = ? WHERE id = ?'
-    )
-      .bind(user.id, 'accepted', Math.floor(Date.now() / 1000), tripId)
-      .run();
-
-    // Obtener información del conductor y pasajero para las notificaciones
-    const driver = await c.env.DB.prepare(
-      `SELECT u.full_name, u.push_token, d.vehicle_model, d.vehicle_color, d.vehicle_plate
+    // Obtener precios y ubicación actual del conductor para calcular la tarifa
+    const driverData = await c.env.DB.prepare(
+      `SELECT u.full_name, u.push_token,
+              d.vehicle_model, d.vehicle_color, d.vehicle_plate,
+              d.base_fare, d.intercity_fare, d.per_km_fare,
+              d.current_latitude, d.current_longitude
        FROM users u
        JOIN drivers d ON u.id = d.id
        WHERE u.id = ?`
     )
       .bind(user.id)
-      .first();
+      .first() as any;
+
+    // Calcular tarifa según precios del conductor
+    // Si el conductor está a más de 5 km del punto de recogida → tarifa intermunicipal
+    let calculatedFare = 0;
+    const baseFare = driverData?.base_fare ?? 5000;
+    const intercityFare = driverData?.intercity_fare ?? 10000;
+    const perKmFare = driverData?.per_km_fare ?? 2000;
+    const distanceKm = (trip as any).distance_km ?? 0;
+
+    let selectedBaseFare = baseFare;
+    if (
+      driverData?.current_latitude &&
+      driverData?.current_longitude &&
+      (trip as any).pickup_latitude &&
+      (trip as any).pickup_longitude
+    ) {
+      const dLat = (((trip as any).pickup_latitude - driverData.current_latitude) * Math.PI) / 180;
+      const dLng = (((trip as any).pickup_longitude - driverData.current_longitude) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((driverData.current_latitude * Math.PI) / 180) *
+          Math.cos(((trip as any).pickup_latitude * Math.PI) / 180) *
+          Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const driverToPickupKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      // Si el conductor está a más de 5 km del punto de recogida → intermunicipal
+      if (driverToPickupKm > 5) {
+        selectedBaseFare = intercityFare;
+      }
+    }
+
+    calculatedFare = Math.round(selectedBaseFare + distanceKm * perKmFare);
+
+    // Actualizar viaje con el conductor asignado y la tarifa calculada
+    await c.env.DB.prepare(
+      'UPDATE trips SET driver_id = ?, status = ?, accepted_at = ?, fare = ? WHERE id = ?'
+    )
+      .bind(user.id, 'accepted', Math.floor(Date.now() / 1000), calculatedFare, tripId)
+      .run();
+
+    // alias para mantener el resto del código igual
+    const driver = driverData;
 
     const passenger = await c.env.DB.prepare(
       'SELECT push_token FROM users WHERE id = ?'
@@ -349,6 +390,14 @@ tripRoutes.put('/:id/status', async (c) => {
       trip.passenger_id !== user.id
     ) {
       return c.json({ error: 'Unauthorized' }, 403);
+    }
+
+    // El pasajero solo puede cancelar si el viaje aún no ha sido aceptado por un conductor
+    if (user.role === 'passenger' && status === 'cancelled' && trip.status !== 'requested') {
+      return c.json({
+        error: 'No puedes cancelar el viaje porque el conductor ya lo aceptó. Comunícate directamente con él.',
+        alreadyAccepted: true,
+      }, 400);
     }
 
     // Determinar columna de timestamp

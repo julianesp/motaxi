@@ -155,7 +155,7 @@ export default function PassengerHomePage() {
     lng: number;
   } | null>(null);
   const [showTripRequest, setShowTripRequest] = useState(false);
-  const [estimatedFare, setEstimatedFare] = useState<number | null>(null);
+  const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null);
   const [showSaveFavoriteDialog, setShowSaveFavoriteDialog] = useState(false);
   const [favoriteName, setFavoriteName] = useState("");
   const [isSavingFavorite, setIsSavingFavorite] = useState(false);
@@ -407,6 +407,21 @@ export default function PassengerHomePage() {
     setIsPanelMinimized(false);
   };
 
+  // Actualizar distancia estimada cada vez que cambien pickup/destination
+  useEffect(() => {
+    if (pickup.latitude && pickup.longitude && destination.latitude && destination.longitude) {
+      const dist = calculateDistance(
+        pickup.latitude,
+        pickup.longitude,
+        destination.latitude,
+        destination.longitude,
+      );
+      setEstimatedDistance(dist);
+    } else {
+      setEstimatedDistance(null);
+    }
+  }, [pickup.latitude, pickup.longitude, destination.latitude, destination.longitude]);
+
   const handleRequestTrip = async () => {
     if (
       !pickup.latitude ||
@@ -430,15 +445,20 @@ export default function PassengerHomePage() {
       destination.latitude,
       destination.longitude,
     );
+    setEstimatedDistance(distance);
 
-    // Usar tarifas del conductor más cercano, o valores por defecto del sistema
-    const nearestDriver = nearbyDrivers.length > 0 ? nearbyDrivers[0] : null;
-    const baseFare = nearestDriver?.base_fare ?? 2000;
-    const perKmFare = nearestDriver?.per_km_fare ?? 500;
-
-    // Calcular tarifa estimada
-    const fare = Math.round(baseFare + distance * perKmFare);
-    setEstimatedFare(fare);
+    // Calcular tarifa estimada basada en conductores disponibles
+    let estimatedFare = 5000; // Valor por defecto si no hay conductores
+    if (nearbyDrivers.length > 0) {
+      // Usar tarifa del conductor más cercano
+      const nearestDriver = nearbyDrivers[0];
+      const baseFare = nearestDriver.base_fare ?? 5000;
+      const perKmFare = nearestDriver.per_km_fare ?? 2000;
+      estimatedFare = Math.round(baseFare + distance * perKmFare);
+    } else {
+      // Si no hay conductores, usar tarifa estándar del sistema
+      estimatedFare = Math.round(5000 + distance * 2000);
+    }
 
     try {
       setShowTripRequest(true);
@@ -453,8 +473,8 @@ export default function PassengerHomePage() {
         dropoff_latitude: destination.latitude,
         dropoff_longitude: destination.longitude,
         dropoff_address: destination.address,
-        fare,
         distance_km: parseFloat(distance.toFixed(2)),
+        estimated_fare: estimatedFare,
       });
 
       // Éxito: solicitud creada
@@ -660,7 +680,7 @@ export default function PassengerHomePage() {
       </Suspense>
 
       {/* Header */}
-      <header className="bg-white shadow-sm z-10 sticky top-0">
+      <header className="bg-white shadow-sm z-50 fixed top-0 left-0 right-0">
         <div className="px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -717,7 +737,7 @@ export default function PassengerHomePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden pt-16 md:pt-20">
         {/* Map */}
         <div className="absolute inset-0">
           <GoogleMapComponent
@@ -968,29 +988,44 @@ export default function PassengerHomePage() {
               </button>
             )}
 
-            {/* Estimated Fare */}
-            {estimatedFare && (
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-4 border border-indigo-200 shadow-sm">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-gray-700 font-medium">Tarifa estimada:</span>
-                  </div>
-                  <span className="text-2xl font-bold text-indigo-600">
-                    ${estimatedFare.toLocaleString()}
-                  </span>
+            {/* Tarifas de conductores disponibles */}
+            {pickup.latitude && destination.latitude && nearbyDrivers.length > 0 && estimatedDistance && (
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-4 border border-indigo-200 shadow-sm space-y-2">
+                <div className="flex items-center space-x-2 mb-1">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-gray-700 font-semibold text-sm">Tarifas de conductores disponibles</span>
                 </div>
-                {nearbyDrivers.length > 0 ? (
-                  <p className="text-xs text-gray-500">
-                    Según tarifas de {nearbyDrivers[0].full_name} (más cercano) · ${nearbyDrivers[0].base_fare?.toLocaleString()} base + ${nearbyDrivers[0].per_km_fare?.toLocaleString()}/km
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-400">
-                    Tarifa base del sistema · $2,000 base + $500/km
-                  </p>
+                <p className="text-xs text-gray-500 mb-2">
+                  El precio final lo define el conductor que acepte tu viaje · {estimatedDistance.toFixed(1)} km estimados
+                </p>
+                <div className="space-y-1">
+                  {nearbyDrivers.slice(0, 4).map((driver) => {
+                    const driverFare = Math.round((driver.base_fare ?? 5000) + estimatedDistance * (driver.per_km_fare ?? 2000));
+                    return (
+                      <div key={driver.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-indigo-100">
+                        <div>
+                          <span className="text-sm font-medium text-gray-800">{driver.full_name}</span>
+                          <span className="text-xs text-gray-400 ml-2">{driver.distance_km?.toFixed(1)} km de ti</span>
+                        </div>
+                        <span className="text-base font-bold text-indigo-700">${driverFare.toLocaleString()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {nearbyDrivers.length > 4 && (
+                  <p className="text-xs text-center text-gray-400">+{nearbyDrivers.length - 4} conductores más disponibles</p>
                 )}
+              </div>
+            )}
+
+            {/* Sin conductores disponibles */}
+            {pickup.latitude && destination.latitude && nearbyDrivers.length === 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                <p className="text-sm text-amber-800 text-center">
+                  No hay conductores disponibles en tu zona en este momento.
+                </p>
               </div>
             )}
 

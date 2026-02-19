@@ -137,8 +137,8 @@ export const tripsAPI = {
     dropoff_latitude: number;
     dropoff_longitude: number;
     dropoff_address: string;
-    fare: number;
     distance_km: number;
+    estimated_fare: number; // Precio estimado calculado en frontend
   }) => {
     const response = await apiClient.post('/trips', tripData);
     return response.data;
@@ -223,6 +223,18 @@ export const driversAPI = {
 
   getEarnings: async () => {
     const response = await apiClient.get('/drivers/earnings');
+    return response.data;
+  },
+};
+
+// API de usuarios
+export const usersAPI = {
+  updateProfile: async (data: {
+    full_name?: string;
+    phone?: string;
+    gender?: "male" | "female" | "other" | null;
+  }) => {
+    const response = await apiClient.put('/users/profile', data);
     return response.data;
   },
 };

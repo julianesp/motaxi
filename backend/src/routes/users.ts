@@ -29,7 +29,7 @@ userRoutes.put('/profile', async (c) => {
   try {
     const user = c.get('user');
     const body = await c.req.json();
-    const { full_name, phone, profile_image } = body;
+    const { full_name, phone, profile_image, gender } = body;
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -46,6 +46,14 @@ userRoutes.put('/profile', async (c) => {
       updates.push('profile_image = ?');
       values.push(profile_image);
     }
+    if (gender !== undefined) {
+      // Validar que el gender sea uno de los valores permitidos
+      if (!['male', 'female', 'other'].includes(gender) && gender !== null) {
+        return c.json({ error: 'Invalid gender value. Must be: male, female, other, or null' }, 400);
+      }
+      updates.push('gender = ?');
+      values.push(gender);
+    }
 
     if (updates.length === 0) {
       return c.json({ error: 'No fields to update' }, 400);
@@ -60,7 +68,7 @@ userRoutes.put('/profile', async (c) => {
       .run();
 
     const updatedUser = await c.env.DB.prepare(
-      'SELECT id, email, phone, full_name, role, profile_image, created_at FROM users WHERE id = ?'
+      'SELECT id, email, phone, full_name, role, profile_image, gender, created_at FROM users WHERE id = ?'
     )
       .bind(user.id)
       .first();

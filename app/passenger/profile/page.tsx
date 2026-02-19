@@ -12,6 +12,7 @@ export default function PassengerProfilePage() {
     full_name: "",
     phone: "",
     email: "",
+    gender: "" as "male" | "female" | "other" | "",
   });
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function PassengerProfilePage() {
         full_name: user.full_name,
         phone: user.phone,
         email: user.email,
+        gender: (user as any).gender || "",
       });
     }
   }, [user]);
@@ -40,9 +42,21 @@ export default function PassengerProfilePage() {
   };
 
   const handleSave = async () => {
-    // TODO: Implementar actualización de perfil en el backend
-    setIsEditing(false);
-    alert("Perfil actualizado (funcionalidad en desarrollo)");
+    try {
+      const { usersAPI } = await import("@/lib/api-client");
+      await usersAPI.updateProfile({
+        full_name: formData.full_name,
+        phone: formData.phone,
+        gender: formData.gender || null,
+      });
+      setIsEditing(false);
+      alert("✅ Perfil actualizado correctamente");
+      // Recargar para reflejar cambios
+      window.location.reload();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("❌ Error al actualizar el perfil. Intenta nuevamente.");
+    }
   };
 
   if (loading) {
@@ -221,6 +235,52 @@ export default function PassengerProfilePage() {
                     />
                   ) : (
                     <span className="text-gray-900">{user.full_name}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Gender */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Género
+                </label>
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 text-gray-400 mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  {isEditing ? (
+                    <select
+                      value={formData.gender}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gender: e.target.value as any })
+                      }
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">Sin especificar</option>
+                      <option value="male">Masculino</option>
+                      <option value="female">Femenino</option>
+                      <option value="other">Otro</option>
+                    </select>
+                  ) : (
+                    <span className="text-gray-900">
+                      {formData.gender === "male"
+                        ? "Masculino"
+                        : formData.gender === "female"
+                          ? "Femenino"
+                          : formData.gender === "other"
+                            ? "Otro"
+                            : "Sin especificar"}
+                    </span>
                   )}
                 </div>
               </div>

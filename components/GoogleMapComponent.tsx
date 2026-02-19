@@ -14,6 +14,17 @@ interface NearbyDriverMarker {
   rating: number;
 }
 
+interface RequestingPassengerMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  name: string;
+  gender?: 'male' | 'female' | 'other';
+  pickup_address: string;
+  dropoff_address: string;
+  distance_km: number;
+}
+
 interface GoogleMapComponentProps {
   center: { lat: number; lng: number };
   zoom?: number;
@@ -26,6 +37,8 @@ interface GoogleMapComponentProps {
   disableAutoFit?: boolean;
   nearbyDrivers?: NearbyDriverMarker[]; // Conductores disponibles para mostrar en el mapa
   onDriverClick?: (driverId: string) => void; // Callback al hacer clic en un conductor
+  requestingPassengers?: RequestingPassengerMarker[]; // Pasajeros solicitando viaje
+  onPassengerClick?: (passengerId: string) => void; // Callback al hacer clic en un pasajero
 }
 
 const mapContainerStyle = {
@@ -53,6 +66,8 @@ function GoogleMapComponent({
   disableAutoFit = false,
   nearbyDrivers = [],
   onDriverClick,
+  requestingPassengers = [],
+  onPassengerClick,
 }: GoogleMapComponentProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -331,14 +346,25 @@ function GoogleMapComponent({
           />
         )}
 
-        {/* Marcador del conductor (morado/naranja) */}
+        {/* Marcador del conductor (moto naranja) */}
         {driverLocation && (
           <Marker
             position={driverLocation}
             icon={{
-              url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='%23f97316'%3E%3Cpath d='M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z'/%3E%3C/svg%3E",
-              scaledSize: new google.maps.Size(40, 40),
-              anchor: new google.maps.Point(20, 20),
+              url: "data:image/svg+xml," + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="11.5" fill="white" stroke="#f97316" stroke-width="2"/>
+                  <g transform="translate(4, 6)">
+                    <circle cx="3" cy="9" r="2" fill="#374151"/>
+                    <circle cx="13" cy="9" r="2" fill="#374151"/>
+                    <path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                    <path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                    <circle cx="8" cy="2" r="1.2" fill="#f97316"/>
+                  </g>
+                </svg>
+              `),
+              scaledSize: new google.maps.Size(44, 44),
+              anchor: new google.maps.Point(22, 22),
             }}
             title="Tu conductor"
           />
@@ -351,9 +377,15 @@ function GoogleMapComponent({
             position={{ lat: driver.lat, lng: driver.lng }}
             icon={{
               url: "data:image/svg+xml," + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#f97316">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="11" fill="white" stroke="#f97316" stroke-width="1.5"/>
-                  <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                  <g transform="translate(4, 6)">
+                    <circle cx="3" cy="9" r="2" fill="#374151"/>
+                    <circle cx="13" cy="9" r="2" fill="#374151"/>
+                    <path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                    <path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                    <circle cx="8" cy="2" r="1.2" fill="#f97316"/>
+                  </g>
                 </svg>
               `),
               scaledSize: new google.maps.Size(36, 36),
@@ -363,6 +395,47 @@ function GoogleMapComponent({
             onClick={() => onDriverClick && onDriverClick(driver.id)}
           />
         ))}
+
+        {/* Marcadores de pasajeros solicitando viaje (con animación pulsante) */}
+        {requestingPassengers.map((passenger) => {
+          // Determinar icono según género
+          const genderIcon = passenger.gender === 'male'
+            ? '🙋🏻‍♂️'
+            : passenger.gender === 'female'
+            ? '🙋🏻‍♀️'
+            : '🙋';
+
+          return (
+            <Marker
+              key={`requesting-${passenger.id}`}
+              position={{ lat: passenger.lat, lng: passenger.lng }}
+              icon={{
+                url: "data:image/svg+xml," + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
+                    <!-- Círculo pulsante exterior (animación de alerta) -->
+                    <circle cx="25" cy="25" r="20" fill="#dc2626" opacity="0.3">
+                      <animate attributeName="r" values="18;24;18" dur="1.5s" repeatCount="indefinite"/>
+                      <animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>
+                    <!-- Círculo pulsante intermedio -->
+                    <circle cx="25" cy="25" r="16" fill="#ef4444" opacity="0.5">
+                      <animate attributeName="r" values="16;20;16" dur="1.5s" repeatCount="indefinite"/>
+                      <animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>
+                    <!-- Círculo principal -->
+                    <circle cx="25" cy="25" r="14" fill="#dc2626" stroke="white" stroke-width="2"/>
+                    <!-- Icono de persona -->
+                    <text x="25" y="33" font-size="18" text-anchor="middle" fill="white">${genderIcon}</text>
+                  </svg>
+                `),
+                scaledSize: new google.maps.Size(50, 50),
+                anchor: new google.maps.Point(25, 25),
+              }}
+              title={`${passenger.name} solicita viaje · ${passenger.distance_km.toFixed(1)} km`}
+              onClick={() => onPassengerClick && onPassengerClick(passenger.id)}
+            />
+          );
+        })}
 
         {/* Ruta desde el conductor hasta el punto de recogida (azul) */}
         {directionsToPickup && (
@@ -452,6 +525,13 @@ export default memo(GoogleMapComponent, (prevProps, nextProps) => {
       return p?.id === d.id && p?.lat === d.lat && p?.lng === d.lng;
     });
 
+  const passengersUnchanged =
+    prevProps.requestingPassengers?.length === nextProps.requestingPassengers?.length &&
+    (nextProps.requestingPassengers || []).every((p, i) => {
+      const prev = (prevProps.requestingPassengers || [])[i];
+      return prev?.id === p.id && prev?.lat === p.lat && prev?.lng === p.lng;
+    });
+
   return (
     prevProps.zoom === nextProps.zoom &&
     prevProps.clickMode === nextProps.clickMode &&
@@ -464,6 +544,7 @@ export default memo(GoogleMapComponent, (prevProps, nextProps) => {
     prevProps.destination?.lng === nextProps.destination?.lng &&
     prevProps.driverLocation?.lat === nextProps.driverLocation?.lat &&
     prevProps.driverLocation?.lng === nextProps.driverLocation?.lng &&
-    driversUnchanged
+    driversUnchanged &&
+    passengersUnchanged
   );
 });

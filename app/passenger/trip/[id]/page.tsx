@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import dynamic from 'next/dynamic';
+import Swal from 'sweetalert2';
 
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
   ssr: false,
@@ -51,6 +52,7 @@ export default function TripTrackingPage() {
   const [comment, setComment] = useState('');
   const [isRated, setIsRated] = useState(false);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
 
   // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
@@ -361,7 +363,9 @@ export default function TripTrackingPage() {
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Tarifa</p>
+                  <p className="text-sm text-gray-600">
+                    Tarifa {trip.status === 'requested' ? 'estimada' : ''}
+                  </p>
                   <p className="text-2xl font-bold text-green-600">${trip.fare.toLocaleString()}</p>
                 </div>
                 <div className="text-right">
@@ -369,7 +373,83 @@ export default function TripTrackingPage() {
                   <p className="text-lg font-semibold text-gray-900">{trip.distance_km.toFixed(1)} km</p>
                 </div>
               </div>
+              {trip.status === 'requested' && (
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 El precio puede ajustarse según las tarifas del conductor que acepte
+                </p>
+              )}
             </div>
+
+            {/* Cancelar viaje - solo disponible cuando está buscando conductor */}
+            {trip.status === 'requested' && (
+              <div className="pt-2">
+                <button
+                  onClick={async () => {
+                    const result = await Swal.fire({
+                      icon: 'warning',
+                      title: '¿Cancelar viaje?',
+                      text: 'Si cancelas, el viaje será eliminado y deberás solicitar uno nuevo.',
+                      showCancelButton: true,
+                      confirmButtonColor: '#dc2626',
+                      cancelButtonColor: '#6b7280',
+                      confirmButtonText: 'Sí, cancelar',
+                      cancelButtonText: 'No, continuar',
+                    });
+
+                    if (!result.isConfirmed) return;
+
+                    setIsCancelling(true);
+                    try {
+                      const { tripsAPI } = await import('@/lib/api-client');
+                      await tripsAPI.updateTripStatus(trip.id, 'cancelled');
+                      await Swal.fire({
+                        icon: 'success',
+                        title: 'Viaje cancelado',
+                        text: 'Tu viaje ha sido cancelado exitosamente.',
+                        confirmButtonColor: '#4f46e5',
+                        timer: 2000,
+                        showConfirmButton: false,
+                      });
+                      router.push('/passenger');
+                    } catch (error) {
+                      console.error('Error cancelling trip:', error);
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo cancelar el viaje. Intenta nuevamente.',
+                        confirmButtonColor: '#4f46e5',
+                      });
+                    } finally {
+                      setIsCancelling(false);
+                    }
+                  }}
+                  disabled={isCancelling}
+                  className={`w-full py-3 px-6 bg-red-100 text-red-700 border border-red-300 rounded-xl font-semibold hover:bg-red-200 transition-all duration-200 flex items-center justify-center space-x-2 ${isCancelling ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>{isCancelling ? 'Cancelando...' : 'Cancelar viaje'}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Nota de cancelación cuando conductor ya aceptó */}
+            {trip.status === 'accepted' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800">¿Necesitas cancelar?</p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      El conductor ya aceptó tu viaje. Para cancelar, comunícate directamente con él por llamada o WhatsApp y lleguen a un acuerdo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Communication Buttons */}
             {trip.driver_phone && (trip.status === 'accepted' || trip.status === 'in_progress') && (

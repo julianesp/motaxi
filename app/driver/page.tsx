@@ -592,12 +592,13 @@ export default function DriverHomePage() {
                                       setAvailableTrips(prev => prev.map(t =>
                                         t.id === trip.id ? { ...t, fare: customPrice, hasCustomOffer: true } : t
                                       ));
-                                    } catch (error) {
+                                    } catch (error: any) {
                                       console.error('Error sending custom price:', error);
+                                      const errorMessage = error?.response?.data?.error || error?.message || 'No se pudo enviar la oferta. Intenta nuevamente.';
                                       Swal.fire({
                                         icon: 'error',
                                         title: 'Error',
-                                        text: 'No se pudo enviar la oferta. Intenta nuevamente.',
+                                        text: errorMessage,
                                         confirmButtonColor: '#4f46e5',
                                       });
                                     }
@@ -1102,12 +1103,13 @@ export default function DriverHomePage() {
 
                             // Cerrar modal
                             setSelectedTripForMap(null);
-                          } catch (error) {
+                          } catch (error: any) {
                             console.error('Error sending custom price:', error);
+                            const errorMessage = error?.response?.data?.error || error?.message || 'No se pudo enviar la oferta. Intenta nuevamente.';
                             Swal.fire({
                               icon: 'error',
                               title: 'Error',
-                              text: 'No se pudo enviar la oferta. Intenta nuevamente.',
+                              text: errorMessage,
                               confirmButtonColor: '#4f46e5',
                             });
                           }

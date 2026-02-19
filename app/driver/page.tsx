@@ -960,13 +960,13 @@ export default function DriverHomePage() {
 
         {/* Modal para ver la ruta del viaje */}
         {selectedTripForMap && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-0 md:p-4">
+            <div className="bg-white md:rounded-2xl w-full h-full md:max-w-6xl md:h-[90vh] flex flex-col overflow-hidden shadow-2xl">
               {/* Header del modal */}
-              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-4 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-3 md:p-4 flex items-center justify-between flex-shrink-0">
                 <div>
-                  <h2 className="text-xl font-bold text-white">Ruta del Viaje</h2>
-                  <p className="text-indigo-100 text-sm">
+                  <h2 className="text-lg md:text-xl font-bold text-white">Ruta del Viaje</h2>
+                  <p className="text-indigo-100 text-xs md:text-sm">
                     {selectedTripForMap.passenger_name} • {selectedTripForMap.distance_km?.toFixed(1)} km
                   </p>
                 </div>
@@ -982,8 +982,8 @@ export default function DriverHomePage() {
 
               {/* Contenido: Mapa y detalles */}
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                {/* Mapa */}
-                <div className="flex-1 relative">
+                {/* Mapa - Ocupa 60% en móvil, flex-1 en desktop */}
+                <div className="h-[60vh] md:h-auto md:flex-1 relative flex-shrink-0">
                   <GoogleMapComponent
                     center={{
                       lat: selectedTripForMap.pickup_latitude,
@@ -1002,8 +1002,9 @@ export default function DriverHomePage() {
                   />
                 </div>
 
-                {/* Panel de información */}
-                <div className="w-full md:w-96 bg-gray-50 p-6 overflow-y-auto space-y-4">
+                {/* Panel de información - Scroll vertical en móvil */}
+                <div className="flex-1 md:w-96 md:flex-none bg-gray-50 overflow-y-auto">
+                  <div className="p-4 md:p-6 space-y-4">
                   {/* Información del viaje */}
                   <div className="bg-white rounded-xl p-4 shadow-sm">
                     <h3 className="font-bold text-gray-800 mb-3">Detalles del viaje</h3>
@@ -1200,6 +1201,7 @@ export default function DriverHomePage() {
                     >
                       Cerrar
                     </button>
+                  </div>
                   </div>
                 </div>
               </div>

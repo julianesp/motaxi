@@ -397,13 +397,14 @@ tripRoutes.put('/:id/offer-price', async (c) => {
 
     // Insertar o actualizar la oferta del conductor
     const offerId = uuidv4();
+    const currentTimestamp = Math.floor(Date.now() / 1000);
     await c.env.DB.prepare(
-      `INSERT INTO driver_price_offers (id, trip_id, driver_id, offered_price)
-       VALUES (?, ?, ?, ?)
+      `INSERT INTO driver_price_offers (id, trip_id, driver_id, offered_price, created_at)
+       VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(trip_id, driver_id)
-       DO UPDATE SET offered_price = ?, created_at = strftime('%s', 'now')`
+       DO UPDATE SET offered_price = ?, created_at = ?`
     )
-      .bind(offerId, tripId, user.id, custom_price, custom_price)
+      .bind(offerId, tripId, user.id, custom_price, currentTimestamp, custom_price, currentTimestamp)
       .run();
 
     // Obtener información del conductor para notificar al pasajero

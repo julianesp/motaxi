@@ -35,6 +35,9 @@ export default function DriverHomePage() {
     month: 0,
   });
 
+  // Estado para ver la ruta de un viaje disponible
+  const [selectedTripForMap, setSelectedTripForMap] = useState<any>(null);
+
   // Estados para el modal de completar perfil
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -442,11 +445,22 @@ export default function DriverHomePage() {
                                   </svg>
                                   <span className="font-medium">{trip.passenger_name}</span>
                                 </div>
-                                {trip.distance_to_pickup && (
-                                  <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                                    📍 {trip.distance_to_pickup} km de ti
-                                  </div>
-                                )}
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => setSelectedTripForMap(trip)}
+                                    className="p-1.5 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors"
+                                    title="Ver ruta en mapa"
+                                  >
+                                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                    </svg>
+                                  </button>
+                                  {trip.distance_to_pickup && (
+                                    <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                      📍 {trip.distance_to_pickup} km de ti
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             )}
 
@@ -939,6 +953,255 @@ export default function DriverHomePage() {
                 <p className="text-xs text-gray-500 text-center mt-3">
                   * Campos obligatorios
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para ver la ruta del viaje */}
+        {selectedTripForMap && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+              {/* Header del modal */}
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Ruta del Viaje</h2>
+                  <p className="text-indigo-100 text-sm">
+                    {selectedTripForMap.passenger_name} • {selectedTripForMap.distance_km?.toFixed(1)} km
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedTripForMap(null)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Contenido: Mapa y detalles */}
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                {/* Mapa */}
+                <div className="flex-1 relative">
+                  <GoogleMapComponent
+                    center={{
+                      lat: selectedTripForMap.pickup_latitude,
+                      lng: selectedTripForMap.pickup_longitude,
+                    }}
+                    zoom={13}
+                    pickup={{
+                      lat: selectedTripForMap.pickup_latitude,
+                      lng: selectedTripForMap.pickup_longitude,
+                    }}
+                    destination={{
+                      lat: selectedTripForMap.dropoff_latitude,
+                      lng: selectedTripForMap.dropoff_longitude,
+                    }}
+                    driverLocation={currentLocation}
+                  />
+                </div>
+
+                {/* Panel de información */}
+                <div className="w-full md:w-96 bg-gray-50 p-6 overflow-y-auto space-y-4">
+                  {/* Información del viaje */}
+                  <div className="bg-white rounded-xl p-4 shadow-sm">
+                    <h3 className="font-bold text-gray-800 mb-3">Detalles del viaje</h3>
+
+                    {/* Origen */}
+                    <div className="mb-3">
+                      <div className="flex items-center mb-1">
+                        <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <span className="text-xs text-gray-500 font-medium">Origen</span>
+                      </div>
+                      <p className="text-sm text-gray-700 ml-5">{selectedTripForMap.pickup_address}</p>
+                    </div>
+
+                    {/* Destino */}
+                    <div className="mb-3">
+                      <div className="flex items-center mb-1">
+                        <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                        <span className="text-xs text-gray-500 font-medium">Destino</span>
+                      </div>
+                      <p className="text-sm text-gray-700 ml-5">{selectedTripForMap.dropoff_address}</p>
+                    </div>
+
+                    {/* Distancia y precio */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                      <div>
+                        <p className="text-xs text-gray-500">Distancia</p>
+                        <p className="text-lg font-semibold text-gray-900">{selectedTripForMap.distance_km?.toFixed(1)} km</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">Precio estimado</p>
+                        <p className="text-2xl font-bold text-green-600">${selectedTripForMap.fare?.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Distancia al pickup */}
+                  {selectedTripForMap.distance_to_pickup && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                      <div className="flex items-center text-blue-800">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-xs font-medium">Distancia al punto de recogida</p>
+                          <p className="text-lg font-bold">{selectedTripForMap.distance_to_pickup} km</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Acciones */}
+                  <div className="space-y-2">
+                    {/* Modificar precio */}
+                    <button
+                      onClick={async () => {
+                        const result = await Swal.fire({
+                          title: 'Modificar precio',
+                          html: `
+                            <p class="text-gray-600 mb-4">Precio actual: <span class="font-bold text-green-600">$${selectedTripForMap.fare?.toLocaleString()}</span></p>
+                            <p class="text-sm text-gray-500 mb-2">Ingresa tu oferta personalizada:</p>
+                          `,
+                          input: 'number',
+                          inputValue: selectedTripForMap.fare,
+                          inputPlaceholder: 'Precio en pesos',
+                          showCancelButton: true,
+                          confirmButtonText: 'Enviar oferta',
+                          cancelButtonText: 'Cancelar',
+                          confirmButtonColor: '#10b981',
+                          cancelButtonColor: '#6b7280',
+                          inputValidator: (value) => {
+                            if (!value || parseFloat(value) <= 0) {
+                              return 'Debes ingresar un precio válido';
+                            }
+                            if (parseFloat(value) < 1000) {
+                              return 'El precio mínimo es $1,000';
+                            }
+                          }
+                        });
+
+                        if (result.isConfirmed) {
+                          try {
+                            const customPrice = parseFloat(result.value);
+                            const { tripsAPI } = await import('@/lib/api-client');
+                            await tripsAPI.offerCustomPrice(selectedTripForMap.id, customPrice);
+
+                            await Swal.fire({
+                              icon: 'success',
+                              title: 'Oferta enviada',
+                              text: `Tu oferta de $${customPrice.toLocaleString()} ha sido enviada al pasajero.`,
+                              confirmButtonColor: '#10b981',
+                              timer: 3000,
+                              timerProgressBar: true,
+                            });
+
+                            // Cerrar modal
+                            setSelectedTripForMap(null);
+                          } catch (error) {
+                            console.error('Error sending custom price:', error);
+                            Swal.fire({
+                              icon: 'error',
+                              title: 'Error',
+                              text: 'No se pudo enviar la oferta. Intenta nuevamente.',
+                              confirmButtonColor: '#4f46e5',
+                            });
+                          }
+                        }
+                      }}
+                      className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Modificar precio
+                    </button>
+
+                    {/* Aceptar viaje */}
+                    <button
+                      onClick={async () => {
+                        const result = await Swal.fire({
+                          title: '¿Aceptar este viaje?',
+                          html: `
+                            <div class="text-left space-y-2">
+                              <p><strong>Pasajero:</strong> ${selectedTripForMap.passenger_name}</p>
+                              <p><strong>Distancia:</strong> ${selectedTripForMap.distance_km?.toFixed(1)} km</p>
+                              <p><strong>Precio:</strong> <span class="text-green-600 text-xl font-bold">$${selectedTripForMap.fare?.toLocaleString()}</span></p>
+                            </div>
+                          `,
+                          icon: 'question',
+                          showCancelButton: true,
+                          confirmButtonText: 'Sí, aceptar',
+                          cancelButtonText: 'Cancelar',
+                          confirmButtonColor: '#4f46e5',
+                          cancelButtonColor: '#6b7280',
+                        });
+
+                        if (result.isConfirmed) {
+                          try {
+                            const { tripsAPI } = await import('@/lib/api-client');
+                            await tripsAPI.acceptTrip(selectedTripForMap.id);
+
+                            const tripData = await tripsAPI.getTrip(selectedTripForMap.id);
+
+                            setActiveTrip({
+                              id: selectedTripForMap.id,
+                              pickup: {
+                                lat: selectedTripForMap.pickup_latitude,
+                                lng: selectedTripForMap.pickup_longitude,
+                                address: selectedTripForMap.pickup_address,
+                              },
+                              destination: {
+                                lat: selectedTripForMap.dropoff_latitude,
+                                lng: selectedTripForMap.dropoff_longitude,
+                                address: selectedTripForMap.dropoff_address,
+                              },
+                              fare: selectedTripForMap.fare,
+                              distance: selectedTripForMap.distance_km,
+                              passengerName: selectedTripForMap.passenger_name,
+                              passengerPhone: selectedTripForMap.passenger_phone,
+                              status: 'accepted',
+                            });
+
+                            setAvailableTrips([]);
+                            setSelectedTripForMap(null);
+
+                            Swal.fire({
+                              icon: 'success',
+                              title: '¡Viaje aceptado!',
+                              text: 'Dirígete al punto de recogida.',
+                              confirmButtonColor: '#4f46e5',
+                              timer: 3000,
+                              timerProgressBar: true,
+                            });
+                          } catch (error) {
+                            console.error('Error accepting trip:', error);
+                            Swal.fire({
+                              icon: 'error',
+                              title: 'Error',
+                              text: 'No se pudo aceptar el viaje. Intenta nuevamente.',
+                              confirmButtonColor: '#4f46e5',
+                            });
+                          }
+                        }
+                      }}
+                      className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200"
+                    >
+                      Aceptar Viaje
+                    </button>
+
+                    {/* Cerrar */}
+                    <button
+                      onClick={() => setSelectedTripForMap(null)}
+                      className="w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-all duration-200"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

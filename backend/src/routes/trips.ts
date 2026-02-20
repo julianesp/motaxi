@@ -428,8 +428,8 @@ tripRoutes.put('/:id/offer-price', async (c) => {
         trip.passenger_id,
         'Nueva oferta de conductor',
         `${driverInfo?.full_name || 'Un conductor'} te ofrece el viaje por $${custom_price.toLocaleString()}`,
-        'price_offer',
-        JSON.stringify({ trip_id: tripId, driver_id: user.id, offered_price: custom_price })
+        'general',
+        JSON.stringify({ trip_id: tripId, driver_id: user.id, offered_price: custom_price, notification_type: 'price_offer' })
       )
       .run();
 

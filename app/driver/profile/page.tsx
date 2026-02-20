@@ -29,10 +29,13 @@ export default function DriverProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [driverInfo, setDriverInfo] = useState<DriverInfo | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
     email: '',
+    profile_image: '',
   });
   const [driverFormData, setDriverFormData] = useState({
     municipality: '',

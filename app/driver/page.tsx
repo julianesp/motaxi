@@ -55,6 +55,55 @@ export default function DriverHomePage() {
     }
   }, [user, loading, router]);
 
+  // Verificar si el conductor tiene un viaje activo asignado
+  useEffect(() => {
+    const checkActiveTrip = async () => {
+      if (!user || user.role !== 'driver') return;
+
+      try {
+        const { tripsAPI } = await import('@/lib/api-client');
+        const data = await tripsAPI.getCurrentTrip();
+
+        if (data.trip && !activeTrip) {
+          // El conductor tiene un viaje activo que no está mostrando
+          const trip = data.trip;
+          setActiveTrip({
+            id: trip.id,
+            pickup: {
+              lat: trip.pickup_latitude,
+              lng: trip.pickup_longitude,
+              address: trip.pickup_address,
+            },
+            destination: {
+              lat: trip.dropoff_latitude,
+              lng: trip.dropoff_longitude,
+              address: trip.dropoff_address,
+            },
+            fare: trip.fare,
+            distance: trip.distance_km,
+            passengerName: trip.passenger_name,
+            passengerPhone: trip.passenger_phone,
+            status: trip.status,
+          });
+
+          // Limpiar viajes disponibles
+          setAvailableTrips([]);
+        }
+      } catch (error) {
+        // No hay viaje activo o error
+        console.log('No active trip or error:', error);
+      }
+    };
+
+    // Verificar inmediatamente
+    checkActiveTrip();
+
+    // Verificar cada 5 segundos
+    const interval = setInterval(checkActiveTrip, 5000);
+
+    return () => clearInterval(interval);
+  }, [user, activeTrip]);
+
   useEffect(() => {
     // Cargar estado de disponibilidad desde el backend
     const loadDriverStatus = async () => {

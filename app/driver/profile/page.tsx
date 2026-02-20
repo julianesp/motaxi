@@ -63,7 +63,9 @@ export default function DriverProfilePage() {
         full_name: user.full_name,
         phone: user.phone,
         email: user.email,
+        profile_image: (user as any).profile_image || '',
       });
+      setPhotoPreview((user as any).profile_image || null);
       fetchDriverInfo();
     }
   }, [user]);

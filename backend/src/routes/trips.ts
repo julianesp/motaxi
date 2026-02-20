@@ -785,6 +785,43 @@ tripRoutes.put('/:id/rate', async (c) => {
       await c.env.DB.prepare('UPDATE drivers SET rating = ? WHERE id = ?')
         .bind(avgRating?.avg || null, ratedUserId)
         .run();
+
+      // Crear notificación para el conductor
+      const stars = '⭐'.repeat(rating);
+      await c.env.DB.prepare(
+        `INSERT INTO notifications (id, user_id, title, message, type, data)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+        .bind(
+          uuidv4(),
+          ratedUserId,
+          'Nueva calificación recibida',
+          `${user.full_name} te calificó con ${rating} estrellas ${stars}${comment ? `: "${comment}"` : ''}`,
+          'general',
+          JSON.stringify({ trip_id: tripId, rating, comment, notification_type: 'rating_received' })
+        )
+        .run();
+
+      // Obtener push token del conductor
+      const driver = await c.env.DB.prepare('SELECT push_token FROM users WHERE id = ?')
+        .bind(ratedUserId)
+        .first() as any;
+
+      // Enviar push notification al conductor
+      if (driver?.push_token) {
+        await PushNotificationService.sendPushNotification({
+          to: driver.push_token,
+          title: 'Nueva calificación',
+          body: `${user.full_name} te calificó con ${rating} estrellas ${stars}`,
+          data: {
+            type: 'rating_received',
+            tripId: tripId,
+            rating: rating,
+          },
+          sound: 'default',
+          priority: 'high',
+        });
+      }
     } else {
       // Actualizar rating del pasajero
       const avgRating = await c.env.DB.prepare(

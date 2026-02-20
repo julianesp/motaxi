@@ -465,6 +465,113 @@ tripRoutes.put('/:id/offer-price', async (c) => {
 });
 
 /**
+ * PUT /trips/:id/accept-offer
+ * Pasajero acepta una oferta específica de un conductor
+ */
+tripRoutes.put('/:id/accept-offer', async (c) => {
+  try {
+    const user = c.get('user');
+    const tripId = c.req.param('id');
+    const body = await c.req.json();
+    const { driver_id } = body;
+
+    // Solo pasajeros pueden aceptar ofertas
+    if (user.role !== 'passenger') {
+      return c.json({ error: 'Only passengers can accept offers' }, 403);
+    }
+
+    if (!driver_id) {
+      return c.json({ error: 'driver_id is required' }, 400);
+    }
+
+    // Verificar que el viaje existe y pertenece al pasajero
+    const trip = await c.env.DB.prepare('SELECT * FROM trips WHERE id = ?')
+      .bind(tripId)
+      .first();
+
+    if (!trip) {
+      return c.json({ error: 'Trip not found' }, 404);
+    }
+
+    if (trip.passenger_id !== user.id) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+
+    if (trip.status !== 'requested') {
+      return c.json({ error: 'Trip is no longer available' }, 400);
+    }
+
+    // Obtener la oferta del conductor
+    const offer = await c.env.DB.prepare(
+      'SELECT * FROM driver_price_offers WHERE trip_id = ? AND driver_id = ?'
+    )
+      .bind(tripId, driver_id)
+      .first() as any;
+
+    if (!offer) {
+      return c.json({ error: 'Offer not found' }, 404);
+    }
+
+    // Obtener información del conductor
+    const driverInfo = await c.env.DB.prepare(
+      `SELECT u.full_name, u.push_token,
+              d.vehicle_model, d.vehicle_color, d.vehicle_plate
+       FROM users u
+       JOIN drivers d ON u.id = d.id
+       WHERE u.id = ?`
+    )
+      .bind(driver_id)
+      .first() as any;
+
+    // Actualizar viaje con el conductor asignado y la tarifa de la oferta
+    await c.env.DB.prepare(
+      'UPDATE trips SET driver_id = ?, status = ?, accepted_at = ?, fare = ? WHERE id = ?'
+    )
+      .bind(driver_id, 'accepted', Math.floor(Date.now() / 1000), offer.offered_price, tripId)
+      .run();
+
+    // Crear notificación para el conductor
+    await c.env.DB.prepare(
+      `INSERT INTO notifications (id, user_id, title, message, type, data)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        uuidv4(),
+        driver_id,
+        '¡Tu oferta fue aceptada!',
+        `${user.full_name} aceptó tu oferta de $${offer.offered_price.toLocaleString()}. Dirígete al punto de recogida.`,
+        'trip_accepted',
+        JSON.stringify({ trip_id: tripId, accepted_price: offer.offered_price })
+      )
+      .run();
+
+    // Enviar push notification al conductor
+    if (driverInfo?.push_token) {
+      const vehicleInfo = `${driverInfo.vehicle_model} ${driverInfo.vehicle_color} - ${driverInfo.vehicle_plate}`;
+      await PushNotificationService.notifyPassengerTripAccepted(
+        driverInfo.push_token,
+        {
+          driverName: user.full_name,
+          vehicleInfo: `Oferta aceptada: $${offer.offered_price.toLocaleString()}`,
+        }
+      );
+    }
+
+    const updatedTrip = await c.env.DB.prepare('SELECT * FROM trips WHERE id = ?')
+      .bind(tripId)
+      .first();
+
+    return c.json({
+      message: 'Offer accepted successfully',
+      trip: updatedTrip
+    });
+  } catch (error: any) {
+    console.error('Accept offer error:', error);
+    return c.json({ error: error.message || 'Failed to accept offer' }, 500);
+  }
+});
+
+/**
  * PUT /trips/:id/status
  * Actualizar estado del viaje
  */

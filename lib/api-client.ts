@@ -188,6 +188,11 @@ export const tripsAPI = {
     const response = await apiClient.get(`/trips/${tripId}/offers`);
     return response.data;
   },
+
+  acceptOffer: async (tripId: string, driverId: string) => {
+    const response = await apiClient.put(`/trips/${tripId}/accept-offer`, { driver_id: driverId });
+    return response.data;
+  },
 };
 
 // API de conductores

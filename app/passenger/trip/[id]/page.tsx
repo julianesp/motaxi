@@ -454,23 +454,28 @@ export default function TripTrackingPage() {
                           if (result.isConfirmed) {
                             try {
                               const { tripsAPI } = await import('@/lib/api-client');
-                              // Aquí deberíamos crear un endpoint específico para aceptar una oferta
-                              // Por ahora, simplemente actualizamos el fare y simulamos que el conductor acepta
-                              // TODO: Implementar endpoint dedicado
+
+                              // Aceptar la oferta del conductor
+                              await tripsAPI.acceptOffer(trip.id, offer.driver_id);
+
                               await Swal.fire({
-                                icon: 'info',
-                                title: 'Notificando conductor',
-                                text: `Estamos notificando a ${offer.driver_name} que aceptaste su oferta.`,
+                                icon: 'success',
+                                title: '¡Oferta aceptada!',
+                                text: `${offer.driver_name} ha sido notificado. Se dirige al punto de recogida.`,
                                 confirmButtonColor: '#4f46e5',
-                                timer: 2000,
-                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
                               });
-                            } catch (error) {
+
+                              // Recargar datos del viaje para ver el conductor asignado
+                              window.location.reload();
+                            } catch (error: any) {
                               console.error('Error accepting offer:', error);
+                              const errorMessage = error?.response?.data?.error || error?.message || 'No se pudo aceptar la oferta. Intenta nuevamente.';
                               Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'No se pudo aceptar la oferta. Intenta nuevamente.',
+                                text: errorMessage,
                                 confirmButtonColor: '#4f46e5',
                               });
                             }

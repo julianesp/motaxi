@@ -179,6 +179,11 @@ export const tripsAPI = {
     return response.data;
   },
 
+  getCurrentDriverTrip: async () => {
+    const response = await apiClient.get('/trips/current-driver');
+    return response.data;
+  },
+
   offerCustomPrice: async (tripId: string, customPrice: number) => {
     const response = await apiClient.put(`/trips/${tripId}/offer-price`, { custom_price: customPrice });
     return response.data;
@@ -271,6 +276,21 @@ export const favoriteDriversAPI = {
   // Eliminar conductor de favoritos
   remove: async (driverId: string) => {
     const response = await apiClient.delete(`/favorites/drivers/${driverId}`);
+    return response.data;
+  },
+};
+
+// API de notificaciones
+export const notificationsAPI = {
+  // Obtener todas las notificaciones del usuario
+  getAll: async () => {
+    const response = await apiClient.get('/notifications');
+    return response.data;
+  },
+
+  // Marcar notificación como leída
+  markAsRead: async (notificationId: string) => {
+    const response = await apiClient.put(`/notifications/${notificationId}/read`);
     return response.data;
   },
 };

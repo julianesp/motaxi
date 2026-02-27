@@ -29,6 +29,7 @@ interface TripData {
   dropoff_longitude: number;
   fare: number;
   distance_km: number;
+  driver_id?: string;
   driver_name?: string;
   driver_phone?: string;
   driver_rating?: number; // Rating promedio del conductor
@@ -54,6 +55,8 @@ export default function TripTrackingPage() {
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [driverOffers, setDriverOffers] = useState<any[]>([]);
+  const [showFavoriteOption, setShowFavoriteOption] = useState(false);
+  const [isAddingToFavorites, setIsAddingToFavorites] = useState(false);
   const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
 
   // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
@@ -738,9 +741,20 @@ export default function TripTrackingPage() {
                           const { tripsAPI } = await import('@/lib/api-client');
                           await tripsAPI.rateTrip(trip.id, rating, comment || undefined);
                           setIsRated(true);
-                          alert('✅ ¡Gracias por tu calificación!');
-                          // Redirigir inmediatamente con parámetro para evitar polling
-                          router.push('/passenger?justCompleted=true');
+
+                          // Mostrar opción de favoritos si hay driver_id
+                          if (trip.driver_id) {
+                            setShowFavoriteOption(true);
+                          } else {
+                            // Si no hay driver_id, redirigir inmediatamente
+                            await Swal.fire({
+                              title: '¡Gracias!',
+                              text: 'Tu calificación ha sido enviada',
+                              icon: 'success',
+                              confirmButtonText: 'OK',
+                            });
+                            router.push('/passenger?justCompleted=true');
+                          }
                         } catch (error) {
                           console.error('Error rating trip:', error);
                           alert('Error al enviar la calificación. Intenta nuevamente.');
@@ -766,6 +780,89 @@ export default function TripTrackingPage() {
                       className="w-full py-2 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-all duration-200"
                     >
                       Omitir por ahora
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Opción de agregar a favoritos después de calificar */}
+            {showFavoriteOption && trip.driver_id && (
+              <div className="pt-4 border-t border-gray-200">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6">
+                  <div className="text-center mb-4">
+                    <div className="flex justify-center mb-3">
+                      <svg className="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">¡Calificación enviada!</h3>
+                    <p className="text-gray-700">¿Te gustaría agregar a {trip.driver_name || 'este conductor'} a tus favoritos?</p>
+                    <p className="text-sm text-gray-600 mt-2">Podrás llamarlo directamente para futuros viajes</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={async () => {
+                        setIsAddingToFavorites(true);
+                        try {
+                          const { apiClient } = await import('@/lib/api-client');
+                          await apiClient.post('/favorites/drivers', {
+                            driver_id: trip.driver_id,
+                            nickname: null,
+                          });
+
+                          await Swal.fire({
+                            title: '¡Agregado!',
+                            text: `${trip.driver_name} ha sido agregado a tus conductores favoritos`,
+                            icon: 'success',
+                            confirmButtonText: 'Genial',
+                          });
+
+                          router.push('/passenger?justCompleted=true');
+                        } catch (error: any) {
+                          console.error('Error adding to favorites:', error);
+
+                          const errorMessage = error.response?.data?.error || error.message;
+                          if (errorMessage?.includes('ya está en tus favoritos')) {
+                            await Swal.fire({
+                              title: 'Información',
+                              text: 'Este conductor ya está en tus favoritos',
+                              icon: 'info',
+                              confirmButtonText: 'OK',
+                            });
+                            router.push('/passenger?justCompleted=true');
+                          } else {
+                            await Swal.fire({
+                              title: 'Error',
+                              text: 'No se pudo agregar a favoritos. Intenta nuevamente.',
+                              icon: 'error',
+                              confirmButtonText: 'OK',
+                            });
+                          }
+                        } finally {
+                          setIsAddingToFavorites(false);
+                        }
+                      }}
+                      disabled={isAddingToFavorites}
+                      className={`w-full py-3 px-6 bg-gradient-to-r from-yellow-500 to-amber-600 text-white rounded-xl font-bold hover:from-yellow-600 hover:to-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2 ${
+                        isAddingToFavorites ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                      <span>{isAddingToFavorites ? 'Agregando...' : 'Agregar a Favoritos'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        router.push('/passenger?justCompleted=true');
+                      }}
+                      disabled={isAddingToFavorites}
+                      className="w-full py-2 px-6 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-all duration-200"
+                    >
+                      No, gracias
                     </button>
                   </div>
                 </div>

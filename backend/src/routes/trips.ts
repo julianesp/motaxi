@@ -202,6 +202,44 @@ tripRoutes.get('/current', async (c) => {
 });
 
 /**
+ * GET /trips/current-driver
+ * Obtener viaje actual del conductor (accepted, in_progress)
+ */
+tripRoutes.get('/current-driver', async (c) => {
+  try {
+    const user = c.get('user');
+
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can view current trip' }, 403);
+    }
+
+    const trip = await c.env.DB.prepare(
+      `SELECT t.*,
+              u.full_name as passenger_name,
+              u.phone as passenger_phone,
+              u.gender as passenger_gender,
+              u.profile_image as passenger_image,
+              p.emergency_contact_name,
+              p.emergency_contact_phone
+       FROM trips t
+       JOIN users u ON t.passenger_id = u.id
+       LEFT JOIN passengers p ON t.passenger_id = p.id
+       WHERE t.driver_id = ?
+         AND t.status IN ('accepted', 'in_progress')
+       ORDER BY t.created_at DESC
+       LIMIT 1`
+    )
+      .bind(user.id)
+      .first();
+
+    return c.json({ trip });
+  } catch (error: any) {
+    console.error('Get current driver trip error:', error);
+    return c.json({ error: error.message || 'Failed to get current trip' }, 500);
+  }
+});
+
+/**
  * GET /trips/history
  * Obtener historial de viajes del usuario
  */

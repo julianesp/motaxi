@@ -462,6 +462,7 @@ const PassengerHomeScreen: React.FC = () => {
         <RatingModal
           visible={showRatingModal}
           tripId={currentTrip.id}
+          driverId={currentTrip.driver_id}
           driverName={driverName}
           onClose={() => {
             setShowRatingModal(false);

@@ -38,6 +38,11 @@ export default function DriverHomePage() {
   // Estado para ver la ruta de un viaje disponible
   const [selectedTripForMap, setSelectedTripForMap] = useState<any>(null);
 
+  // Estados para notificaciones
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   // Estados para el modal de completar perfil
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -62,9 +67,9 @@ export default function DriverHomePage() {
 
       try {
         const { tripsAPI } = await import('@/lib/api-client');
-        const data = await tripsAPI.getCurrentTrip();
+        const data = await tripsAPI.getCurrentDriverTrip();
 
-        if (data.trip && !activeTrip) {
+        if (data.trip) {
           // El conductor tiene un viaje activo que no está mostrando
           const trip = data.trip;
           setActiveTrip({
@@ -86,8 +91,11 @@ export default function DriverHomePage() {
             status: trip.status,
           });
 
-          // Limpiar viajes disponibles
+          // Limpiar viajes disponibles solo si hay un viaje activo
           setAvailableTrips([]);
+        } else if (activeTrip && !data.trip) {
+          // Si teníamos un viaje activo pero ya no existe en el backend, limpiarlo
+          setActiveTrip(null);
         }
       } catch (error) {
         // No hay viaje activo o error
@@ -95,13 +103,12 @@ export default function DriverHomePage() {
       }
     };
 
-    // Verificar inmediatamente
-    checkActiveTrip();
-
-    // Verificar cada 5 segundos
-    const interval = setInterval(checkActiveTrip, 5000);
-
-    return () => clearInterval(interval);
+    // Solo hacer polling si NO hay viaje activo
+    if (!activeTrip) {
+      checkActiveTrip();
+      const interval = setInterval(checkActiveTrip, 5000);
+      return () => clearInterval(interval);
+    }
   }, [user, activeTrip]);
 
   useEffect(() => {
@@ -177,7 +184,8 @@ export default function DriverHomePage() {
 
   useEffect(() => {
     // Consultar viajes disponibles cada 5 segundos cuando el conductor esté disponible
-    if (!isAvailable || user?.role !== 'driver') {
+    // Detener polling si no está disponible, no es conductor, o tiene un viaje activo
+    if (!isAvailable || activeTrip || user?.role !== 'driver') {
       setAvailableTrips([]);
       return;
     }
@@ -201,7 +209,61 @@ export default function DriverHomePage() {
     const interval = setInterval(fetchAvailableTrips, 5000);
 
     return () => clearInterval(interval);
-  }, [isAvailable, user, rejectedTripIds]);
+  }, [isAvailable, user, rejectedTripIds, activeTrip]);
+
+  // Cargar notificaciones
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user) return;
+
+      try {
+        const { notificationsAPI } = await import('@/lib/api-client');
+        const data = await notificationsAPI.getAll();
+        const notifs = data.notifications || [];
+        setNotifications(notifs);
+        setUnreadCount(notifs.filter((n: any) => !n.is_read).length);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    if (user) {
+      fetchNotifications();
+      // Actualizar notificaciones cada 30 segundos
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      const { notificationsAPI } = await import('@/lib/api-client');
+      await notificationsAPI.markAsRead(notificationId);
+
+      // Actualizar estado local
+      setNotifications(prev =>
+        prev.map(n => n.id === notificationId ? { ...n, is_read: 1 } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // Cerrar dropdown de notificaciones al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showNotifications) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.notifications-dropdown')) {
+          setShowNotifications(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications]);
 
   const handleCompleteProfile = async () => {
     // Validar campos obligatorios
@@ -324,6 +386,86 @@ export default function DriverHomePage() {
               >
                 Ganancias
               </button>
+              {/* Botón de notificaciones */}
+              <div className="relative notifications-dropdown">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center hover:bg-indigo-200 relative"
+                >
+                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Dropdown de notificaciones */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900">Notificaciones</h3>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500">
+                        <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        No tienes notificaciones
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-200">
+                        {notifications.map((notification: any) => (
+                          <div
+                            key={notification.id}
+                            onClick={() => handleMarkAsRead(notification.id)}
+                            className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                              !notification.is_read ? 'bg-blue-50' : ''
+                            }`}
+                          >
+                            <div className="flex items-start space-x-3">
+                              <div className="flex-shrink-0">
+                                {notification.type === 'general' || notification.type === 'rating_received' ? (
+                                  <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                    </svg>
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
+                                <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {new Date(notification.created_at * 1000).toLocaleString('es-ES', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
+                              {!notification.is_read && (
+                                <div className="flex-shrink-0">
+                                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => router.push('/driver/profile')}
                 className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center"
@@ -560,8 +702,8 @@ export default function DriverHomePage() {
                                         status: 'accepted',
                                       });
 
-                                      // Limpiar lista de viajes disponibles
-                                      setAvailableTrips([]);
+                                      // Remover solo el viaje aceptado de la lista de disponibles
+                                      setAvailableTrips(prev => prev.filter(t => t.id !== trip.id));
 
                                       Swal.fire({
                                         icon: 'success',

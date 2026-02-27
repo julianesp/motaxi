@@ -4,10 +4,12 @@
   "description": "Cloudflare Workers API for MoTaxi",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --remote",
+    "dev:local": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:create": "wrangler d1 create motaxi-db",
     "db:migrate": "wrangler d1 execute motaxi-db --file=../cloudflare_d1_schema.sql",
+    "db:migrate:local": "wrangler d1 execute motaxi-db --file=../cloudflare_d1_schema.sql --local",
     "db:query": "wrangler d1 execute motaxi-db --command",
     "test": "vitest"
   },

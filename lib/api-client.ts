@@ -198,6 +198,16 @@ export const tripsAPI = {
     const response = await apiClient.put(`/trips/${tripId}/accept-offer`, { driver_id: driverId });
     return response.data;
   },
+
+  cancelCurrentRequestedTrip: async () => {
+    // Cancela el viaje actual si está en estado 'requested' (sin conductor asignado)
+    const data = await apiClient.get('/trips/current').then(r => r.data);
+    if (data.trip && data.trip.status === 'requested') {
+      const response = await apiClient.put(`/trips/${data.trip.id}/status`, { status: 'cancelled' });
+      return response.data;
+    }
+    return null;
+  },
 };
 
 // API de conductores

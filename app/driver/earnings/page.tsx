@@ -105,7 +105,7 @@ export default function DriverEarningsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -131,7 +131,7 @@ export default function DriverEarningsPage() {
               </svg>
               Volver
             </button>
-            <h1 className="text-xl font-bold text-indigo-600">Mis Ganancias</h1>
+            <h1 className="text-xl font-bold text-[#008000]">Mis Ganancias</h1>
             <div className="w-20"></div>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function DriverEarningsPage() {
             </div>
 
             {/* Total */}
-            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="bg-gradient-to-br from-green-500 to-[#008000] rounded-2xl p-6 text-white shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium opacity-90">Total</span>
                 <svg className="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,7 +190,7 @@ export default function DriverEarningsPage() {
 
           {/* Recent Trips */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
+            <div className="px-6 py-4 bg-gradient-to-r from-green-500 to-[#008000] text-white">
               <h2 className="text-xl font-bold">Historial de Viajes Completados</h2>
             </div>
 
@@ -224,7 +224,7 @@ export default function DriverEarningsPage() {
                         </div>
                       </div>
                       <div className="text-right ml-4">
-                        <p className="text-2xl font-bold text-indigo-600">${trip.fare.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-[#008000]">${trip.fare.toLocaleString()}</p>
                         <p className="text-sm text-gray-500">{trip.distance_km} km</p>
                       </div>
                     </div>

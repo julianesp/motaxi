@@ -10,9 +10,32 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'MoTaxi - Transporte Rápido y Seguro',
-  description: 'Aplicación de mototaxis para pasajeros y conductores',
+  description: 'Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy',
   icons: {
-    icon: '/favicon.svg',
+    icon: 'https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png',
+    apple: 'https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png',
+  },
+  openGraph: {
+    title: 'MoTaxi - Transporte Rápido y Seguro',
+    description: 'Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy',
+    url: 'https://motaxi.dev',
+    siteName: 'MoTaxi',
+    images: [
+      {
+        url: 'https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png',
+        width: 512,
+        height: 512,
+        alt: 'MoTaxi logo',
+      },
+    ],
+    locale: 'es_CO',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'MoTaxi - Transporte Rápido y Seguro',
+    description: 'Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy',
+    images: ['https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png'],
   },
 };
 

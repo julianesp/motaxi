@@ -241,10 +241,10 @@ function GoogleMapComponent({
 
   if (loadError) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50">
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
         <div className="text-center p-6 max-w-md bg-white rounded-2xl shadow-xl">
           <div className="mb-4">
-            <svg className="w-16 h-16 mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-16 h-16 mx-auto text-[#008000]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
           </div>
@@ -253,7 +253,7 @@ function GoogleMapComponent({
             Necesitas activar las APIs de Google Maps en Google Cloud Console.
           </p>
           <details className="text-left text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
-            <summary className="cursor-pointer font-medium text-indigo-600 hover:text-indigo-700">
+            <summary className="cursor-pointer font-medium text-[#008000] hover:text-[#006600]">
               Ver instrucciones rápidas
             </summary>
             <ol className="mt-2 space-y-1 list-decimal list-inside">
@@ -277,7 +277,7 @@ function GoogleMapComponent({
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando mapa...</p>
         </div>
       </div>
@@ -477,7 +477,7 @@ function GoogleMapComponent({
       >
         {isGettingLocation ? (
           <svg
-            className="w-6 h-6 text-indigo-600 animate-spin"
+            className="w-6 h-6 text-[#008000] animate-spin"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -491,7 +491,7 @@ function GoogleMapComponent({
           </svg>
         ) : (
           <svg
-            className="w-6 h-6 text-indigo-600"
+            className="w-6 h-6 text-[#008000]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

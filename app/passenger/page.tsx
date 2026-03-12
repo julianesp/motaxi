@@ -49,7 +49,7 @@ const GoogleMapComponent = dynamic(
     loading: () => (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando mapa...</p>
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function PassengerHomePage() {
             icon: "warning",
             title: "GPS no disponible",
             text: "No se pudo obtener tu ubicación. Por favor, activa el GPS o selecciona manualmente tu ubicación de recogida.",
-            confirmButtonColor: "#4f46e5",
+            confirmButtonColor: "#008000",
           });
         },
         {
@@ -259,7 +259,7 @@ export default function PassengerHomePage() {
         icon: "info",
         title: "Geolocalización no soportada",
         text: "Tu navegador no soporta geolocalización. Por favor, selecciona manualmente tu ubicación de recogida.",
-        confirmButtonColor: "#4f46e5",
+        confirmButtonColor: "#008000",
       });
     }
   }, []);
@@ -307,7 +307,7 @@ export default function PassengerHomePage() {
       inputPlaceholder: "Ej: El de la Boxer roja",
       inputAttributes: { maxlength: "40" },
       showCancelButton: true,
-      confirmButtonColor: "#4f46e5",
+      confirmButtonColor: "#008000",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Agregar",
       cancelButtonText: "Cancelar",
@@ -323,14 +323,14 @@ export default function PassengerHomePage() {
         icon: "success",
         title: "¡Agregado!",
         text: `${driver.full_name} es ahora un conductor favorito.`,
-        confirmButtonColor: "#4f46e5",
+        confirmButtonColor: "#008000",
         timer: 2500,
         timerProgressBar: true,
         showConfirmButton: false,
       });
     } catch (error: any) {
       const msg = error.response?.data?.error || "No se pudo agregar el favorito.";
-      Swal.fire({ icon: "error", title: "Error", text: msg, confirmButtonColor: "#4f46e5" });
+      Swal.fire({ icon: "error", title: "Error", text: msg, confirmButtonColor: "#008000" });
     }
   };
 
@@ -351,7 +351,7 @@ export default function PassengerHomePage() {
       await favoriteDriversAPI.remove(driverId);
       setFavoriteDrivers((prev) => prev.filter((d) => d.driver_id !== driverId));
     } catch (error) {
-      Swal.fire({ icon: "error", title: "Error", text: "No se pudo eliminar.", confirmButtonColor: "#4f46e5" });
+      Swal.fire({ icon: "error", title: "Error", text: "No se pudo eliminar.", confirmButtonColor: "#008000" });
     }
   };
 
@@ -433,7 +433,7 @@ export default function PassengerHomePage() {
         icon: "warning",
         title: "Faltan datos",
         text: "Por favor, selecciona la ubicación de recogida y el destino.",
-        confirmButtonColor: "#4f46e5",
+        confirmButtonColor: "#008000",
       });
       return;
     }
@@ -482,7 +482,7 @@ export default function PassengerHomePage() {
         icon: "success",
         title: "¡Solicitud enviada!",
         text: "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
-        confirmButtonColor: "#4f46e5",
+        confirmButtonColor: "#008000",
         confirmButtonText: "Seguir viaje",
         timer: 3000,
         timerProgressBar: true,
@@ -499,7 +499,7 @@ export default function PassengerHomePage() {
           icon: "error",
           title: "Sesión expirada",
           text: "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
-          confirmButtonColor: "#4f46e5",
+          confirmButtonColor: "#008000",
         });
         router.push("/auth/login");
       } else if (error.response?.data?.error) {
@@ -507,14 +507,14 @@ export default function PassengerHomePage() {
           icon: "error",
           title: "Error",
           text: error.response.data.error,
-          confirmButtonColor: "#4f46e5",
+          confirmButtonColor: "#008000",
         });
       } else {
         Swal.fire({
           icon: "error",
           title: "Error al solicitar el viaje",
           text: "No se pudo crear la solicitud. Por favor, intenta nuevamente.",
-          confirmButtonColor: "#4f46e5",
+          confirmButtonColor: "#008000",
         });
       }
     }
@@ -545,7 +545,7 @@ export default function PassengerHomePage() {
         icon: "info",
         title: "No disponible",
         text: "Tu navegador no soporta geolocalización.",
-        confirmButtonColor: "#4f46e5",
+        confirmButtonColor: "#008000",
       });
       return;
     }
@@ -586,7 +586,7 @@ export default function PassengerHomePage() {
             icon: "error",
             title: "Error",
             text: "Error al obtener la dirección de tu ubicación.",
-            confirmButtonColor: "#4f46e5",
+            confirmButtonColor: "#008000",
           });
         } finally {
           setIsLocating(false);
@@ -608,7 +608,7 @@ export default function PassengerHomePage() {
           icon: "warning",
           title: "GPS no disponible",
           text: errorMessage,
-          confirmButtonColor: "#4f46e5",
+          confirmButtonColor: "#008000",
         });
       },
       {
@@ -643,7 +643,7 @@ export default function PassengerHomePage() {
         icon: "success",
         title: "¡Guardado!",
         text: "Ubicación guardada en favoritos.",
-        confirmButtonColor: "#4f46e5",
+        confirmButtonColor: "#008000",
         timer: 2000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -654,7 +654,7 @@ export default function PassengerHomePage() {
         icon: "error",
         title: "Error",
         text: "No se pudo guardar en favoritos. Intenta nuevamente.",
-        confirmButtonColor: "#4f46e5",
+        confirmButtonColor: "#008000",
       });
     } finally {
       setIsSavingFavorite(false);
@@ -665,7 +665,7 @@ export default function PassengerHomePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -684,10 +684,10 @@ export default function PassengerHomePage() {
         <div className="px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-md">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#008000] to-[#006600] rounded-xl flex items-center justify-center shadow-md">
                 <span className="text-white font-bold text-lg md:text-xl">M</span>
               </div>
-              <h1 className="text-xl md:text-2xl font-bold text-indigo-600">MoTaxi</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-[#008000]">MoTaxi</h1>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
               <span className="text-sm md:text-base text-gray-700 hidden sm:inline">
@@ -715,10 +715,10 @@ export default function PassengerHomePage() {
               </button>
               <button
                 onClick={() => router.push("/passenger/profile")}
-                className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-full flex items-center justify-center hover:shadow-md transition-shadow"
+                className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center hover:shadow-md transition-shadow"
               >
                 <svg
-                  className="w-5 h-5 md:w-6 md:h-6 text-indigo-600"
+                  className="w-5 h-5 md:w-6 md:h-6 text-[#008000]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -796,7 +796,7 @@ export default function PassengerHomePage() {
         {/* Botón de Contacto al Desarrollador */}
         <a
           href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
-          className="absolute top-20 right-4 md:top-24 md:right-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center w-12 h-12 md:w-14 md:h-14 z-20 transition-all duration-200 hover:scale-110 active:scale-95"
+          className="absolute top-20 right-4 md:top-24 md:right-6 bg-gradient-to-r from-purple-600 to-[#008000] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center w-12 h-12 md:w-14 md:h-14 z-20 transition-all duration-200 hover:scale-110 active:scale-95"
           title="Contactar Soporte"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -975,7 +975,7 @@ export default function PassengerHomePage() {
             {destination.latitude && destination.longitude && (
               <button
                 onClick={() => setShowSaveFavoriteDialog(true)}
-                className="w-full py-2.5 px-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center justify-center space-x-2 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors border border-indigo-200"
+                className="w-full py-2.5 px-4 text-sm text-[#008000] hover:text-[#006600] font-medium flex items-center justify-center space-x-2 bg-green-50 hover:bg-green-100 rounded-xl transition-colors border border-green-200"
               >
                 <svg
                   className="w-5 h-5"
@@ -990,9 +990,9 @@ export default function PassengerHomePage() {
 
             {/* Tarifas de conductores disponibles */}
             {pickup.latitude && destination.latitude && nearbyDrivers.length > 0 && estimatedDistance && (
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-4 border border-indigo-200 shadow-sm space-y-2">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 shadow-sm space-y-2">
                 <div className="flex items-center space-x-2 mb-1">
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="text-gray-700 font-semibold text-sm">Tarifas de conductores disponibles</span>
@@ -1004,12 +1004,12 @@ export default function PassengerHomePage() {
                   {nearbyDrivers.slice(0, 4).map((driver) => {
                     const driverFare = Math.round((driver.base_fare ?? 5000) + estimatedDistance * (driver.per_km_fare ?? 2000));
                     return (
-                      <div key={driver.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-indigo-100">
+                      <div key={driver.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-green-100">
                         <div>
                           <span className="text-sm font-medium text-gray-800">{driver.full_name}</span>
                           <span className="text-xs text-gray-400 ml-2">{driver.distance_km?.toFixed(1)} km de ti</span>
                         </div>
-                        <span className="text-base font-bold text-indigo-700">${driverFare.toLocaleString()}</span>
+                        <span className="text-base font-bold text-[#006600]">${driverFare.toLocaleString()}</span>
                       </div>
                     );
                   })}
@@ -1033,7 +1033,7 @@ export default function PassengerHomePage() {
                 <button
                   onClick={handleRequestTrip}
                   disabled={!pickup.latitude || !destination.latitude || showTripRequest}
-                  className="btn btn-primary w-full py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="btn btn-primary w-full py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 bg-gradient-to-r from-[#008000] to-[#006600] hover:from-[#006600] hover:to-[#004d00] text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {showTripRequest ? (
                     <span className="flex items-center justify-center space-x-2">
@@ -1136,7 +1136,7 @@ export default function PassengerHomePage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {loadingFavoriteDrivers ? (
                 <div className="text-center py-10">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#008000] mx-auto"></div>
                   <p className="mt-3 text-gray-500 text-sm">Cargando...</p>
                 </div>
               ) : favoriteDrivers.length === 0 ? (
@@ -1171,7 +1171,7 @@ export default function PassengerHomePage() {
                             </span>
                           </div>
                           {driver.nickname && (
-                            <p className="text-xs text-indigo-600 font-medium">"{driver.nickname}"</p>
+                            <p className="text-xs text-[#008000] font-medium">"{driver.nickname}"</p>
                           )}
                           <p className="text-xs text-gray-500 truncate">{driver.vehicle_color} {driver.vehicle_model}</p>
                           <p className="text-xs text-yellow-600">⭐ {driver.rating?.toFixed(1)} · {driver.total_trips} viajes</p>
@@ -1235,7 +1235,7 @@ export default function PassengerHomePage() {
               value={favoriteName}
               onChange={(e) => setFavoriteName(e.target.value)}
               placeholder="Ej: Casa, Trabajo, Gimnasio"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-4 text-black"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent mb-4 text-black"
               maxLength={50}
             />
             <div className="flex space-x-3">
@@ -1252,7 +1252,7 @@ export default function PassengerHomePage() {
               <button
                 onClick={handleSaveDestinationAsFavorite}
                 disabled={!favoriteName.trim() || isSavingFavorite}
-                className="flex-1 py-3 px-4 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 bg-[#008000] text-white rounded-xl font-medium hover:bg-[#006600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSavingFavorite ? "Guardando..." : "Guardar"}
               </button>

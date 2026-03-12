@@ -11,7 +11,7 @@ const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent
   loading: () => (
     <div className="flex items-center justify-center h-full">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
         <p className="mt-4 text-gray-600">Cargando mapa...</p>
       </div>
     </div>
@@ -273,7 +273,7 @@ export default function DriverHomePage() {
         icon: 'warning',
         title: 'Campos incompletos',
         text: 'Por favor completa todos los campos obligatorios.',
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#008000',
       });
       return;
     }
@@ -288,7 +288,7 @@ export default function DriverHomePage() {
         icon: 'success',
         title: '¡Perfil completado!',
         text: 'Ahora puedes activarte como conductor.',
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#008000',
         timer: 3000,
         timerProgressBar: true,
       });
@@ -305,7 +305,7 @@ export default function DriverHomePage() {
         icon: 'error',
         title: 'Error',
         text: 'No se pudo guardar el perfil. Intenta nuevamente.',
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#008000',
       });
     } finally {
       setIsSubmittingProfile(false);
@@ -329,7 +329,7 @@ export default function DriverHomePage() {
           icon: 'warning',
           title: 'Perfil incompleto',
           text: 'Debes completar tu perfil antes de activarte como conductor.',
-          confirmButtonColor: '#4f46e5',
+          confirmButtonColor: '#008000',
         });
         setShowProfileModal(true);
       } else if (error.response?.data?.notVerified) {
@@ -337,14 +337,14 @@ export default function DriverHomePage() {
           icon: 'warning',
           title: 'Cuenta no verificada',
           text: 'Tu cuenta debe estar verificada antes de poder prestar servicio.',
-          confirmButtonColor: '#4f46e5',
+          confirmButtonColor: '#008000',
         });
       } else {
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: 'No se pudo actualizar la disponibilidad. Intenta nuevamente.',
-          confirmButtonColor: '#4f46e5',
+          confirmButtonColor: '#008000',
         });
       }
     } finally {
@@ -356,7 +356,7 @@ export default function DriverHomePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -370,7 +370,7 @@ export default function DriverHomePage() {
         <div className="container-app py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-indigo-600">MoTaxi</h1>
+              <h1 className="text-2xl font-bold text-[#008000]">MoTaxi</h1>
               <div
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
                   isAvailable ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -382,7 +382,7 @@ export default function DriverHomePage() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push('/driver/earnings')}
-                className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium hover:bg-indigo-200"
+                className="px-4 py-2 bg-green-100 text-[#006600] rounded-lg font-medium hover:bg-green-200"
               >
                 Ganancias
               </button>
@@ -390,9 +390,9 @@ export default function DriverHomePage() {
               <div className="relative notifications-dropdown">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center hover:bg-indigo-200 relative"
+                  className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 relative"
                 >
-                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                   {unreadCount > 0 && (
@@ -434,8 +434,8 @@ export default function DriverHomePage() {
                                     </svg>
                                   </div>
                                 ) : (
-                                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                   </div>
@@ -468,9 +468,9 @@ export default function DriverHomePage() {
               </div>
               <button
                 onClick={() => router.push('/driver/profile')}
-                className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center"
+                className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"
               >
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -544,7 +544,7 @@ export default function DriverHomePage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">
-                        Hoy: <span className="font-bold text-indigo-600">${earnings.today.toLocaleString()}</span>
+                        Hoy: <span className="font-bold text-[#008000]">${earnings.today.toLocaleString()}</span>
                       </span>
                     </div>
                   </div>
@@ -583,15 +583,15 @@ export default function DriverHomePage() {
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <div className="text-center">
                       <p className="text-sm text-gray-600">Hoy</p>
-                      <p className="text-2xl font-bold text-indigo-600">${earnings.today.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-[#008000]">${earnings.today.toLocaleString()}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-gray-600">Semana</p>
-                      <p className="text-2xl font-bold text-indigo-600">${earnings.week.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-[#008000]">${earnings.week.toLocaleString()}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-gray-600">Mes</p>
-                      <p className="text-2xl font-bold text-indigo-600">${earnings.month.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-[#008000]">${earnings.month.toLocaleString()}</p>
                     </div>
                   </div>
 
@@ -620,13 +620,13 @@ export default function DriverHomePage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h3 className="font-bold text-gray-800">Solicitudes Disponibles</h3>
-                        <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium">
+                        <span className="bg-green-100 text-[#006600] px-3 py-1 rounded-full text-sm font-medium">
                           {availableTrips.length} {availableTrips.length === 1 ? 'viaje' : 'viajes'}
                         </span>
                       </div>
                       <div className="space-y-3 max-h-[400px] overflow-y-auto">
                         {availableTrips.map((trip: any) => (
-                          <div key={trip.id} className="bg-white border-2 border-indigo-200 rounded-xl p-4 hover:border-indigo-400 transition-colors">
+                          <div key={trip.id} className="bg-white border-2 border-green-200 rounded-xl p-4 hover:border-green-400 transition-colors">
                             {/* Mostrar pasajero y distancia al pickup */}
                             {trip.passenger_name && (
                               <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
@@ -639,10 +639,10 @@ export default function DriverHomePage() {
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => setSelectedTripForMap(trip)}
-                                    className="p-1.5 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors"
+                                    className="p-1.5 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
                                     title="Ver ruta en mapa"
                                   >
-                                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                                     </svg>
                                   </button>
@@ -709,7 +709,7 @@ export default function DriverHomePage() {
                                         icon: 'success',
                                         title: '¡Viaje aceptado!',
                                         text: 'Dirígete al punto de recogida.',
-                                        confirmButtonColor: '#4f46e5',
+                                        confirmButtonColor: '#008000',
                                         timer: 3000,
                                         timerProgressBar: true,
                                       });
@@ -719,11 +719,11 @@ export default function DriverHomePage() {
                                         icon: 'error',
                                         title: 'Error',
                                         text: 'No se pudo aceptar el viaje. Intenta nuevamente.',
-                                        confirmButtonColor: '#4f46e5',
+                                        confirmButtonColor: '#008000',
                                       });
                                     }
                                   }}
-                                  className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                                  className="flex-1 py-3 px-4 bg-gradient-to-r from-[#008000] to-[#006600] text-white rounded-xl font-medium hover:from-[#006600] hover:to-[#004d00] transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                   Aceptar Viaje
                                 </button>
@@ -790,7 +790,7 @@ export default function DriverHomePage() {
                                         icon: 'error',
                                         title: 'Error',
                                         text: errorMessage,
-                                        confirmButtonColor: '#4f46e5',
+                                        confirmButtonColor: '#008000',
                                       });
                                     }
                                   }
@@ -826,12 +826,12 @@ export default function DriverHomePage() {
               </div>
 
               {/* Información del Pasajero */}
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-green-50 to-purple-50 border-2 border-green-200 rounded-xl p-4">
                 <div className="flex items-center mb-3">
-                  <svg className="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#008000] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <h3 className="font-bold text-indigo-900">Información del Pasajero</h3>
+                  <h3 className="font-bold text-[#003300]">Información del Pasajero</h3>
                 </div>
 
                 <div className="space-y-2">
@@ -847,8 +847,8 @@ export default function DriverHomePage() {
                         <span className="font-semibold text-gray-900">{activeTrip.passengerPhone}</span>
                       </div>
 
-                      <div className="pt-3 mt-3 border-t border-indigo-200">
-                        <p className="text-sm text-indigo-700 mb-3">
+                      <div className="pt-3 mt-3 border-t border-green-200">
+                        <p className="text-sm text-[#006600] mb-3">
                           Contacta al pasajero para coordinar mejor el viaje
                         </p>
                         <div className="grid grid-cols-1 gap-2">
@@ -926,7 +926,7 @@ export default function DriverHomePage() {
                         icon: 'success',
                         title: 'Viaje iniciado',
                         text: '¡Buen viaje! Lleva al pasajero a su destino.',
-                        confirmButtonColor: '#4f46e5',
+                        confirmButtonColor: '#008000',
                         timer: 3000,
                         timerProgressBar: true,
                       });
@@ -936,7 +936,7 @@ export default function DriverHomePage() {
                         icon: 'error',
                         title: 'Error',
                         text: 'No se pudo iniciar el viaje. Intenta nuevamente.',
-                        confirmButtonColor: '#4f46e5',
+                        confirmButtonColor: '#008000',
                       });
                     }
                   }}
@@ -970,7 +970,7 @@ export default function DriverHomePage() {
                           icon: 'success',
                           title: '¡Viaje completado!',
                           text: 'Gracias por usar MoTaxi.',
-                          confirmButtonColor: '#4f46e5',
+                          confirmButtonColor: '#008000',
                           timer: 3000,
                           timerProgressBar: true,
                         });
@@ -981,7 +981,7 @@ export default function DriverHomePage() {
                           icon: 'error',
                           title: 'Error',
                           text: 'No se pudo completar el viaje. Intenta nuevamente.',
-                          confirmButtonColor: '#4f46e5',
+                          confirmButtonColor: '#008000',
                         });
                       }
                     }}
@@ -1004,7 +1004,7 @@ export default function DriverHomePage() {
             <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="mb-6">
                 <div className="flex items-center justify-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-full flex items-center justify-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#008000] to-[#006600] rounded-full flex items-center justify-center">
                     <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -1030,7 +1030,7 @@ export default function DriverHomePage() {
                     value={profileData.vehicle_model}
                     onChange={(e) => setProfileData({ ...profileData, vehicle_model: e.target.value })}
                     placeholder="Ej: Boxer 100, Discover 125, etc."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
                     required
                   />
                 </div>
@@ -1045,7 +1045,7 @@ export default function DriverHomePage() {
                     value={profileData.vehicle_color}
                     onChange={(e) => setProfileData({ ...profileData, vehicle_color: e.target.value })}
                     placeholder="Ej: Rojo, Negro, Azul, etc."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
                     required
                   />
                 </div>
@@ -1060,7 +1060,7 @@ export default function DriverHomePage() {
                     value={profileData.vehicle_plate}
                     onChange={(e) => setProfileData({ ...profileData, vehicle_plate: e.target.value.toUpperCase() })}
                     placeholder="Ej: ABC123"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 uppercase"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 uppercase"
                     maxLength={6}
                     required
                   />
@@ -1076,7 +1076,7 @@ export default function DriverHomePage() {
                     value={profileData.license_number}
                     onChange={(e) => setProfileData({ ...profileData, license_number: e.target.value })}
                     placeholder="Ej: 12345678"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
                     required
                   />
                 </div>
@@ -1089,7 +1089,7 @@ export default function DriverHomePage() {
                   <select
                     value={profileData.municipality}
                     onChange={(e) => setProfileData({ ...profileData, municipality: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
                   >
                     <option value="">Selecciona un municipio</option>
                     <option value="colon">Colón</option>
@@ -1123,7 +1123,7 @@ export default function DriverHomePage() {
                 <button
                   onClick={handleCompleteProfile}
                   disabled={isSubmittingProfile}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-bold text-lg hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="w-full py-4 px-6 bg-gradient-to-r from-[#008000] to-[#006600] text-white rounded-xl font-bold text-lg hover:from-[#006600] hover:to-[#004d00] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {isSubmittingProfile ? (
                     <>
@@ -1155,10 +1155,10 @@ export default function DriverHomePage() {
           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-0 md:p-4">
             <div className="bg-white md:rounded-2xl w-full h-full md:max-w-6xl md:h-[90vh] flex flex-col overflow-hidden shadow-2xl">
               {/* Header del modal */}
-              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-3 md:p-4 flex items-center justify-between flex-shrink-0">
+              <div className="bg-gradient-to-r from-[#008000] to-[#006600] p-3 md:p-4 flex items-center justify-between flex-shrink-0">
                 <div>
                   <h2 className="text-lg md:text-xl font-bold text-white">Ruta del Viaje</h2>
-                  <p className="text-indigo-100 text-xs md:text-sm">
+                  <p className="text-green-100 text-xs md:text-sm">
                     {selectedTripForMap.passenger_name} • {selectedTripForMap.distance_km?.toFixed(1)} km
                   </p>
                 </div>
@@ -1301,7 +1301,7 @@ export default function DriverHomePage() {
                               icon: 'error',
                               title: 'Error',
                               text: errorMessage,
-                              confirmButtonColor: '#4f46e5',
+                              confirmButtonColor: '#008000',
                             });
                           }
                         }
@@ -1330,7 +1330,7 @@ export default function DriverHomePage() {
                           showCancelButton: true,
                           confirmButtonText: 'Sí, aceptar',
                           cancelButtonText: 'Cancelar',
-                          confirmButtonColor: '#4f46e5',
+                          confirmButtonColor: '#008000',
                           cancelButtonColor: '#6b7280',
                         });
 
@@ -1367,7 +1367,7 @@ export default function DriverHomePage() {
                               icon: 'success',
                               title: '¡Viaje aceptado!',
                               text: 'Dirígete al punto de recogida.',
-                              confirmButtonColor: '#4f46e5',
+                              confirmButtonColor: '#008000',
                               timer: 3000,
                               timerProgressBar: true,
                             });
@@ -1377,12 +1377,12 @@ export default function DriverHomePage() {
                               icon: 'error',
                               title: 'Error',
                               text: 'No se pudo aceptar el viaje. Intenta nuevamente.',
-                              confirmButtonColor: '#4f46e5',
+                              confirmButtonColor: '#008000',
                             });
                           }
                         }
                       }}
-                      className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200"
+                      className="w-full py-3 px-4 bg-gradient-to-r from-[#008000] to-[#006600] text-white rounded-xl font-medium hover:from-[#006600] hover:to-[#004d00] transition-all duration-200"
                     >
                       Aceptar Viaje
                     </button>

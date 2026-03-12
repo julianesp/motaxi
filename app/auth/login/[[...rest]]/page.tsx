@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { SignIn, useSignIn, useClerk } from "@clerk/nextjs";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/Navbar/page";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function LoginPage() {
       try {
         await clerk.signOut();
       } catch (err) {
-        console.log('No active Clerk session to sign out');
+        console.log("No active Clerk session to sign out");
       }
     }
     setUseClerkAuth(value);
@@ -76,7 +76,7 @@ export default function LoginPage() {
       className="min-h-screen"
       style={{
         background: "#000000",
-        backgroundImage: "linear-gradient(to top, #0f9b0f, #000000)",
+        backgroundImage: "linear-gradient(to top, #008000, #000000)",
       }}
     >
       <Navbar />
@@ -210,7 +210,11 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
-                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      aria-label={
+                        showPassword
+                          ? "Ocultar contraseña"
+                          : "Mostrar contraseña"
+                      }
                     >
                       {showPassword ? (
                         <svg

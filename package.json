@@ -23,6 +23,7 @@
     "next": "^16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sass": "^1.98.0",
     "sweetalert2": "^11.26.18"
   },
   "devDependencies": {

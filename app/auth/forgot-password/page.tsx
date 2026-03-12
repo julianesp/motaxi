@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/Navbar/page";
 import { apiClient } from "@/lib/api-client";
 
 export default function ForgotPasswordPage() {
@@ -57,15 +57,15 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Navbar />
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
           {/* Header */}
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <svg
-                className="w-8 h-8 text-indigo-600"
+                className="w-8 h-8 text-[#008000]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-4xl font-bold text-indigo-600 mb-2">MoTaxi</h1>
+            <h1 className="text-4xl font-bold text-[#008000] mb-2">MoTaxi</h1>
             <h2 className="text-2xl font-semibold text-gray-800">
               ¿Olvidaste tu contraseña?
             </h2>
@@ -178,7 +178,7 @@ export default function ForgotPasswordPage() {
               ¿Ya tienes un código de recuperación?{" "}
               <Link
                 href={`/auth/reset-password${emailOrPhone ? `?identifier=${encodeURIComponent(emailOrPhone)}` : ""}`}
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+                className="font-medium text-[#008000] hover:text-green-500"
               >
                 Ingresar código
               </Link>
@@ -189,7 +189,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center">
             <Link
               href="/auth/login"
-              className="inline-flex items-center text-indigo-600 hover:text-indigo-500 font-medium transition-colors"
+              className="inline-flex items-center text-[#008000] hover:text-green-500 font-medium transition-colors"
             >
               <svg
                 className="w-4 h-4 mr-2"

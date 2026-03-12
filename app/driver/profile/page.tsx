@@ -195,7 +195,7 @@ export default function DriverProfilePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function DriverProfilePage() {
               </svg>
               Volver
             </button>
-            <h1 className="text-xl font-bold text-indigo-600">Mi Perfil</h1>
+            <h1 className="text-xl font-bold text-[#008000]">Mi Perfil</h1>
             <div className="w-20"></div>
           </div>
         </div>
@@ -233,10 +233,10 @@ export default function DriverProfilePage() {
           {/* Profile Card */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             {/* Header with Avatar */}
-            <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-8">
+            <div className="bg-gradient-to-r from-green-500 to-[#008000] px-6 py-8">
               <div className="flex flex-col items-center">
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-16 h-16 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-16 h-16 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -246,7 +246,7 @@ export default function DriverProfilePage() {
                   </svg>
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-1">{user.full_name}</h2>
-                <p className="text-indigo-100 mb-2">Conductor</p>
+                <p className="text-green-100 mb-2">Conductor</p>
                 {driverInfo && (
                   <div className={`px-4 py-2 rounded-full text-sm font-medium border ${getVerificationStatusColor(driverInfo.verification_status)}`}>
                     {getVerificationStatusText(driverInfo.verification_status)}
@@ -290,7 +290,7 @@ export default function DriverProfilePage() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                     />
                   ) : (
                     <span className="text-gray-900">{user.email}</span>
@@ -312,7 +312,7 @@ export default function DriverProfilePage() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                     />
                   ) : (
                     <span className="text-gray-900">{user.phone}</span>
@@ -334,7 +334,7 @@ export default function DriverProfilePage() {
                       type="text"
                       value={formData.full_name}
                       onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                     />
                   ) : (
                     <span className="text-gray-900">{user.full_name}</span>
@@ -359,7 +359,7 @@ export default function DriverProfilePage() {
                           value={driverFormData.vehicle_model}
                           onChange={(e) => setDriverFormData({ ...driverFormData, vehicle_model: e.target.value })}
                           placeholder="Ej: Yamaha FZ 150"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                         />
                       ) : (
                         <div className="flex items-center">
@@ -382,7 +382,7 @@ export default function DriverProfilePage() {
                           value={driverFormData.vehicle_color}
                           onChange={(e) => setDriverFormData({ ...driverFormData, vehicle_color: e.target.value })}
                           placeholder="Ej: Rojo"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                         />
                       ) : (
                         <div className="flex items-center">
@@ -405,7 +405,7 @@ export default function DriverProfilePage() {
                           value={driverFormData.vehicle_plate}
                           onChange={(e) => setDriverFormData({ ...driverFormData, vehicle_plate: e.target.value.toUpperCase() })}
                           placeholder="Ej: ABC123"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black font-mono uppercase"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black font-mono uppercase"
                           maxLength={6}
                         />
                       ) : (
@@ -429,7 +429,7 @@ export default function DriverProfilePage() {
                           value={driverFormData.license_number}
                           onChange={(e) => setDriverFormData({ ...driverFormData, license_number: e.target.value })}
                           placeholder="Ej: 123456789"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                         />
                       ) : (
                         <div className="flex items-center">
@@ -455,7 +455,7 @@ export default function DriverProfilePage() {
                         <select
                           value={driverFormData.municipality}
                           onChange={(e) => setDriverFormData({ ...driverFormData, municipality: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                         >
                           <option value="">Seleccionar municipio</option>
                           {MUNICIPALITIES.map((municipality) => (
@@ -479,7 +479,7 @@ export default function DriverProfilePage() {
                     <div className="mb-4">
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-start space-x-3 flex-1">
-                          <svg className="w-5 h-5 text-indigo-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-[#008000] mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                           </svg>
                           <div className="flex-1">
@@ -499,7 +499,7 @@ export default function DriverProfilePage() {
                               onChange={(e) => setDriverFormData({ ...driverFormData, accepts_intercity_trips: e.target.checked })}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008000]"></div>
                           </label>
                         ) : (
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${driverInfo.accepts_intercity_trips ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -565,7 +565,7 @@ export default function DriverProfilePage() {
                               value={driverFormData.base_fare}
                               onChange={(e) => setDriverFormData({ ...driverFormData, base_fare: e.target.value === '' ? '' : parseInt(e.target.value) })}
                               placeholder="2000"
-                              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                               min="0"
                               step="1000"
                             />
@@ -593,7 +593,7 @@ export default function DriverProfilePage() {
                               value={driverFormData.intercity_fare}
                               onChange={(e) => setDriverFormData({ ...driverFormData, intercity_fare: e.target.value === '' ? '' : parseInt(e.target.value) })}
                               placeholder="10000"
-                              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                               min="0"
                               step="1000"
                             />
@@ -717,7 +717,7 @@ export default function DriverProfilePage() {
                     <button
                       onClick={handleSave}
                       disabled={isSaving}
-                      className="flex-1 py-3 px-4 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-3 px-4 bg-[#008000] text-white rounded-xl font-medium hover:bg-[#006600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSaving ? 'Guardando...' : 'Guardar Cambios'}
                     </button>
@@ -725,7 +725,7 @@ export default function DriverProfilePage() {
                 ) : (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="w-full py-3 px-4 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+                    className="w-full py-3 px-4 bg-[#008000] text-white rounded-xl font-medium hover:bg-[#006600] transition-colors"
                   >
                     Editar Perfil
                   </button>
@@ -741,7 +741,7 @@ export default function DriverProfilePage() {
               className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center">
-                <svg className="w-6 h-6 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="font-medium text-gray-900">Mis Ganancias</span>
@@ -756,7 +756,7 @@ export default function DriverProfilePage() {
               className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center">
-                <svg className="w-6 h-6 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="font-medium text-gray-900">Historial de Viajes</span>
@@ -768,7 +768,7 @@ export default function DriverProfilePage() {
 
             <a
               href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-md p-4 flex items-center justify-between hover:from-purple-700 hover:to-indigo-700 transition-all"
+              className="w-full bg-gradient-to-r from-purple-600 to-[#008000] rounded-xl shadow-md p-4 flex items-center justify-between hover:from-purple-700 hover:to-[#006600] transition-all"
             >
               <div className="flex items-center">
                 <svg className="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

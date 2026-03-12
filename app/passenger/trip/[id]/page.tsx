@@ -11,7 +11,7 @@ const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent
   loading: () => (
     <div className="flex items-center justify-center h-full">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
         <p className="mt-4 text-gray-600">Cargando mapa...</p>
       </div>
     </div>
@@ -159,7 +159,7 @@ export default function TripTrackingPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando viaje...</p>
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function TripTrackingPage() {
           <p className="text-gray-600">Viaje no encontrado</p>
           <button
             onClick={() => router.push('/passenger')}
-            className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            className="mt-4 px-6 py-2 bg-[#008000] text-white rounded-lg hover:bg-[#006600]"
           >
             Volver
           </button>
@@ -238,19 +238,19 @@ export default function TripTrackingPage() {
         <div className="px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-md">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#008000] to-[#006600] rounded-xl flex items-center justify-center shadow-md">
                 <span className="text-white font-bold text-lg md:text-xl">M</span>
               </div>
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-indigo-600">MoTaxi</h1>
+                <h1 className="text-lg md:text-xl font-bold text-[#008000]">MoTaxi</h1>
                 <p className="text-xs text-gray-500">Viaje #{trip.id.slice(0, 8)}</p>
               </div>
             </div>
             <button
               onClick={() => router.push('/passenger/profile')}
-              className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-full flex items-center justify-center hover:shadow-md transition-shadow"
+              className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center hover:shadow-md transition-shadow"
             >
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 md:w-6 md:h-6 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </button>
@@ -319,9 +319,9 @@ export default function TripTrackingPage() {
 
             {/* Driver Info */}
             {trip.driver_name && (
-              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-2 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   Tu Conductor
@@ -401,8 +401,8 @@ export default function TripTrackingPage() {
 
             {/* Ofertas de conductores - solo cuando está buscando conductor */}
             {trip.status === 'requested' && driverOffers.length > 0 && (
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl p-4">
-                <h3 className="text-sm font-bold text-indigo-900 mb-3 flex items-center">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
+                <h3 className="text-sm font-bold text-[#003300] mb-3 flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                   </svg>
@@ -412,7 +412,7 @@ export default function TripTrackingPage() {
                   {driverOffers.map((offer: any) => (
                     <div
                       key={offer.id}
-                      className="bg-white border border-indigo-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                      className="bg-white border border-green-200 rounded-lg p-3 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
@@ -448,7 +448,7 @@ export default function TripTrackingPage() {
                             `,
                             icon: 'question',
                             showCancelButton: true,
-                            confirmButtonColor: '#4f46e5',
+                            confirmButtonColor: '#008000',
                             cancelButtonColor: '#6b7280',
                             confirmButtonText: 'Sí, aceptar',
                             cancelButtonText: 'Cancelar',
@@ -465,7 +465,7 @@ export default function TripTrackingPage() {
                                 icon: 'success',
                                 title: '¡Oferta aceptada!',
                                 text: `${offer.driver_name} ha sido notificado. Se dirige al punto de recogida.`,
-                                confirmButtonColor: '#4f46e5',
+                                confirmButtonColor: '#008000',
                                 timer: 3000,
                                 timerProgressBar: true,
                               });
@@ -479,19 +479,19 @@ export default function TripTrackingPage() {
                                 icon: 'error',
                                 title: 'Error',
                                 text: errorMessage,
-                                confirmButtonColor: '#4f46e5',
+                                confirmButtonColor: '#008000',
                               });
                             }
                           }
                         }}
-                        className="w-full mt-2 py-2 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all"
+                        className="w-full mt-2 py-2 px-4 bg-gradient-to-r from-[#008000] to-[#006600] text-white rounded-lg text-sm font-medium hover:from-[#006600] hover:to-[#004d00] transition-all"
                       >
                         Aceptar oferta
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-indigo-700 mt-3">
+                <p className="text-xs text-[#006600] mt-3">
                   💡 Los conductores pueden enviar ofertas personalizadas. Puedes esperar más ofertas o aceptar una ahora.
                 </p>
               </div>
@@ -523,7 +523,7 @@ export default function TripTrackingPage() {
                         icon: 'success',
                         title: 'Viaje cancelado',
                         text: 'Tu viaje ha sido cancelado exitosamente.',
-                        confirmButtonColor: '#4f46e5',
+                        confirmButtonColor: '#008000',
                         timer: 2000,
                         showConfirmButton: false,
                       });
@@ -534,7 +534,7 @@ export default function TripTrackingPage() {
                         icon: 'error',
                         title: 'Error',
                         text: 'No se pudo cancelar el viaje. Intenta nuevamente.',
-                        confirmButtonColor: '#4f46e5',
+                        confirmButtonColor: '#008000',
                       });
                     } finally {
                       setIsCancelling(false);
@@ -571,14 +571,14 @@ export default function TripTrackingPage() {
             {/* Communication Buttons */}
             {trip.driver_phone && (trip.status === 'accepted' || trip.status === 'in_progress') && (
               <div className="space-y-3">
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-4">
+                <div className="bg-gradient-to-r from-green-50 to-purple-50 border-2 border-green-200 rounded-xl p-4">
                   <div className="flex items-center mb-3">
-                    <svg className="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[#008000] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
-                    <h3 className="font-bold text-indigo-900">Comunicación con el Conductor</h3>
+                    <h3 className="font-bold text-[#003300]">Comunicación con el Conductor</h3>
                   </div>
-                  <p className="text-sm text-indigo-700 mb-4">
+                  <p className="text-sm text-[#006600] mb-4">
                     Mantente en contacto con tu conductor para mayor seguridad y coordinación
                   </p>
                   <div className="grid grid-cols-1 gap-3">
@@ -607,7 +607,7 @@ export default function TripTrackingPage() {
                       <span className="font-semibold">WhatsApp</span>
                     </a>
                   </div>
-                  <div className="mt-3 flex items-center justify-center text-xs text-indigo-600">
+                  <div className="mt-3 flex items-center justify-center text-xs text-[#008000]">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>

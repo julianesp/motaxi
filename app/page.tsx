@@ -4,16 +4,16 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import dynamic from "next/dynamic";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/Navbar/page";
 
 // Cargar el mapa dinámicamente para evitar problemas de SSR
 const LandingMap = dynamic(() => import("@/components/LandingMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl">
+    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-purple-100 rounded-2xl">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-        <p className="mt-4 text-indigo-600">Cargando mapa...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
+        <p className="mt-4 text-[#008000]">Cargando mapa...</p>
       </div>
     </div>
   ),
@@ -25,7 +25,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#008000] via-purple-600 to-pink-500">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto"></div>
           <p className="mt-4 text-white text-lg font-medium">
@@ -41,7 +41,7 @@ export default function HomePage() {
       className="min-h-screen"
       style={{
         background: "#000000",
-        backgroundImage: "linear-gradient(to top, #0f9b0f, #000000)",
+        backgroundImage: "linear-gradient(to top, #008000, #000000)",
       }}
     >
       {/* Navbar */}
@@ -51,7 +51,7 @@ export default function HomePage() {
       <section
         className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(to bottom right, #0f9b0f, #000000)",
+          background: "linear-gradient(to bottom right, #008000, #000000)",
         }}
       >
         <div className="absolute inset-0 bg-black opacity-10"></div>
@@ -66,10 +66,9 @@ export default function HomePage() {
               </div>
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
                 Tu transporte,
-                <br />
-                <span className="text-green-400">a un toque</span>
+                <br />a un toque
               </h1>
-              <p className="text-xl lg:text-2xl text-gray-200 max-w-xl">
+              <p className="text-xl lg:text-2xl text-white max-w-xl">
                 Conectando los 4 municipios del Valle de Sibundoy: Santiago,
                 Colón, Sibundoy y San Francisco
               </p>
@@ -97,7 +96,7 @@ export default function HomePage() {
                     </button>
                     <button
                       onClick={() => router.push("/auth/login")}
-                      className="px-8 py-4 bg-transparent border-2 border-green-400 text-white font-bold rounded-xl hover:bg-green-500 hover:border-green-500 transition-all duration-200"
+                      className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-green-500 hover:border-green-500 transition-all duration-200"
                     >
                       Iniciar sesión
                     </button>
@@ -108,22 +107,22 @@ export default function HomePage() {
               {/* Estadísticas */}
               <div className="grid grid-cols-3 gap-6 pt-8">
                 <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">
+                  <div className="text-3xl lg:text-4xl font-bold text-white">
                     4
                   </div>
-                  <div className="text-sm text-indigo-100">Municipios</div>
+                  <div className="text-sm text-green-100">Municipios</div>
                 </div>
                 <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">
+                  <div className="text-3xl lg:text-4xl font-bold text-white">
                     24/7
                   </div>
-                  <div className="text-sm text-indigo-100">Disponible</div>
+                  <div className="text-sm text-green-100">Disponible</div>
                 </div>
                 <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-yellow-300">
+                  <div className="text-3xl lg:text-4xl font-bold text-white">
                     35k+
                   </div>
-                  <div className="text-sm text-indigo-100">Habitantes</div>
+                  <div className="text-sm text-green-100">Habitantes</div>
                 </div>
               </div>
             </div>
@@ -158,8 +157,8 @@ export default function HomePage() {
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               Nuestros Municipios
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              MoTaxi conecta los cuatro municipios del hermoso Valle de Sibundoy
+            <p className="text-xl text-black max-w-2xl mx-auto">
+              MoTaxi conecta los cuatro municipios del Valle de Sibundoy
             </p>
           </div>
 
@@ -167,17 +166,17 @@ export default function HomePage() {
             {MUNICIPALITIES.map((municipality, index) => (
               <div
                 key={municipality.id}
-                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-indigo-600"
+                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#008000]"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#008000] to-[#008000] rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
                   {municipality.name[0]}
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
                   {municipality.name}
                 </h3>
-                <p className="text-gray-600 mb-4">{municipality.description}</p>
-                {municipality.population && (
-                  <div className="flex items-center text-sm text-gray-500">
+                {/* <p className="text-black mb-4">{municipality.description}</p> */}
+                {/* {municipality.population && (
+                  <div className="flex items-center text-sm text-black">
                     <svg
                       className="w-4 h-4 mr-2"
                       fill="none"
@@ -193,7 +192,7 @@ export default function HomePage() {
                     </svg>
                     {municipality.population.toLocaleString()} habitantes
                   </div>
-                )}
+                )} */}
               </div>
             ))}
           </div>
@@ -207,7 +206,7 @@ export default function HomePage() {
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               ¿Por qué elegir MoTaxi?
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-black max-w-2xl mx-auto">
               La solución de transporte moderna para el Valle de Sibundoy
             </p>
           </div>
@@ -215,7 +214,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-12">
             {/* Feature 1 */}
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="none"
@@ -233,7 +232,7 @@ export default function HomePage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
                 Rápido y Confiable
               </h3>
-              <p className="text-gray-600">
+              <p className="text-black">
                 Encuentra un conductor en minutos. Sistema de geolocalización en
                 tiempo real para conexiones instantáneas.
               </p>
@@ -241,7 +240,7 @@ export default function HomePage() {
 
             {/* Feature 2 */}
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="none"
@@ -257,7 +256,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Seguro</h3>
-              <p className="text-gray-600">
+              <p className="text-black">
                 Conductores verificados y sistema de calificaciones. Tu
                 seguridad es nuestra prioridad.
               </p>
@@ -265,7 +264,7 @@ export default function HomePage() {
 
             {/* Feature 3 */}
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="none"
@@ -283,7 +282,7 @@ export default function HomePage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
                 Tarifas Justas
               </h3>
-              <p className="text-gray-600">
+              <p className="text-black">
                 Precios transparentes y competitivos. Sabe cuánto pagarás antes
                 de viajar.
               </p>
@@ -294,24 +293,24 @@ export default function HomePage() {
 
       {/* CTA Section */}
       {!user && (
-        <section className="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+        <section className="py-20 bg-gradient-to-br from-[#008000] via-[#008000] to-[#008000]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
               ¿Listo para comenzar?
             </h2>
-            <p className="text-xl text-indigo-100 mb-8">
+            <p className="text-xl text-green-100 mb-8">
               Únete a la revolución del transporte en el Valle de Sibundoy
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => router.push("/auth/role-selection")}
-                className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
+                className="px-8 py-4 bg-white text-black font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
               >
                 Registrarse como Pasajero
               </button>
               <button
                 onClick={() => router.push("/auth/role-selection")}
-                className="px-8 py-4 bg-yellow-400 text-gray-900 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
+                className="px-8 py-4 bg-white text-gray-900 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
               >
                 Registrarse como Conductor
               </button>

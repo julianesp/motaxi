@@ -173,6 +173,10 @@ tripRoutes.get('/current', async (c) => {
       return c.json({ error: 'Only passengers can view current trip' }, 403);
     }
 
+    // Viajes 'requested' tienen un tiempo límite de 2 horas para evitar huérfanos
+    // 'accepted' e 'in_progress' no tienen límite de tiempo
+    const twoHoursAgo = Math.floor(Date.now() / 1000) - 7200;
+
     const trip = await c.env.DB.prepare(
       `SELECT t.*,
               u.full_name as driver_name,
@@ -188,11 +192,22 @@ tripRoutes.get('/current', async (c) => {
        LEFT JOIN drivers d ON t.driver_id = d.id
        WHERE t.passenger_id = ?
          AND t.status IN ('requested', 'accepted', 'in_progress')
+         AND (t.status != 'requested' OR t.created_at > ?)
        ORDER BY t.created_at DESC
        LIMIT 1`
     )
-      .bind(user.id)
+      .bind(user.id, twoHoursAgo)
       .first();
+
+    // Si había un viaje 'requested' huérfano (mayor a 2 horas), cancelarlo automáticamente
+    if (!trip) {
+      await c.env.DB.prepare(
+        `UPDATE trips SET status = 'cancelled', cancelled_at = ?
+         WHERE passenger_id = ? AND status = 'requested' AND created_at <= ?`
+      )
+        .bind(Math.floor(Date.now() / 1000), user.id, twoHoursAgo)
+        .run();
+    }
 
     return c.json({ trip });
   } catch (error: any) {

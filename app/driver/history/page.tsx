@@ -126,7 +126,7 @@ export default function DriverHistoryPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando historial...</p>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function DriverHistoryPage() {
               </svg>
               Volver
             </button>
-            <h1 className="text-xl font-bold text-indigo-600">Historial de Viajes</h1>
+            <h1 className="text-xl font-bold text-[#008000]">Historial de Viajes</h1>
             <div className="w-20"></div>
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function DriverHistoryPage() {
 
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center mb-4">
-                <svg className="w-8 h-8 text-indigo-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <h3 className="text-lg font-bold text-gray-900">Día con Más Viajes</h3>
@@ -230,7 +230,7 @@ export default function DriverHistoryPage() {
               {stats.mostTripsDay.date ? (
                 <div>
                   <p className="text-gray-600 text-sm mb-2">{stats.mostTripsDay.date}</p>
-                  <p className="text-3xl font-bold text-indigo-600">{stats.mostTripsDay.trips} viajes</p>
+                  <p className="text-3xl font-bold text-[#008000]">{stats.mostTripsDay.trips} viajes</p>
                   <p className="text-gray-500 text-sm mt-1">${stats.mostTripsDay.earnings.toLocaleString()} ganados</p>
                 </div>
               ) : (
@@ -248,7 +248,7 @@ export default function DriverHistoryPage() {
                   onClick={() => setSelectedPeriod('day')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     selectedPeriod === 'day'
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-[#008000] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -258,7 +258,7 @@ export default function DriverHistoryPage() {
                   onClick={() => setSelectedPeriod('week')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     selectedPeriod === 'week'
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-[#008000] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -268,7 +268,7 @@ export default function DriverHistoryPage() {
                   onClick={() => setSelectedPeriod('month')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     selectedPeriod === 'month'
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-[#008000] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -278,17 +278,17 @@ export default function DriverHistoryPage() {
             </div>
 
             {/* Resumen del Período */}
-            <div className="bg-indigo-50 rounded-xl p-4 mb-6">
+            <div className="bg-green-50 rounded-xl p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-indigo-600 font-medium">
+                  <p className="text-[#008000] font-medium">
                     {selectedPeriod === 'day' ? 'Hoy' : selectedPeriod === 'week' ? 'Esta Semana' : 'Este Mes'}
                   </p>
-                  <p className="text-2xl font-bold text-indigo-900">${periodEarnings.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-[#003300]">${periodEarnings.toLocaleString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-indigo-600 font-medium">{filteredTrips.length} viajes</p>
-                  <p className="text-sm text-indigo-500">
+                  <p className="text-[#008000] font-medium">{filteredTrips.length} viajes</p>
+                  <p className="text-sm text-green-500">
                     Promedio: ${filteredTrips.length > 0 ? Math.round(periodEarnings / filteredTrips.length).toLocaleString() : 0}
                   </p>
                 </div>
@@ -306,7 +306,7 @@ export default function DriverHistoryPage() {
                 </div>
               ) : (
                 filteredTrips.map((trip) => (
-                  <div key={trip.id} className="border border-gray-200 rounded-xl p-4 hover:border-indigo-300 transition-colors">
+                  <div key={trip.id} className="border border-gray-200 rounded-xl p-4 hover:border-green-300 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center mb-2">

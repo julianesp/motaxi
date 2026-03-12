@@ -206,7 +206,7 @@ export default function LeafletMapWithLocation({
       >
         {isGettingLocation ? (
           <svg
-            className="w-6 h-6 text-indigo-600 animate-spin"
+            className="w-6 h-6 text-[#008000] animate-spin"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -220,7 +220,7 @@ export default function LeafletMapWithLocation({
           </svg>
         ) : (
           <svg
-            className="w-6 h-6 text-indigo-600"
+            className="w-6 h-6 text-[#008000]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

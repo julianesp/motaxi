@@ -3,7 +3,7 @@
 import { useState, FormEvent, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/Navbar/page";
 import { apiClient } from "@/lib/api-client";
 
 function ResetPasswordForm() {
@@ -83,15 +83,15 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Navbar />
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
           {/* Header */}
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <svg
-                className="w-8 h-8 text-indigo-600"
+                className="w-8 h-8 text-[#008000]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -104,7 +104,7 @@ function ResetPasswordForm() {
                 />
               </svg>
             </div>
-            <h1 className="text-4xl font-bold text-indigo-600 mb-2">MoTaxi</h1>
+            <h1 className="text-4xl font-bold text-[#008000] mb-2">MoTaxi</h1>
             <h2 className="text-2xl font-semibold text-gray-800">
               Restablecer Contraseña
             </h2>
@@ -258,7 +258,7 @@ function ResetPasswordForm() {
             <div className="text-center">
               <Link
                 href="/auth/forgot-password"
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                className="text-sm font-medium text-[#008000] hover:text-green-500"
               >
                 ¿No tienes un código? Solicitar uno nuevo
               </Link>
@@ -298,7 +298,7 @@ export default function ResetPasswordPage() {
       fallback={
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
             <p className="mt-4 text-gray-600">Cargando...</p>
           </div>
         </div>

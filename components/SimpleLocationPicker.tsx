@@ -123,7 +123,7 @@ export default function SimpleLocationPicker({
                   setShowFavorites(false);
                   setShowSuggestions(true);
                 }}
-                className="text-xs text-indigo-600 hover:text-indigo-700"
+                className="text-xs text-[#008000] hover:text-[#006600]"
               >
                 Ver municipios
               </button>
@@ -167,7 +167,7 @@ export default function SimpleLocationPicker({
                     setShowSuggestions(false);
                     setShowFavorites(true);
                   }}
-                  className="text-xs text-indigo-600 hover:text-indigo-700"
+                  className="text-xs text-[#008000] hover:text-[#006600]"
                 >
                   Ver favoritos
                 </button>

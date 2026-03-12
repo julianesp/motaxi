@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { UserRole } from "@/lib/types";
 import { SignUp, useSignUp, useClerk } from "@clerk/nextjs";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/Navbar/page";
 
 function RegisterForm() {
   const router = useRouter();
@@ -36,7 +36,7 @@ function RegisterForm() {
       try {
         await clerk.signOut();
       } catch (err) {
-        console.log('No active Clerk session to sign out');
+        console.log("No active Clerk session to sign out");
       }
     }
     setUseClerkAuth(value);
@@ -121,7 +121,7 @@ function RegisterForm() {
       className="min-h-screen"
       style={{
         background: "#000000",
-        backgroundImage: "linear-gradient(to top, #0f9b0f, #000000)",
+        backgroundImage: "linear-gradient(to top, #008000, #000000)",
       }}
     >
       <Navbar />
@@ -192,7 +192,7 @@ function RegisterForm() {
                   elements: {
                     rootBox: "w-full",
                     card: "shadow-none",
-                    formButtonPrimary: "bg-indigo-600 hover:bg-indigo-700",
+                    formButtonPrimary: "bg-[#008000] hover:bg-[#006600]",
                   },
                   layout: {
                     socialButtonsPlacement: "top",
@@ -307,18 +307,18 @@ function RegisterForm() {
                   id="terms"
                   type="checkbox"
                   required
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1"
+                  className="h-4 w-4 text-[#008000] focus:ring-green-500 border-gray-300 rounded mt-1"
                 />
                 <label
                   htmlFor="terms"
                   className="ml-2 block text-sm text-gray-300"
                 >
                   Acepto los{" "}
-                  <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                  <a href="#" className="text-[#008000] hover:text-green-500">
                     términos y condiciones
                   </a>{" "}
                   y la{" "}
-                  <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                  <a href="#" className="text-[#008000] hover:text-green-500">
                     política de privacidad
                   </a>
                 </label>
@@ -341,7 +341,7 @@ function RegisterForm() {
                 ¿Ya tienes una cuenta?{" "}
                 <Link
                   href="/auth/login"
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                  className="font-medium text-[#008000] hover:text-green-500"
                 >
                   Inicia sesión
                 </Link>

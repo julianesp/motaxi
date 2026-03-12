@@ -87,6 +87,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      // Si el usuario es pasajero, cancelar viaje 'requested' huérfano antes de salir
+      if (user?.role === 'passenger') {
+        try {
+          const { tripsAPI } = await import('./api-client');
+          await tripsAPI.cancelCurrentRequestedTrip();
+        } catch {
+          // No bloquear el logout si falla la cancelación
+        }
+      }
       await authAPI.logout();
     } catch (error) {
       console.error('Logout error:', error);

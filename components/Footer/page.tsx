@@ -46,8 +46,15 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Aviso método de pago */}
+        <div className="border-t border-gray-700 mt-8 pt-8">
+          <p className="text-xs text-gray-500 text-center leading-relaxed max-w-3xl mx-auto">
+            <span className="font-semibold text-gray-400">Aviso legal sobre pagos:</span> MoTaxi actúa exclusivamente como plataforma de conexión entre conductores y pasajeros. El método de pago de cada viaje es pactado libremente entre las partes. MoTaxi no procesa, retiene ni intermedia ningún pago, y no asume responsabilidad sobre las transacciones económicas realizadas entre los usuarios.
+          </p>
+        </div>
+
         {/* Línea divisoria y derechos de autor */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <div className="border-t border-gray-800 mt-6 pt-6 text-center text-gray-400">
           <p>&copy; {currentYear} MoTaxi. Todos los derechos reservados.</p>
         </div>
       </div>

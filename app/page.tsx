@@ -5,12 +5,13 @@ import { useAuth } from "@/lib/auth-context";
 import dynamic from "next/dynamic";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 import Navbar from "@/components/Navbar/page";
+import styles from "./styles.module.scss";
 
 // Cargar el mapa dinámicamente para evitar problemas de SSR
 const LandingMap = dynamic(() => import("@/components/LandingMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-purple-100 rounded-2xl">
+    <div className="w-full h-full flex items-center justify-center   rounded-2xl top-2">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
         <p className="mt-4 text-[#008000]">Cargando mapa...</p>
@@ -44,7 +45,6 @@ export default function HomePage() {
         backgroundImage: "linear-gradient(to top, #008000, #000000)",
       }}
     >
-      {/* Navbar */}
       <Navbar />
 
       {/* Hero Section */}
@@ -128,7 +128,7 @@ export default function HomePage() {
             </div>
 
             {/* Mapa */}
-            <div className="h-[400px] lg:h-[600px]">
+            <div className={`h-[300px] lg:h-[500px] ${styles.container}`}>
               <LandingMap />
             </div>
           </div>
@@ -285,6 +285,46 @@ export default function HomePage() {
               <p className="text-black">
                 Precios transparentes y competitivos. Sabe cuánto pagarás antes
                 de viajar.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Aviso método de pago */}
+      <section className="py-14 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex-shrink-0 w-14 h-14 bg-[#008000]/10 border-2 border-[#008000] rounded-full flex items-center justify-center">
+              <svg
+                className="w-7 h-7 text-[#008000] "
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-black mb-2">
+                Aviso sobre métodos de pago
+              </h3>
+              <p className="text-black leading-relaxed">
+                <strong>MoTaxi es una plataforma de conexión</strong> entre
+                conductores y pasajeros. El método de pago de cada viaje es
+                acordado directamente y de forma libre entre las partes
+                involucradas (efectivo, transferencia, u otro medio que
+                decidan).{" "}
+                <strong>
+                  MoTaxi no procesa, gestiona ni intermedia ningún pago
+                </strong>
+                , por lo que no asume responsabilidad alguna sobre las
+                transacciones económicas realizadas entre conductor y pasajero.
               </p>
             </div>
           </div>

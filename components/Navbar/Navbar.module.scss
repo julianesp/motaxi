@@ -1,5 +1,5 @@
 .navbar {
-    width: 100%;
+  width: 100%;
   border-bottom-left-radius: 30px;
   border-bottom-right-radius: 30px;
 
@@ -8,38 +8,72 @@
   box-shadow: 0px 5px 10px rgba(255, 255, 255, 0.5);
 }
 
+
 @keyframes logoTilt {
-  from { transform: translateX(0) rotate(0deg); }
-  to   { transform: translateX(0) rotate(-45deg); }
+  from {
+    transform: translateX(0) rotate(0deg);
+  }
+  to {
+    transform: translateX(0) rotate(-45deg);
+  }
 }
 
 @keyframes logoGo {
-  from { transform: translateX(0) rotate(-45deg); }
-  to   { transform: translateX(var(--logo-travel)) rotate(-45deg); }
+  from {
+    transform: translateX(0) rotate(-45deg);
+  }
+  to {
+    transform: translateX(var(--logo-travel)) rotate(-45deg);
+  }
 }
 
 @keyframes logoReturn {
-  from { transform: translateX(var(--logo-travel)) rotate(-45deg); }
-  to   { transform: translateX(0) rotate(0deg); }
+  from {
+    transform: translateX(var(--logo-travel)) rotate(-45deg);
+  }
+  to {
+    transform: translateX(0) rotate(0deg);
+  }
 }
 
 @keyframes logoBounce {
-  0%, 100% { transform: translateX(var(--logo-travel)) rotate(-45deg) translateY(0); }
-  40%       { transform: translateX(var(--logo-travel)) rotate(-45deg) translateY(-18px); }
-  60%       { transform: translateX(var(--logo-travel)) rotate(-45deg) translateY(-10px); }
+  0%,
+  100% {
+    transform: translateX(var(--logo-travel)) rotate(-45deg) translateY(0);
+  }
+  40% {
+    transform: translateX(var(--logo-travel)) rotate(-45deg) translateY(-18px);
+  }
+  60% {
+    transform: translateX(var(--logo-travel)) rotate(-45deg) translateY(-10px);
+  }
 }
 
 @keyframes smokeRise {
-  0%   { transform: translate(0, 0) scale(0.3);  opacity: 0.7; }
-  50%  { transform: translate(var(--smoke-dx), -28px) scale(1);   opacity: 0.4; }
-  100% { transform: translate(var(--smoke-dx), -55px) scale(1.6); opacity: 0; }
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(var(--smoke-dx), -28px) scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(var(--smoke-dx), -55px) scale(1.6);
+    opacity: 0;
+  }
 }
 
 .smokeParticle {
   position: fixed;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(180,180,180,0.9) 0%, rgba(120,120,120,0.3) 70%, transparent 100%);
+  background: radial-gradient(
+    circle,
+    rgba(180, 180, 180, 0.9) 0%,
+    rgba(120, 120, 120, 0.3) 70%,
+    transparent 100%
+  );
   animation: smokeRise var(--smoke-dur) ease-out forwards;
   z-index: 9999;
 }

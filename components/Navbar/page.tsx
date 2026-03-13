@@ -25,6 +25,49 @@ export default function Navbar() {
   const logoRef = useRef<HTMLImageElement>(null);
 
   const bounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const smokeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const smokeParticlesRef = useRef<HTMLElement[]>([]);
+
+  const spawnSmokeParticle = (x: number, y: number) => {
+    const el = document.createElement("div");
+    el.className = styles.smokeParticle;
+    const size = 10 + Math.random() * 16;
+    const dx = -(12 + Math.random() * 20); // humo va hacia atrás (izquierda)
+    const dur = 0.7 + Math.random() * 0.5;
+    el.style.cssText = `
+      width: ${size}px;
+      height: ${size}px;
+      left: ${x - size / 2}px;
+      top: ${y - size / 2}px;
+      --smoke-dx: ${dx}px;
+      --smoke-dur: ${dur}s;
+    `;
+    document.body.appendChild(el);
+    smokeParticlesRef.current.push(el);
+    setTimeout(() => {
+      el.remove();
+      smokeParticlesRef.current = smokeParticlesRef.current.filter((p) => p !== el);
+    }, dur * 1000 + 50);
+  };
+
+  const startSmoke = () => {
+    const el = logoRef.current;
+    if (!el) return;
+    smokeIntervalRef.current = setInterval(() => {
+      const rect = el.getBoundingClientRect();
+      // El humo sale por la parte trasera (izquierda) del logo
+      const x = rect.left + 4;
+      const y = rect.top + rect.height / 2 + 6;
+      spawnSmokeParticle(x, y);
+    }, 80);
+  };
+
+  const stopSmoke = () => {
+    if (smokeIntervalRef.current) {
+      clearInterval(smokeIntervalRef.current);
+      smokeIntervalRef.current = null;
+    }
+  };
 
   const handleLogoMouseEnter = () => {
     const el = logoRef.current;
@@ -46,11 +89,12 @@ export default function Navbar() {
       void el.offsetWidth;
       el.classList.add(styles.logoMotoGo);
 
-      // Fase 3: saltar en el centro
+      // Fase 3: saltar en el centro + humo
       bounceTimeoutRef.current = setTimeout(() => {
         el.classList.remove(styles.logoMotoGo);
         void el.offsetWidth;
         el.classList.add(styles.logoMotoBounce);
+        startSmoke();
       }, 410);
     }, 210);
   };
@@ -63,6 +107,8 @@ export default function Navbar() {
       clearTimeout(bounceTimeoutRef.current);
       bounceTimeoutRef.current = null;
     }
+
+    stopSmoke();
 
     el.classList.remove(styles.logoMotoGo, styles.logoMotoBounce);
     void el.offsetWidth;

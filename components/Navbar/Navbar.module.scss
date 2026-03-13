@@ -29,6 +29,21 @@
   60%       { transform: translateX(var(--logo-travel)) rotate(-45deg) translateY(-10px); }
 }
 
+@keyframes smokeRise {
+  0%   { transform: translate(0, 0) scale(0.3);  opacity: 0.7; }
+  50%  { transform: translate(var(--smoke-dx), -28px) scale(1);   opacity: 0.4; }
+  100% { transform: translate(var(--smoke-dx), -55px) scale(1.6); opacity: 0; }
+}
+
+.smokeParticle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(180,180,180,0.9) 0%, rgba(120,120,120,0.3) 70%, transparent 100%);
+  animation: smokeRise var(--smoke-dur) ease-out forwards;
+  z-index: 9999;
+}
+
 .logoMotoTilt {
   animation: logoTilt 0.2s ease-out forwards;
 }

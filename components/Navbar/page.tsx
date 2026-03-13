@@ -24,20 +24,49 @@ export default function Navbar() {
   const isHomePage = pathname === "/";
   const logoRef = useRef<HTMLImageElement>(null);
 
+  const bounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleLogoMouseEnter = () => {
     const el = logoRef.current;
     if (!el) return;
-    el.classList.remove("logo-moto-return");
-    void el.offsetWidth; // reflow para reiniciar animación
-    el.classList.add("logo-moto-go");
+
+    // Calcular cuánto debe viajar: centro del viewport menos posición actual del logo
+    const rect = el.getBoundingClientRect();
+    const travel = Math.round(window.innerWidth / 2 - rect.left - rect.width / 2);
+    el.style.setProperty("--logo-travel", `${travel}px`);
+
+    // Fase 1: inclinarse 45°
+    el.classList.remove(styles.logoMotoReturn, styles.logoMotoGo, styles.logoMotoBounce);
+    void el.offsetWidth;
+    el.classList.add(styles.logoMotoTilt);
+
+    // Fase 2: arrancar hasta el centro
+    bounceTimeoutRef.current = setTimeout(() => {
+      el.classList.remove(styles.logoMotoTilt);
+      void el.offsetWidth;
+      el.classList.add(styles.logoMotoGo);
+
+      // Fase 3: saltar en el centro
+      bounceTimeoutRef.current = setTimeout(() => {
+        el.classList.remove(styles.logoMotoGo);
+        void el.offsetWidth;
+        el.classList.add(styles.logoMotoBounce);
+      }, 410);
+    }, 210);
   };
 
   const handleLogoMouseLeave = () => {
     const el = logoRef.current;
     if (!el) return;
-    el.classList.remove("logo-moto-go");
+
+    if (bounceTimeoutRef.current) {
+      clearTimeout(bounceTimeoutRef.current);
+      bounceTimeoutRef.current = null;
+    }
+
+    el.classList.remove(styles.logoMotoGo, styles.logoMotoBounce);
     void el.offsetWidth;
-    el.classList.add("logo-moto-return");
+    el.classList.add(styles.logoMotoReturn);
   };
 
   return (
@@ -60,7 +89,7 @@ export default function Navbar() {
                 alt="MoTaxi logo"
                 width={46}
                 height={46}
-                className="rounded-full border-[1px] border-[#008000] shadow-lg"
+                className="rounded-full border-[1px] border-[#008000] shadow-lg bg-white"
               />
               <span className="text-white  px-3 py-2 rounded-md text-lg font-bold transition-all duration-200 [text-shadow:_1px_1px_2px_rgb(0_0_0_/_80%),_-1px_-1px_2px_rgb(0_0_0_/_80%),_1px_-1px_2px_rgb(0_0_0_/_80%),_-1px_1px_2px_rgb(0_0_0_/_80%)] hover:scale-105 ">
                 MoTaxi

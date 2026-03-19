@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { MUNICIPALITIES } from '@/lib/constants/municipalities';
+import TrialBanner from '@/components/TrialBanner';
+import Swal from 'sweetalert2';
 
 interface DriverInfo {
   vehicle_model: string;
@@ -31,6 +33,7 @@ export default function DriverProfilePage() {
   const [driverInfo, setDriverInfo] = useState<DriverInfo | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -135,10 +138,50 @@ export default function DriverProfilePage() {
     }
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({ icon: 'warning', title: 'Formato inválido', text: 'Por favor selecciona una imagen válida.', confirmButtonColor: '#42CE1D' });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire({ icon: 'warning', title: 'Imagen muy grande', text: 'La imagen no puede superar 2MB.', confirmButtonColor: '#42CE1D' });
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setPhotoPreview(base64);
+      setFormData(prev => ({ ...prev, profile_image: base64 }));
+      setIsUploadingPhoto(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
+    // Foto de perfil obligatoria
+    if (!photoPreview && !formData.profile_image) {
+      alert('📸 La foto de perfil es obligatoria. Por favor agrega una foto.');
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const { driversAPI } = await import('@/lib/api-client');
+      const { driversAPI, usersAPI } = await import('@/lib/api-client');
+
+      // Guardar foto de perfil si cambió
+      if (formData.profile_image) {
+        await usersAPI.updateProfile({
+          full_name: formData.full_name,
+          phone: formData.phone,
+          profile_image: formData.profile_image,
+        });
+      }
 
       // Preparar datos con valores por defecto para campos vacíos
       const dataToSend = {
@@ -156,10 +199,10 @@ export default function DriverProfilePage() {
       await fetchDriverInfo();
 
       setIsEditing(false);
-      alert('✅ Perfil actualizado correctamente');
+      Swal.fire({ icon: 'success', title: 'Perfil actualizado', text: 'Perfil actualizado correctamente', confirmButtonColor: '#42CE1D' });
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('❌ Error al actualizar el perfil. Intenta nuevamente.');
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Error al actualizar el perfil. Intenta nuevamente.', confirmButtonColor: '#42CE1D' });
     } finally {
       setIsSaving(false);
     }
@@ -230,20 +273,57 @@ export default function DriverProfilePage() {
       {/* Main Content */}
       <div className="container-app py-6">
         <div className="max-w-2xl mx-auto">
+          {/* Trial / Subscription Banner */}
+          <div className="mb-4">
+            <TrialBanner user={{ id: user.id, full_name: user.full_name, email: user.email, phone: user.phone }} />
+          </div>
+
           {/* Profile Card */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             {/* Header with Avatar */}
             <div className="bg-gradient-to-r from-green-500 to-[#008000] px-6 py-8">
               <div className="flex flex-col items-center">
-                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-16 h-16 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
+                <div className="relative mb-4">
+                  <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Foto de perfil" className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-16 h-16 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  {/* Botón de cambiar foto - siempre visible */}
+                  <label
+                    htmlFor="photo-upload"
+                    className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#42CE1D] hover:bg-[#35a818] rounded-full flex items-center justify-center cursor-pointer shadow-md transition-colors"
+                    title="Cambiar foto de perfil"
+                  >
+                    {isUploadingPhoto ? (
+                      <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                  </label>
+                  <input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoChange}
+                  />
+                  {/* Indicador de foto requerida */}
+                  {!photoPreview && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">!</span>
+                    </div>
+                  )}
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-1">{user.full_name}</h2>
                 <p className="text-green-100 mb-2">Conductor</p>

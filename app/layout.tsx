@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { ClerkProvider } from '@clerk/nextjs';
 import { esES } from '@clerk/localizations';
 import Footer from '@/components/Footer/page';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -52,6 +53,7 @@ export default function RootLayout({
             {children}
           </AuthProvider>
           <Footer/>
+          <Script src="https://checkout.epayco.co/checkout.js" strategy="afterInteractive" />
         </body>
       </html>
     </ClerkProvider>

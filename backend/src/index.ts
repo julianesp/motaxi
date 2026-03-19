@@ -22,6 +22,9 @@ export interface Env {
   WOMPI_PRIVATE_KEY?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
+  EPAYCO_PUBLIC_KEY?: string;
+  EPAYCO_TEST_MODE?: string;
+  SITE_URL?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();

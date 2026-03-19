@@ -723,7 +723,7 @@ export default function TripTrackingPage() {
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Cuéntanos sobre tu experiencia (opcional)"
-                    className="w-full p-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent mb-4"
+                    className="w-full p-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent mb-4 text-gray-900 bg-white"
                     rows={3}
                   />
 

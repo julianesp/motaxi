@@ -16,6 +16,11 @@ JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
 CORS_ORIGIN = "https://motaxi.dev,https://www.motaxi.dev,http://localhost:3000"
 # RESEND_API_KEY y RESEND_FROM_EMAIL se configuran en .dev.vars para desarrollo
 # y como secrets en producción con: wrangler secret put RESEND_API_KEY
+# URL pública del sitio Next.js (para callbacks de ePayco)
+SITE_URL = "https://motaxi.dev"
+# ePayco - llave pública (no es secreta, es pública por diseño de ePayco)
+EPAYCO_PUBLIC_KEY = "101df072a3893ba3a275792688bbd7b1"
+EPAYCO_TEST_MODE = "false"
 
 # Configuración de D1 Database
 # Usa la misma base de datos para desarrollo y producción

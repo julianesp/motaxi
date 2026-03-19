@@ -263,6 +263,7 @@ export const usersAPI = {
     full_name?: string;
     phone?: string;
     gender?: "male" | "female" | "other" | null;
+    profile_image?: string;
   }) => {
     const response = await apiClient.put('/users/profile', data);
     return response.data;

@@ -108,6 +108,7 @@ export default function PassengerProfilePage() {
       {/* Main Content */}
       <div className="container-app py-6">
         <div className="max-w-2xl mx-auto">
+
           {/* Profile Card */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             {/* Header with Avatar */}
@@ -425,6 +426,21 @@ export default function PassengerProfilePage() {
                 />
               </svg>
             </button>
+
+            <a
+              href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
+              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span className="font-medium text-black">Contactar Soporte</span>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
 
             <button
               onClick={handleLogout}

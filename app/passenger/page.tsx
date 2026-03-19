@@ -172,6 +172,7 @@ export default function PassengerHomePage() {
   const [favoriteDrivers, setFavoriteDrivers] = useState<FavoriteDriver[]>([]);
   const [showFavoriteDriversPanel, setShowFavoriteDriversPanel] = useState(false);
   const [loadingFavoriteDrivers, setLoadingFavoriteDrivers] = useState(false);
+  const [passengerCustomPrice, setPassengerCustomPrice] = useState<number | null>(null);
 
   useEffect(() => {
     // Solo verificar autenticación una vez que termine de cargar
@@ -417,10 +418,63 @@ export default function PassengerHomePage() {
         destination.longitude,
       );
       setEstimatedDistance(dist);
+      setPassengerCustomPrice(null); // Resetear precio personalizado al cambiar la ruta
     } else {
       setEstimatedDistance(null);
+      setPassengerCustomPrice(null);
     }
   }, [pickup.latitude, pickup.longitude, destination.latitude, destination.longitude]);
+
+  const handleModifyPrice = async () => {
+    // Calcular precio estimado actual para mostrarlo como referencia
+    let currentEstimate = 5000;
+    if (estimatedDistance && nearbyDrivers.length > 0) {
+      const nearestDriver = nearbyDrivers[0];
+      currentEstimate = Math.round((nearestDriver.base_fare ?? 5000) + estimatedDistance * (nearestDriver.per_km_fare ?? 2000));
+    } else if (estimatedDistance) {
+      currentEstimate = Math.round(5000 + estimatedDistance * 2000);
+    }
+
+    const displayPrice = passengerCustomPrice ?? currentEstimate;
+
+    const { value: newPrice } = await Swal.fire({
+      title: "Proponer precio",
+      html: `
+        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">
+          Precio estimado: <strong style="color:#008000;">$${currentEstimate.toLocaleString()}</strong>
+        </p>
+        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;">
+          Puedes proponer un precio diferente. Los conductores verán tu oferta y decidirán si aceptarla.
+        </p>
+        <input id="swal-price-input" type="number" min="1000" step="100"
+          value="${displayPrice}"
+          style="width:100%;padding:10px 12px;border:2px solid #d1fae5;border-radius:12px;font-size:18px;font-weight:bold;color:#008000;text-align:center;outline:none;"
+          placeholder="Ingresa el precio"
+        />
+      `,
+      confirmButtonText: "Confirmar precio",
+      confirmButtonColor: "#008000",
+      showCancelButton: true,
+      cancelButtonText: passengerCustomPrice ? "Usar precio estimado" : "Cancelar",
+      cancelButtonColor: "#6b7280",
+      preConfirm: () => {
+        const input = document.getElementById('swal-price-input') as HTMLInputElement;
+        const val = parseInt(input.value);
+        if (!val || val < 1000) {
+          Swal.showValidationMessage("El precio mínimo es $1,000");
+          return false;
+        }
+        return val;
+      },
+    });
+
+    if (newPrice) {
+      setPassengerCustomPrice(newPrice);
+    } else if (passengerCustomPrice && !newPrice) {
+      // Si canceló con "Usar precio estimado"
+      setPassengerCustomPrice(null);
+    }
+  };
 
   const handleRequestTrip = async () => {
     if (
@@ -449,7 +503,10 @@ export default function PassengerHomePage() {
 
     // Calcular tarifa estimada basada en conductores disponibles
     let estimatedFare = 5000; // Valor por defecto si no hay conductores
-    if (nearbyDrivers.length > 0) {
+    if (passengerCustomPrice) {
+      // El pasajero propuso un precio personalizado
+      estimatedFare = passengerCustomPrice;
+    } else if (nearbyDrivers.length > 0) {
       // Usar tarifa del conductor más cercano
       const nearestDriver = nearbyDrivers[0];
       const baseFare = nearestDriver.base_fare ?? 5000;
@@ -1017,17 +1074,61 @@ export default function PassengerHomePage() {
                 {nearbyDrivers.length > 4 && (
                   <p className="text-xs text-center text-gray-400">+{nearbyDrivers.length - 4} conductores más disponibles</p>
                 )}
+                {/* Botón modificar precio */}
+                <button
+                  onClick={handleModifyPrice}
+                  className="w-full mt-1 py-2 px-3 text-sm font-medium text-[#008000] bg-white hover:bg-green-50 border border-green-300 rounded-xl transition-colors flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>
+                    {passengerCustomPrice
+                      ? `Tu precio: $${passengerCustomPrice.toLocaleString()} · Modificar`
+                      : "Proponer mi precio"}
+                  </span>
+                </button>
               </div>
             )}
 
             {/* Sin conductores disponibles */}
             {pickup.latitude && destination.latitude && nearbyDrivers.length === 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
                 <p className="text-sm text-amber-800 text-center">
                   No hay conductores disponibles en tu zona en este momento.
                 </p>
+                {/* Proponer precio sin conductores visibles */}
+                <button
+                  onClick={handleModifyPrice}
+                  className="w-full py-2 px-3 text-sm font-medium text-[#008000] bg-white hover:bg-green-50 border border-green-300 rounded-xl transition-colors flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>
+                    {passengerCustomPrice
+                      ? `Tu precio: $${passengerCustomPrice.toLocaleString()} · Modificar`
+                      : "Proponer mi precio"}
+                  </span>
+                </button>
               </div>
             )}
+
+                {/* Indicador de precio propuesto por el pasajero */}
+                {passengerCustomPrice && (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                    <span className="text-sm text-gray-600">Tu precio propuesto:</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-base font-bold text-[#008000]">${passengerCustomPrice.toLocaleString()}</span>
+                      <button
+                        onClick={handleModifyPrice}
+                        className="text-xs text-gray-400 hover:text-[#008000] underline"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Request Button */}
                 <button

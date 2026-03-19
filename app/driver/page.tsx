@@ -371,20 +371,33 @@ export default function DriverHomePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-[#008000]">MoTaxi</h1>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  isAvailable ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              {/* Toggle disponibilidad */}
+              <button
+                onClick={toggleAvailability}
+                className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none ${
+                  isAvailable ? 'bg-[#42CE1D]' : 'bg-red-500'
                 }`}
+                title={isAvailable ? 'Disponible' : 'No disponible'}
               >
-                {isAvailable ? 'Disponible' : 'No disponible'}
-              </div>
+                <span
+                  className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                    isAvailable ? 'translate-x-7' : 'translate-x-0'
+                  }`}
+                />
+              </button>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Botón ganancias con icono de moneda */}
               <button
                 onClick={() => router.push('/driver/earnings')}
-                className="px-4 py-2 bg-green-100 text-[#006600] rounded-lg font-medium hover:bg-green-200"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80"
+                title="Ganancias"
               >
-                Ganancias
+                <svg viewBox="0 0 40 40" className="w-10 h-10">
+                  <circle cx="20" cy="20" r="19" fill="#FBBF24" stroke="#F59E0B" strokeWidth="1.5"/>
+                  <circle cx="20" cy="20" r="15" fill="#FCD34D"/>
+                  <text x="20" y="26" textAnchor="middle" fontSize="16" fontWeight="900" fill="#92400E" fontFamily="serif">$</text>
+                </svg>
               </button>
               {/* Botón de notificaciones */}
               <div className="relative notifications-dropdown">

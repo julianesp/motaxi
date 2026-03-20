@@ -7,11 +7,12 @@ import { esES } from "@clerk/localizations";
 import Footer from "@/components/Footer/page";
 import Script from "next/script";
 import OpenInBrowser from "@/components/OpenInBrowser";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  manifest: '/manifest.json',
+  manifest: "/manifest.json",
   title: "MoTaxi - Transporte Rápido y Desde la Comodidad de tu Hogar",
   description:
     "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación actual",
@@ -57,6 +58,7 @@ export default function RootLayout({
     <ClerkProvider localization={esES}>
       <html lang="es">
         <body className={inter.className}>
+          <Analytics />
           <OpenInBrowser />
           <AuthProvider>{children}</AuthProvider>
           <Footer />

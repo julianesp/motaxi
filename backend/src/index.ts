@@ -25,6 +25,8 @@ export interface Env {
   EPAYCO_PUBLIC_KEY?: string;
   EPAYCO_TEST_MODE?: string;
   SITE_URL?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();

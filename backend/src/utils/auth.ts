@@ -85,6 +85,74 @@ export class AuthUtils {
   }
 }
 
+const EXEMPT_EMAILS = ['julii1295@gmail.com', 'alexriob@gmail.com', 'admin@neurai.dev'];
+
+/**
+ * Middleware de suscripción para rutas de conductor
+ * Bloquea si el trial expiró y no tiene suscripción activa
+ */
+export async function subscriptionMiddleware(c: any, next: any) {
+  const user = c.get('user');
+  if (!user || user.role !== 'driver') {
+    await next();
+    return;
+  }
+
+  if (EXEMPT_EMAILS.includes(user.email?.toLowerCase())) {
+    await next();
+    return;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  const subscription = await (c.env.DB as D1Database)
+    .prepare('SELECT * FROM subscriptions WHERE user_id = ? ORDER BY created_at DESC LIMIT 1')
+    .bind(user.id)
+    .first() as any;
+
+  if (!subscription) {
+    await next();
+    return;
+  }
+
+  const isTrialActive = subscription.status === 'trial' && now < subscription.trial_ends_at;
+  const isSubscriptionActive = subscription.status === 'active' && subscription.current_period_end && now < subscription.current_period_end;
+
+  if (!isTrialActive && !isSubscriptionActive) {
+    return c.json({
+      error: 'Suscripción requerida',
+      code: 'SUBSCRIPTION_REQUIRED',
+      message: 'Tu período de prueba ha vencido. Suscríbete para continuar usando MoTaxi.',
+    }, 403);
+  }
+
+  // Enviar notificación 3 días antes de que venza el período activo
+  const periodEnd = isSubscriptionActive ? subscription.current_period_end : subscription.trial_ends_at;
+  const daysLeft = Math.ceil((periodEnd - now) / (24 * 60 * 60));
+
+  if (daysLeft === 3) {
+    const existing = await (c.env.DB as D1Database)
+      .prepare(`SELECT id FROM notifications WHERE user_id = ? AND type = 'subscription_reminder' AND created_at > ?`)
+      .bind(user.id, now - 86400)
+      .first();
+
+    if (!existing) {
+      const period = isTrialActive ? 'prueba' : 'suscripción';
+      await (c.env.DB as D1Database).prepare(
+        `INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, ?)`
+      ).bind(
+        crypto.randomUUID(),
+        user.id,
+        `⚠️ Tu ${period} vence en 3 días`,
+        `Tu período de ${period} vence el ${new Date(periodEnd * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'long' })}. Renueva ahora para no perder el acceso.`,
+        'subscription_reminder'
+      ).run();
+    }
+  }
+
+  await next();
+}
+
 /**
  * Middleware de autenticación para Hono
  */

@@ -78,12 +78,16 @@ export default function HomePage() {
                   <button
                     onClick={() =>
                       router.push(
-                        user.role === "passenger" ? "/passenger" : "/driver",
+                        user.email === "admin@neurai.dev"
+                          ? "/admin"
+                          : user.role === "passenger"
+                          ? "/passenger"
+                          : "/driver",
                       )
                     }
                     className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                   >
-                    Ir a mi Dashboard
+                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Ir a mi Dashboard"}
                   </button>
                 ) : (
                   // Usuario no autenticado - mostrar botones de registro e inicio de sesión

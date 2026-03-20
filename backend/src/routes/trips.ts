@@ -1,13 +1,18 @@
 import { Hono } from 'hono';
 import { v4 as uuidv4 } from 'uuid';
-import { authMiddleware } from '../utils/auth';
+import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
-import { PushNotificationService } from '../services/push-notifications';
+import { sendWebPush } from '../services/web-push';
 
 export const tripRoutes = new Hono<{ Bindings: Env }>();
 
 // Todas las rutas requieren autenticación
 tripRoutes.use('*', authMiddleware);
+// Rutas donde el conductor actúa requieren suscripción activa
+tripRoutes.use('/active', subscriptionMiddleware);
+tripRoutes.use('/:id/accept', subscriptionMiddleware);
+tripRoutes.use('/:id/status', subscriptionMiddleware);
+tripRoutes.use('/current-driver', subscriptionMiddleware);
 
 /**
  * POST /trips
@@ -60,9 +65,48 @@ tripRoutes.post('/', async (c) => {
       .bind(tripId)
       .first();
 
-    // NUEVO FLUJO: Los conductores verán la solicitud en su tablero
-    // y ellos decidirán si aceptarla o no.
-    // Ya NO se envían notificaciones automáticas.
+    // Enviar Web Push a todos los conductores disponibles y verificados con suscripción activa
+    if (c.env.VAPID_PUBLIC_KEY && c.env.VAPID_PRIVATE_KEY) {
+      try {
+        const pushSubs = await c.env.DB.prepare(`
+          SELECT wps.endpoint, wps.p256dh, wps.auth
+          FROM web_push_subscriptions wps
+          JOIN drivers d ON d.id = wps.user_id
+          WHERE d.is_available = 1 AND d.verification_status = 'approved'
+        `).all();
+
+        const subscriptions = pushSubs.results || [];
+        const fareStr = estimated_fare ? `$${Number(estimated_fare).toLocaleString('es-CO')}` : '';
+        const notifPayload = {
+          title: '¡Nueva solicitud de viaje!',
+          body: `${pickup_address}${fareStr ? ' · ' + fareStr : ''}`,
+          data: { type: 'new_trip', tripId },
+          icon: '/logo.png',
+          tag: `trip-${tripId}`,
+        };
+
+        // Enviar en paralelo, ignorar errores individuales
+        const sends = subscriptions.map((sub: any) =>
+          sendWebPush(
+            { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+            notifPayload,
+            c.env.VAPID_PUBLIC_KEY!,
+            c.env.VAPID_PRIVATE_KEY!
+          ).then(result => {
+            // Si la suscripción expiró, eliminarla
+            if (!result.success && result.error === 'subscription_expired') {
+              return c.env.DB.prepare(
+                'DELETE FROM web_push_subscriptions WHERE endpoint = ?'
+              ).bind(sub.endpoint).run();
+            }
+          }).catch(() => {})
+        );
+        // No esperar a que terminen — responder al pasajero de inmediato
+        c.executionCtx?.waitUntil(Promise.all(sends));
+      } catch (pushError) {
+        console.error('Error sending push notifications:', pushError);
+      }
+    }
 
     return c.json({
       success: true,

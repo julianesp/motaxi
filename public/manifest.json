@@ -1,0 +1,22 @@
+{
+  "name": "MoTaxi",
+  "short_name": "MoTaxi",
+  "description": "Transporte rápido y seguro en el Valle de Sibundoy",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#42CE1D",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

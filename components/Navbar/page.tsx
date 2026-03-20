@@ -174,7 +174,11 @@ export default function Navbar() {
                   <button
                     onClick={() =>
                       router.push(
-                        user.role === "passenger" ? "/passenger" : "/driver",
+                        user.email === "admin@neurai.dev"
+                          ? "/admin"
+                          : user.role === "passenger"
+                          ? "/passenger"
+                          : "/driver",
                       )
                     }
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -183,7 +187,7 @@ export default function Navbar() {
                         : "bg-green-100 text-[#008000] hover:bg-green-200"
                     }`}
                   >
-                    Mi Dashboard
+                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi Dashboard"}
                   </button>
                   <button
                     onClick={handleLogout}
@@ -299,13 +303,17 @@ export default function Navbar() {
                   <button
                     onClick={() => {
                       router.push(
-                        user.role === "passenger" ? "/passenger" : "/driver",
+                        user.email === "admin@neurai.dev"
+                          ? "/admin"
+                          : user.role === "passenger"
+                          ? "/passenger"
+                          : "/driver",
                       );
                       setMobileMenuOpen(false);
                     }}
                     className="w-full text-center px-4 py-3 rounded-xl font-semibold transition-all bg-[#008000] text-white hover:bg-[#006600] shadow-md"
                   >
-                    Mi Dashboard
+                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi Dashboard"}
                   </button>
                   <button
                     onClick={() => {

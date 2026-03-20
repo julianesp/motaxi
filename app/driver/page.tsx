@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useSubscription } from '@/lib/hooks/useSubscription';
+import { usePushNotifications } from '@/lib/hooks/usePushNotifications';
 import dynamic from 'next/dynamic';
 import Swal from 'sweetalert2';
+import EpaycoSubscriptionCheckout from '@/components/EpaycoSubscriptionCheckout';
 
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
   ssr: false,
@@ -21,6 +24,10 @@ const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent
 export default function DriverHomePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { status: subStatus, loading: subLoading, refetch: refetchSub } = useSubscription();
+  const { permission, isSubscribed, isLoading: pushLoading, isSupported: pushSupported, subscribe: subscribePush } = usePushNotifications();
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [dismissedPushBanner, setDismissedPushBanner] = useState(false);
 
   const [isAvailable, setIsAvailable] = useState(false);
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
@@ -352,7 +359,7 @@ export default function DriverHomePage() {
     }
   };
 
-  if (loading) {
+  if (loading || subLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -363,10 +370,93 @@ export default function DriverHomePage() {
     );
   }
 
+  // Bloquear acceso si la suscripción expiró
+  if (subStatus && !subStatus.has_access) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.538-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Suscripción requerida</h2>
+          <p className="text-gray-500 mb-6">
+            Tu período de prueba ha vencido. Suscríbete para continuar usando MoTaxi y recibir viajes.
+          </p>
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <p className="text-3xl font-bold text-[#42CE1D]">$14.900 COP</p>
+            <p className="text-gray-500 text-sm">por mes</p>
+          </div>
+          {!showCheckout ? (
+            <button
+              onClick={() => setShowCheckout(true)}
+              className="w-full py-3 px-6 bg-[#42CE1D] text-white font-semibold rounded-xl hover:bg-[#38b018] transition-colors"
+            >
+              Suscribirme ahora
+            </button>
+          ) : (
+            <div className="mt-2">
+              <EpaycoSubscriptionCheckout
+                user={{
+                  id: user!.id,
+                  full_name: user!.full_name,
+                  email: user!.email,
+                  phone: user!.phone,
+                }}
+                onClose={() => setShowCheckout(false)}
+                onSuccess={() => {
+                  setShowCheckout(false);
+                  refetchSub();
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar banner si: soporta push, no está suscrito, permiso no denegado, y no fue descartado
+  const showPushBanner = pushSupported && !isSubscribed && permission !== 'denied' && !dismissedPushBanner;
+
   return (
     <div className="h-screen flex flex-col">
+      {/* Banner para activar notificaciones push */}
+      {showPushBanner && (
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#42CE1D] text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-2 min-w-0">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <p className="text-sm font-medium truncate">Activa las notificaciones para recibir nuevos viajes</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={async () => {
+                const ok = await subscribePush();
+                if (ok) setDismissedPushBanner(true);
+              }}
+              disabled={pushLoading}
+              className="bg-white text-[#42CE1D] text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-60"
+            >
+              {pushLoading ? 'Activando...' : 'Activar'}
+            </button>
+            <button
+              onClick={() => setDismissedPushBanner(true)}
+              className="text-white opacity-70 hover:opacity-100 p-1"
+              aria-label="Cerrar"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="bg-white shadow-sm z-50 fixed top-0 left-0 right-0">
+      <header className={`bg-white shadow-sm z-50 fixed left-0 right-0 ${showPushBanner ? 'top-[52px]' : 'top-0'}`}>
         <div className="container-app py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -498,7 +588,7 @@ export default function DriverHomePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 relative pt-16 md:pt-20">
+      <div className={`flex-1 relative ${showPushBanner ? 'pt-28 md:pt-32' : 'pt-16 md:pt-20'}`}>
         {/* Map */}
         <div className="absolute inset-0">
           <GoogleMapComponent

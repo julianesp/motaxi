@@ -1,10 +1,13 @@
 import { Hono } from 'hono';
-import { authMiddleware } from '../utils/auth';
+import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
 
 export const driverRoutes = new Hono<{ Bindings: Env }>();
 
 driverRoutes.use('*', authMiddleware);
+// Disponibilidad y ubicación requieren suscripción activa
+driverRoutes.use('/availability', subscriptionMiddleware);
+driverRoutes.use('/location', subscriptionMiddleware);
 
 /**
  * GET /drivers/profile

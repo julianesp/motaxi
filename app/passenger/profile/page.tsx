@@ -16,8 +16,10 @@ export default function PassengerProfilePage() {
   });
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "passenger")) {
-      router.push("/");
+    if (!loading) {
+      if (!user) return router.push("/");
+      if (user.email === "admin@neurai.dev") return router.push("/admin");
+      if (user.role !== "passenger") return router.push("/");
     }
   }, [user, loading, router]);
 

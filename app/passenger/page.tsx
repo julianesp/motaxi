@@ -180,10 +180,10 @@ export default function PassengerHomePage() {
       setHasCheckedAuth(true);
 
       if (!user) {
-        // Si no hay usuario después de cargar, redirigir al login
         router.push("/auth/login");
+      } else if (user.email === "admin@neurai.dev") {
+        router.push("/admin");
       } else if (user.role !== "passenger") {
-        // Si el usuario existe pero no es pasajero, redirigir a inicio
         router.push("/");
       }
     }

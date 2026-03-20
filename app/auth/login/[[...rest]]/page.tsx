@@ -81,14 +81,14 @@ export default function LoginPage() {
     >
       <Navbar />
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
-        <div className="max-w-md w-full space-y-8 bg-gray-900 bg-opacity-90 p-8 rounded-2xl shadow-2xl border border-green-500 border-opacity-30">
+        <div className="max-w-md w-full space-y-8 bg-white bg-opacity-90 p-8 rounded-2xl shadow-2xl border border-[#008000] border-opacity-30">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-green-400 mb-2">MoTaxi</h1>
-            <h2 className="text-2xl font-semibold text-white">
+            <h1 className="text-4xl font-bold text-[#008000] mb-2">MoTaxi</h1>
+            <h2 className="text-2xl font-semibold text-black">
               Iniciar Sesión
             </h2>
-            <p className="mt-2 text-gray-300">Elige cómo quieres ingresar</p>
+            <p className="mt-2 text-black">Elige cómo quieres ingresar</p>
           </div>
 
           {/* Toggle entre métodos de login */}
@@ -109,7 +109,7 @@ export default function LoginPage() {
               onClick={() => handleToggleClerk(true)}
               className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                 useClerkAuth
-                  ? "bg-green-600 text-white shadow-lg"
+                  ? "bg-[#008000] text-white shadow-lg"
                   : "text-gray-300 hover:text-white"
               }`}
             >
@@ -148,11 +148,11 @@ export default function LoginPage() {
                     formButtonPrimary:
                       "bg-green-600 hover:bg-green-700 text-white",
                     formFieldInput:
-                      "bg-gray-800 text-white border-gray-700 focus:border-green-500",
-                    formFieldLabel: "text-gray-300",
-                    footerActionLink: "text-green-400 hover:text-green-300",
+                      "bg-white text-black border-gray-300 focus:border-green-500",
+                    formFieldLabel: "text-gray-700",
+                    footerActionLink: "text-green-600 hover:text-green-500",
                     socialButtonsBlockButton:
-                      "border-gray-700 text-white hover:bg-gray-800",
+                      "border-gray-300 text-black hover:bg-gray-100",
                   },
                   layout: {
                     socialButtonsPlacement: "top",
@@ -172,7 +172,7 @@ export default function LoginPage() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-300 mb-1"
+                    className="block text-sm font-medium text-black mb-1"
                   >
                     Correo Electrónico
                   </label>
@@ -182,7 +182,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-white text-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="tu@email.com"
                     autoComplete="email"
                   />
@@ -191,7 +191,7 @@ export default function LoginPage() {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-300 mb-1"
+                    className="block text-sm font-medium text-black mb-1"
                   >
                     Contraseña
                   </label>
@@ -202,7 +202,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="w-full px-4 py-3 pr-12 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-4 py-3 pr-12 bg-white text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="••••••••"
                       autoComplete="current-password"
                     />
@@ -266,7 +266,7 @@ export default function LoginPage() {
                   />
                   <label
                     htmlFor="remember-me"
-                    className="ml-2 block text-sm text-gray-300"
+                    className="ml-2 block text-sm text-black"
                   >
                     Recordarme
                   </label>
@@ -274,7 +274,7 @@ export default function LoginPage() {
 
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm font-medium text-green-400 hover:text-green-300"
+                  className="text-sm font-medium text-[#008000] hover:text-green-300"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -293,11 +293,11 @@ export default function LoginPage() {
           {/* Register Link - Solo mostrar en modo tradicional */}
           {!useClerkAuth && (
             <div className="text-center">
-              <p className="text-gray-300">
+              <p className="text-black">
                 ¿No tienes una cuenta?{" "}
                 <Link
                   href="/auth/role-selection"
-                  className="font-medium text-green-400 hover:text-green-300"
+                  className="font-medium text-[#008000] hover:text-green-300"
                 >
                   Regístrate aquí
                 </Link>

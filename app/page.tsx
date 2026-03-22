@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 import Navbar from "@/components/Navbar/page";
@@ -23,6 +24,26 @@ const LandingMap = dynamic(() => import("@/components/LandingMap"), {
 export default function HomePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [activeDriversCount, setActiveDriversCount] = useState<number | null>(null);
+  const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+        const res = await fetch(`${API_URL}/drivers/nearby?lat=1.1656&lng=-77.0`);
+        if (res.ok) {
+          const data = await res.json();
+          setActiveDriversCount((data.drivers || []).length);
+        }
+      } catch {
+        // silencioso si falla
+      }
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) {
     return (
@@ -117,16 +138,26 @@ export default function HomePage() {
                   <div className="text-sm text-green-100">Municipios</div>
                 </div>
                 <div>
+                  <div className="flex items-center gap-2">
+                    {activeDriversCount !== null && activeDriversCount > 0 && (
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400"></span>
+                      </span>
+                    )}
+                    <div className="text-3xl lg:text-4xl font-bold text-white">
+                      {activeDriversCount !== null ? activeDriversCount : "—"}
+                    </div>
+                  </div>
+                  <div className="text-sm text-green-100">
+                    {activeDriversCount === 1 ? "Conductor activo" : "Conductores activos"}
+                  </div>
+                </div>
+                <div>
                   <div className="text-3xl lg:text-4xl font-bold text-white">
                     24/7
                   </div>
                   <div className="text-sm text-green-100">Disponible</div>
-                </div>
-                <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-white">
-                    35k+
-                  </div>
-                  <div className="text-sm text-green-100">Habitantes</div>
                 </div>
               </div>
             </div>

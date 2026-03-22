@@ -35,6 +35,7 @@ interface GoogleMapComponentProps {
   onMapClick?: (location: { lat: number; lng: number }) => void;
   clickMode?: 'pickup' | 'destination' | null;
   disableAutoFit?: boolean;
+  followDriver?: boolean; // Seguir al conductor en tiempo real con panTo
   nearbyDrivers?: NearbyDriverMarker[]; // Conductores disponibles para mostrar en el mapa
   onDriverClick?: (driverId: string) => void; // Callback al hacer clic en un conductor
   requestingPassengers?: RequestingPassengerMarker[]; // Pasajeros solicitando viaje
@@ -52,6 +53,7 @@ const defaultOptions = {
   streetViewControl: false,
   mapTypeControl: false,
   fullscreenControl: false,
+  rotateControl: true,
 };
 
 function GoogleMapComponent({
@@ -64,6 +66,7 @@ function GoogleMapComponent({
   onMapClick,
   clickMode = null,
   disableAutoFit = false,
+  followDriver = false,
   nearbyDrivers = [],
   onDriverClick,
   requestingPassengers = [],
@@ -138,6 +141,17 @@ function GoogleMapComponent({
       setIsGettingLocation(false);
     }
   };
+
+  // Seguir al conductor en tiempo real cuando followDriver está activo
+  useEffect(() => {
+    if (!followDriver || !map || !driverLocation) return;
+    const hasMovedSignificantly = !lastDriverLocationRef.current ||
+      Math.abs(lastDriverLocationRef.current.lat - driverLocation.lat) > 0.00005 ||
+      Math.abs(lastDriverLocationRef.current.lng - driverLocation.lng) > 0.00005;
+    if (hasMovedSignificantly) {
+      map.panTo({ lat: driverLocation.lat, lng: driverLocation.lng });
+    }
+  }, [followDriver, map, driverLocation]);
 
   // Calcular ruta desde conductor hasta punto de recogida
   useEffect(() => {
@@ -536,6 +550,7 @@ export default memo(GoogleMapComponent, (prevProps, nextProps) => {
     prevProps.zoom === nextProps.zoom &&
     prevProps.clickMode === nextProps.clickMode &&
     prevProps.disableAutoFit === nextProps.disableAutoFit &&
+    prevProps.followDriver === nextProps.followDriver &&
     prevProps.center?.lat === nextProps.center?.lat &&
     prevProps.center?.lng === nextProps.center?.lng &&
     prevProps.pickup?.lat === nextProps.pickup?.lat &&

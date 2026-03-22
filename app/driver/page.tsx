@@ -50,8 +50,9 @@ export default function DriverHomePage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Estados para el modal de completar perfil
+  // Estados para el onboarding de conductor (en pasos)
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(1); // 1: bienvenida, 2: vehículo, 3: licencia, 4: municipio
   const [profileData, setProfileData] = useState({
     vehicle_model: '',
     vehicle_color: '',
@@ -129,7 +130,8 @@ export default function DriverHomePage() {
 
           // Verificar si el perfil está completo
           if (!response.driver.profile_completed) {
-            // Mostrar modal para completar perfil
+            // Mostrar onboarding para completar perfil
+            setOnboardingStep(1);
             setShowProfileModal(true);
 
             // Pre-cargar datos existentes si los hay
@@ -338,6 +340,7 @@ export default function DriverHomePage() {
           text: 'Debes completar tu perfil antes de activarte como conductor.',
           confirmButtonColor: '#008000',
         });
+        setOnboardingStep(1);
         setShowProfileModal(true);
       } else if (error.response?.data?.notVerified) {
         Swal.fire({
@@ -1101,153 +1104,253 @@ export default function DriverHomePage() {
           </div>
         )}
 
-        {/* Modal Obligatorio para Completar Perfil */}
+        {/* Onboarding en pasos para completar perfil */}
         {showProfileModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="mb-6">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#008000] to-[#006600] rounded-full flex items-center justify-center">
-                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] overflow-y-auto">
+
+              {/* Barra de progreso */}
+              <div className="px-6 pt-5 pb-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-[#008000]">Paso {onboardingStep} de 4</span>
+                  <span className="text-xs text-gray-400">{Math.round((onboardingStep / 4) * 100)}%</span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
-                  ¡Bienvenido a MoTaxi!
-                </h2>
-                <p className="text-gray-600 text-center">
-                  Para comenzar a prestar servicio, necesitamos que completes tu perfil de conductor.
-                  Esta información es importante para la seguridad de los pasajeros.
-                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-[#42CE1D] h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${(onboardingStep / 4) * 100}%` }}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-4">
-                {/* Modelo del Vehículo */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Modelo del Vehículo <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.vehicle_model}
-                    onChange={(e) => setProfileData({ ...profileData, vehicle_model: e.target.value })}
-                    placeholder="Ej: Boxer 100, Discover 125, etc."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-                    required
-                  />
-                </div>
+              <div className="px-6 pb-6 pt-4">
 
-                {/* Color del Vehículo */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Color del Vehículo <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.vehicle_color}
-                    onChange={(e) => setProfileData({ ...profileData, vehicle_color: e.target.value })}
-                    placeholder="Ej: Rojo, Negro, Azul, etc."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-                    required
-                  />
-                </div>
-
-                {/* Placa del Vehículo */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Placa del Vehículo <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.vehicle_plate}
-                    onChange={(e) => setProfileData({ ...profileData, vehicle_plate: e.target.value.toUpperCase() })}
-                    placeholder="Ej: ABC123"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 uppercase"
-                    maxLength={6}
-                    required
-                  />
-                </div>
-
-                {/* Número de Licencia */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Número de Licencia de Conducción <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.license_number}
-                    onChange={(e) => setProfileData({ ...profileData, license_number: e.target.value })}
-                    placeholder="Ej: 12345678"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-                    required
-                  />
-                </div>
-
-                {/* Municipio (Opcional) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Municipio donde operas (Opcional)
-                  </label>
-                  <select
-                    value={profileData.municipality}
-                    onChange={(e) => setProfileData({ ...profileData, municipality: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-                  >
-                    <option value="">Selecciona un municipio</option>
-                    <option value="colon">Colón</option>
-                    <option value="sibundoy">Sibundoy</option>
-                    <option value="san_francisco">San Francisco</option>
-                    <option value="santiago">Santiago</option>
-                  </select>
-                </div>
-
-                {/* Aviso de Verificación */}
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-yellow-800 mb-1">
-                        Verificación Pendiente
-                      </h4>
-                      <p className="text-sm text-yellow-700">
-                        Una vez completes tu perfil, un administrador verificará tu información antes de que puedas prestar servicio.
-                        Recibirás una notificación cuando tu cuenta sea aprobada.
+                {/* PASO 1: Bienvenida */}
+                {onboardingStep === 1 && (
+                  <div className="text-center space-y-5">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#42CE1D] to-[#008000] rounded-full flex items-center justify-center mx-auto shadow-lg">
+                      <span className="text-4xl">🏍️</span>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Bienvenido, {user?.full_name?.split(' ')[0]}!</h2>
+                      <p className="text-gray-500 text-sm leading-relaxed">
+                        Configura tu perfil en 3 pasos rápidos. Solo te tomará 2 minutos y podrás empezar a recibir viajes.
                       </p>
                     </div>
+                    <div className="bg-gray-50 rounded-xl p-4 text-left space-y-3">
+                      {[
+                        { icon: '🏍️', text: 'Datos de tu moto' },
+                        { icon: '📋', text: 'Número de licencia' },
+                        { icon: '📍', text: 'Tu municipio' },
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-xl">{item.icon}</span>
+                          <span className="text-sm text-gray-700">{item.text}</span>
+                          <span className="ml-auto text-xs bg-green-100 text-[#008000] px-2 py-0.5 rounded-full">~30 seg</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-left">
+                      <p className="text-xs text-blue-700">
+                        💡 <strong>Puedes completarlo después</strong> desde tu perfil. Pero necesitas tenerlo completo para activarte como conductor.
+                      </p>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setShowProfileModal(false)}
+                        className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        Después
+                      </button>
+                      <button
+                        onClick={() => setOnboardingStep(2)}
+                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm"
+                      >
+                        Empezar →
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )}
 
-              {/* Botón de Guardar */}
-              <div className="mt-6">
-                <button
-                  onClick={handleCompleteProfile}
-                  disabled={isSubmittingProfile}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-[#008000] to-[#006600] text-white rounded-xl font-bold text-lg hover:from-[#006600] hover:to-[#004d00] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {isSubmittingProfile ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Guardando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Completar Perfil</span>
-                    </>
-                  )}
-                </button>
-                <p className="text-xs text-gray-500 text-center mt-3">
-                  * Campos obligatorios
-                </p>
+                {/* PASO 2: Datos del vehículo */}
+                {onboardingStep === 2 && (
+                  <div className="space-y-5">
+                    <div>
+                      <div className="text-3xl mb-2">🏍️</div>
+                      <h2 className="text-xl font-bold text-gray-900">Datos de tu moto</h2>
+                      <p className="text-gray-500 text-sm">Esta información aparece a los pasajeros para identificarte.</p>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                          Modelo <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileData.vehicle_model}
+                          onChange={(e) => setProfileData({ ...profileData, vehicle_model: e.target.value })}
+                          placeholder="Ej: Boxer 100, Discover 125..."
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
+                          autoFocus
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                          Color <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileData.vehicle_color}
+                          onChange={(e) => setProfileData({ ...profileData, vehicle_color: e.target.value })}
+                          placeholder="Ej: Rojo, Negro, Azul..."
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                          Placa <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileData.vehicle_plate}
+                          onChange={(e) => setProfileData({ ...profileData, vehicle_plate: e.target.value.toUpperCase() })}
+                          placeholder="Ej: ABC123"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 uppercase tracking-widest transition-colors"
+                          maxLength={6}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setOnboardingStep(1)}
+                        className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        ← Atrás
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!profileData.vehicle_model || !profileData.vehicle_color || !profileData.vehicle_plate) {
+                            Swal.fire({ icon: 'warning', title: 'Completa los campos', text: 'Todos los campos de este paso son obligatorios.', confirmButtonColor: '#008000' });
+                            return;
+                          }
+                          setOnboardingStep(3);
+                        }}
+                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm"
+                      >
+                        Siguiente →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* PASO 3: Licencia */}
+                {onboardingStep === 3 && (
+                  <div className="space-y-5">
+                    <div>
+                      <div className="text-3xl mb-2">📋</div>
+                      <h2 className="text-xl font-bold text-gray-900">Número de licencia</h2>
+                      <p className="text-gray-500 text-sm">Requerida para verificar que estás habilitado para conducir.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Número de licencia <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileData.license_number}
+                        onChange={(e) => setProfileData({ ...profileData, license_number: e.target.value })}
+                        placeholder="Ej: 12345678"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                      <p className="text-xs text-yellow-700">
+                        ⚠️ Un administrador verificará tu licencia antes de activar tu cuenta. Recibirás una notificación cuando sea aprobada.
+                      </p>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setOnboardingStep(2)}
+                        className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        ← Atrás
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!profileData.license_number) {
+                            Swal.fire({ icon: 'warning', title: 'Campo requerido', text: 'Ingresa tu número de licencia.', confirmButtonColor: '#008000' });
+                            return;
+                          }
+                          setOnboardingStep(4);
+                        }}
+                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm"
+                      >
+                        Siguiente →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* PASO 4: Municipio y finalizar */}
+                {onboardingStep === 4 && (
+                  <div className="space-y-5">
+                    <div>
+                      <div className="text-3xl mb-2">📍</div>
+                      <h2 className="text-xl font-bold text-gray-900">¿Dónde operas?</h2>
+                      <p className="text-gray-500 text-sm">Esto nos ayuda a mostrarte los viajes más cercanos a ti.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Municipio principal</label>
+                      <select
+                        value={profileData.municipality}
+                        onChange={(e) => setProfileData({ ...profileData, municipality: e.target.value })}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
+                      >
+                        <option value="">Selecciona un municipio</option>
+                        <option value="colon">Colón</option>
+                        <option value="sibundoy">Sibundoy</option>
+                        <option value="san_francisco">San Francisco</option>
+                        <option value="santiago">Santiago</option>
+                      </select>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                      <h3 className="text-sm font-bold text-[#003300] mb-2">Resumen de tu perfil</h3>
+                      <div className="space-y-1 text-sm text-gray-700">
+                        <div className="flex justify-between"><span className="text-gray-500">Modelo:</span><span className="font-medium">{profileData.vehicle_model}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Color:</span><span className="font-medium">{profileData.vehicle_color}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Placa:</span><span className="font-medium uppercase">{profileData.vehicle_plate}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Licencia:</span><span className="font-medium">{profileData.license_number}</span></div>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setOnboardingStep(3)}
+                        className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        ← Atrás
+                      </button>
+                      <button
+                        onClick={handleCompleteProfile}
+                        disabled={isSubmittingProfile}
+                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isSubmittingProfile ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                            </svg>
+                            Guardando...
+                          </>
+                        ) : (
+                          '¡Listo! ✓'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>

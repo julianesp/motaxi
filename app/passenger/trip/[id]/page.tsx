@@ -269,6 +269,7 @@ export default function TripTrackingPage() {
             destination={destinationLocation}
             driverLocation={driverLocation}
             disableAutoFit={true}
+            followDriver={!!driverLocation && (trip?.status === 'accepted' || trip?.status === 'in_progress')}
           />
         </div>
 

@@ -1156,7 +1156,14 @@ export default function PassengerHomePage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{selectedDriver.full_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-900">{selectedDriver.full_name}</h3>
+                    {selectedDriver.rating >= 4.5 && selectedDriver.total_trips >= 20 && (
+                      <span className="inline-flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-xs font-bold">
+                        ⭐ Destacado
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500">{selectedDriver.vehicle_color} {selectedDriver.vehicle_model}</p>
                 </div>
               </div>

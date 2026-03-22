@@ -327,6 +327,15 @@ export default function DriverProfilePage() {
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-1">{user.full_name}</h2>
                 <p className="text-green-100 mb-2">Conductor</p>
+                {/* Badge Conductor Destacado */}
+                {driverInfo && driverInfo.rating >= 4.5 && driverInfo.total_trips >= 20 && (
+                  <div className="flex items-center gap-1.5 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold mb-2 shadow-md">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    Conductor Destacado
+                  </div>
+                )}
                 {driverInfo && (
                   <div className={`px-4 py-2 rounded-full text-sm font-medium border ${getVerificationStatusColor(driverInfo.verification_status)}`}>
                     {getVerificationStatusText(driverInfo.verification_status)}

@@ -350,11 +350,18 @@ export default function DriverHomePage() {
           confirmButtonColor: '#008000',
         });
       } else {
+        const msg = error.response?.data?.message || error.response?.data?.error || 'No se pudo actualizar la disponibilidad. Intenta nuevamente.';
+        const isSubscription = error.response?.status === 403 || error.response?.data?.code === 'SUBSCRIPTION_REQUIRED';
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo actualizar la disponibilidad. Intenta nuevamente.',
-          confirmButtonColor: '#008000',
+          icon: isSubscription ? 'warning' : 'error',
+          title: isSubscription ? 'Suscripción requerida' : 'Error',
+          text: msg,
+          confirmButtonColor: '#42CE1D',
+          ...(isSubscription ? { confirmButtonText: 'Ver mi perfil', showCancelButton: true, cancelButtonText: 'Cancelar' } : {}),
+        }).then((result) => {
+          if (isSubscription && result.isConfirmed) {
+            router.push('/driver/profile');
+          }
         });
       }
     } finally {

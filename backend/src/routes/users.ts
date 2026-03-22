@@ -128,17 +128,27 @@ userRoutes.put('/switch-role', async (c) => {
       .bind(role, user.id)
       .run();
 
-    // Si cambia a driver, crear registro en drivers si no existe
+    // Si cambia a driver, crear registro en drivers y suscripción si no existen
     if (role === 'driver') {
+      const now = Math.floor(Date.now() / 1000);
       const existing = await c.env.DB.prepare('SELECT id FROM drivers WHERE id = ?')
-        .bind(user.id)
-        .first();
+        .bind(user.id).first();
       if (!existing) {
         const tempPlate = `PENDING-${user.id.substring(0, 8)}`;
         const tempLicense = `PENDING-${user.id.substring(0, 8)}`;
         await c.env.DB.prepare(
           'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, rating, verification_status, is_verified, verified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(user.id, tempLicense, tempPlate, 'PENDING', 'PENDING', null, 'approved', 1, Math.floor(Date.now() / 1000)).run();
+        ).bind(user.id, tempLicense, tempPlate, 'PENDING', 'PENDING', null, 'approved', 1, now).run();
+      }
+      // Crear suscripción de prueba si no tiene una
+      const existingSub = await c.env.DB.prepare('SELECT id FROM subscriptions WHERE user_id = ?')
+        .bind(user.id).first();
+      if (!existingSub) {
+        const trialEndsAt = now + (15 * 24 * 60 * 60);
+        const { v4: uuidv4 } = await import('uuid');
+        await c.env.DB.prepare(
+          `INSERT INTO subscriptions (id, user_id, status, plan, amount, trial_ends_at) VALUES (?, ?, 'trial', 'monthly', 14900, ?)`
+        ).bind(uuidv4(), user.id, trialEndsAt).run();
       }
     }
 

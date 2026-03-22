@@ -212,14 +212,18 @@ export default function PassengerHomePage() {
     }
   }, [user, loading, router, hasCheckedAuth]);
 
-  // Mostrar advertencia de seguridad nocturna al cargar
+  // Mostrar advertencia de seguridad nocturna al cargar (solo una vez por sesión, desde las 7pm)
   useEffect(() => {
     if (!user) return;
     const hour = new Date().getHours();
-    const isNight = hour >= 20 || hour < 6;
-    if (isNight) {
-      setShowSafetyWarning(true);
-    }
+    const isNight = hour >= 19 || hour < 6;
+    if (!isNight) return;
+    const shownKey = 'motaxi_night_warning_shown';
+    const today = new Date().toDateString();
+    const lastShown = sessionStorage.getItem(shownKey);
+    if (lastShown === today) return;
+    sessionStorage.setItem(shownKey, today);
+    setShowSafetyWarning(true);
   }, [user]);
 
   useEffect(() => {

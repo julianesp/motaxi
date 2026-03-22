@@ -106,6 +106,76 @@ userRoutes.post('/push-token', async (c) => {
 });
 
 /**
+ * PUT /users/switch-role
+ * Cambiar rol del usuario entre passenger y driver
+ */
+userRoutes.put('/switch-role', async (c) => {
+  try {
+    const user = c.get('user');
+    const body = await c.req.json();
+    const { role } = body;
+
+    if (!['passenger', 'driver'].includes(role)) {
+      return c.json({ error: 'Invalid role. Must be: passenger or driver' }, 400);
+    }
+
+    if (user.role === role) {
+      return c.json({ error: 'Already in this role' }, 400);
+    }
+
+    // Cambiar rol en tabla users
+    await c.env.DB.prepare('UPDATE users SET role = ? WHERE id = ?')
+      .bind(role, user.id)
+      .run();
+
+    // Si cambia a driver, crear registro en drivers si no existe
+    if (role === 'driver') {
+      const existing = await c.env.DB.prepare('SELECT id FROM drivers WHERE id = ?')
+        .bind(user.id)
+        .first();
+      if (!existing) {
+        const tempPlate = `PENDING-${user.id.substring(0, 8)}`;
+        const tempLicense = `PENDING-${user.id.substring(0, 8)}`;
+        await c.env.DB.prepare(
+          'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, rating, verification_status, is_verified, verified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(user.id, tempLicense, tempPlate, 'PENDING', 'PENDING', null, 'approved', 1, Math.floor(Date.now() / 1000)).run();
+      }
+    }
+
+    return c.json({ message: 'Role updated successfully', role });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to switch role' }, 500);
+  }
+});
+
+/**
+ * DELETE /users/account
+ * Eliminar cuenta del usuario
+ */
+userRoutes.delete('/account', async (c) => {
+  try {
+    const user = c.get('user');
+
+    // Eliminar sesiones
+    await c.env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id).run();
+
+    // Eliminar datos de rol
+    if (user.role === 'driver') {
+      await c.env.DB.prepare('DELETE FROM drivers WHERE id = ?').bind(user.id).run();
+    } else if (user.role === 'passenger') {
+      await c.env.DB.prepare('DELETE FROM passengers WHERE id = ?').bind(user.id).run();
+    }
+
+    // Eliminar usuario
+    await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id).run();
+
+    return c.json({ message: 'Account deleted successfully' });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to delete account' }, 500);
+  }
+});
+
+/**
  * DELETE /users/push-token
  * Eliminar token de push notifications
  */

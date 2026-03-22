@@ -200,9 +200,10 @@ export default function DriverProfilePage() {
 
       setIsEditing(false);
       Swal.fire({ icon: 'success', title: 'Perfil actualizado', text: 'Perfil actualizado correctamente', confirmButtonColor: '#42CE1D' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Error al actualizar el perfil. Intenta nuevamente.', confirmButtonColor: '#42CE1D' });
+      const msg = error?.response?.data?.error || error?.message || 'Error al actualizar el perfil. Intenta nuevamente.';
+      Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#42CE1D' });
     } finally {
       setIsSaving(false);
     }

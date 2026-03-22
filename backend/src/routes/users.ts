@@ -134,10 +134,12 @@ userRoutes.put('/switch-role', async (c) => {
       const existing = await c.env.DB.prepare('SELECT id FROM drivers WHERE id = ?')
         .bind(user.id).first();
       if (!existing) {
-        const tempPlate = `PENDING-${user.id.substring(0, 8)}`;
-        const tempLicense = `PENDING-${user.id.substring(0, 8)}`;
+        // Usar un sufijo único basado en timestamp para evitar colisiones UNIQUE
+        const uniqueSuffix = user.id.substring(0, 6) + now.toString().slice(-4);
+        const tempPlate = `P-${uniqueSuffix}`;
+        const tempLicense = `L-${uniqueSuffix}`;
         await c.env.DB.prepare(
-          'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, rating, verification_status, is_verified, verified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          'INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, rating, verification_status, is_verified, verified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         ).bind(user.id, tempLicense, tempPlate, 'PENDING', 'PENDING', null, 'approved', 1, now).run();
       }
       // Crear suscripción de prueba si no tiene una

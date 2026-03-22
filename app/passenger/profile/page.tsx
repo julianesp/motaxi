@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 
 export default function PassengerProfilePage() {
   const router = useRouter();
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -20,6 +20,7 @@ export default function PassengerProfilePage() {
     if (!loading) {
       if (!user) return router.push("/");
       if (user.email === "admin@neurai.dev") return router.push("/admin");
+      if (user.role === "driver") return router.push("/driver");
       if (user.role !== "passenger") return router.push("/");
     }
   }, [user, loading, router]);
@@ -64,6 +65,7 @@ export default function PassengerProfilePage() {
     try {
       const { apiClient } = await import('@/lib/api-client');
       await apiClient.put('/users/switch-role', { role: 'driver' });
+      await refreshUser();
       await Swal.fire({
         icon: 'success',
         title: '¡Modo conductor activado!',
@@ -157,7 +159,7 @@ export default function PassengerProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="container-app py-4">
           <div className="flex items-center justify-between">
             <button

@@ -33,7 +33,7 @@ export default function DriverHomePage() {
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
-  const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+  const [isPanelMinimized, setIsPanelMinimized] = useState(true);
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
   const [rejectedTripIds, setRejectedTripIds] = useState<Set<string>>(new Set());
   const [earnings, setEarnings] = useState({
@@ -64,7 +64,11 @@ export default function DriverHomePage() {
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'driver')) {
-      router.push('/');
+      if (user?.role === 'passenger') {
+        router.push('/passenger');
+      } else {
+        router.push('/');
+      }
     }
   }, [user, loading, router]);
 
@@ -599,7 +603,7 @@ export default function DriverHomePage() {
 
       {/* Main Content */}
       <div className={`flex-1 relative ${showPushBanner ? 'pt-28 md:pt-32' : 'pt-16 md:pt-20'}`}>
-        {/* Map */}
+        {/* Map - ocupa todo el espacio */}
         <div className="absolute inset-0">
           <GoogleMapComponent
             center={currentLocation || { lat: 1.1656, lng: -77.0 }}
@@ -612,57 +616,25 @@ export default function DriverHomePage() {
           />
         </div>
 
-        {/* Status Card */}
-        <div className="absolute top-1 left-20 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-2 z-20">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={toggleAvailability}
-              disabled={isUpdatingAvailability}
-              className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
-                isAvailable ? 'bg-green-500' : 'bg-gray-300'
-              } ${isUpdatingAvailability ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                  isAvailable ? 'translate-x-6' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
-            <span className="text-gray-700 text-sm">
-              {isUpdatingAvailability
-                ? 'Actualizando...'
-                : isAvailable
-                ? 'Conectado'
-                : 'Desconectado'}
-            </span>
-          </div>
-        </div>
-
-        {/* Earnings Summary */}
+        {/* Earnings Summary - flotante sobre el mapa */}
         {!activeTrip && (
-          <div className={`absolute bottom-0 left-0 right-0 md:left-4 md:bottom-4 md:right-auto md:w-96 bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-20 pointer-events-auto overflow-y-auto transition-all duration-300 ${
-            isPanelMinimized
-              ? 'max-h-[60px] md:max-h-[70px]'
-              : 'max-h-[85vh] md:max-h-[calc(100vh-2rem)]'
+          <div className={`absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-t-3xl shadow-2xl z-20 transition-all duration-300 ${
+            isPanelMinimized ? 'h-[60px]' : 'max-h-[60vh] overflow-y-auto'
           }`}>
-            <div className="p-4 md:p-6 space-y-3 md:space-y-4">
-              {/* Handle para arrastrar en móvil y botón de toggle */}
-              <div className="flex items-center justify-between -mt-2 mb-2">
+            <div className="p-4 space-y-3">
+              {/* Handle y barra de estado siempre visible */}
+              <div className="flex items-center justify-between -mt-1 mb-1">
                 {isPanelMinimized ? (
-                  <div className="flex items-center space-x-3 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        {isAvailable ? '🟢 Conectado' : '⚫ Desconectado'}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">
-                        Hoy: <span className="font-bold text-[#008000]">${earnings.today.toLocaleString()}</span>
-                      </span>
-                    </div>
+                  <div className="flex items-center space-x-4 flex-1">
+                    <span className="text-sm font-medium text-gray-600">
+                      {isAvailable ? '🟢 Conectado' : '⚫ Desconectado'}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      Hoy: <span className="font-bold text-[#008000]">${earnings.today.toLocaleString()}</span>
+                    </span>
                   </div>
                 ) : (
-                  <div className="md:hidden flex justify-center flex-1">
+                  <div className="flex justify-center flex-1">
                     <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
                   </div>
                 )}
@@ -929,7 +901,7 @@ export default function DriverHomePage() {
 
         {/* Active Trip Panel - Mostrar cuando hay un viaje activo */}
         {activeTrip && (
-          <div className="absolute bottom-0 left-0 right-0 md:left-4 md:bottom-4 md:right-auto md:w-96 bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-20 pointer-events-auto overflow-y-auto max-h-[85vh] md:max-h-[calc(100vh-2rem)]">
+          <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-t-3xl shadow-2xl z-20 max-h-[60vh] overflow-y-auto">
             <div className="p-4 md:p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-800">Viaje Activo</h2>

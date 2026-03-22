@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState, useCallback, memo } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from '@react-google-maps/api';
+import { useEffect, useRef, useState, useCallback, memo } from "react";
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  DirectionsRenderer,
+} from "@react-google-maps/api";
 
-const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
+const libraries: ("places" | "geometry")[] = ["places", "geometry"];
 
 interface NearbyDriverMarker {
   id: string;
@@ -19,7 +24,7 @@ interface RequestingPassengerMarker {
   lat: number;
   lng: number;
   name: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   pickup_address: string;
   dropoff_address: string;
   distance_km: number;
@@ -33,7 +38,7 @@ interface GoogleMapComponentProps {
   driverLocation?: { lat: number; lng: number } | null;
   onLocationChange?: (location: { lat: number; lng: number }) => void;
   onMapClick?: (location: { lat: number; lng: number }) => void;
-  clickMode?: 'pickup' | 'destination' | null;
+  clickMode?: "pickup" | "destination" | null;
   disableAutoFit?: boolean;
   followDriver?: boolean; // Seguir al conductor en tiempo real con panTo
   nearbyDrivers?: NearbyDriverMarker[]; // Conductores disponibles para mostrar en el mapa
@@ -43,17 +48,16 @@ interface GoogleMapComponentProps {
 }
 
 const mapContainerStyle = {
-  width: '100%',
-  height: '100%',
+  width: "100%",
+  height: "100%",
 };
 
 const defaultOptions = {
-  disableDefaultUI: false,
-  zoomControl: true,
+  disableDefaultUI: true,
   streetViewControl: false,
   mapTypeControl: false,
   fullscreenControl: false,
-  rotateControl: true,
+  rotateControl: false,
 };
 
 function GoogleMapComponent({
@@ -73,22 +77,29 @@ function GoogleMapComponent({
   onPassengerClick,
 }: GoogleMapComponentProps) {
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    id: "google-map-script",
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries,
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [initialCenter] = useState(center);
-  const [directionsToPickup, setDirectionsToPickup] = useState<google.maps.DirectionsResult | null>(null);
-  const [directionsToDestination, setDirectionsToDestination] = useState<google.maps.DirectionsResult | null>(null);
+  const [directionsToPickup, setDirectionsToPickup] =
+    useState<google.maps.DirectionsResult | null>(null);
+  const [directionsToDestination, setDirectionsToDestination] =
+    useState<google.maps.DirectionsResult | null>(null);
 
   // Referencias para evitar recalcular rutas innecesariamente
   const lastPickupRef = useRef<{ lat: number; lng: number } | null>(null);
   const lastDestinationRef = useRef<{ lat: number; lng: number } | null>(null);
-  const lastDriverLocationRef = useRef<{ lat: number; lng: number } | null>(null);
+  const lastDriverLocationRef = useRef<{ lat: number; lng: number } | null>(
+    null,
+  );
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -98,13 +109,16 @@ function GoogleMapComponent({
     setMap(null);
   }, []);
 
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng && onMapClick) {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      onMapClick({ lat, lng });
-    }
-  }, [onMapClick]);
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (e.latLng && onMapClick) {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        onMapClick({ lat, lng });
+      }
+    },
+    [onMapClick],
+  );
 
   // Función para centrar el mapa en la ubicación del usuario
   const handleCenterToUserLocation = () => {
@@ -127,17 +141,17 @@ function GoogleMapComponent({
           setIsGettingLocation(false);
         },
         (error) => {
-          console.error('Error getting location:', error);
+          console.error("Error getting location:", error);
           setIsGettingLocation(false);
         },
         {
           enableHighAccuracy: true,
           timeout: 5000,
           maximumAge: 0,
-        }
+        },
       );
     } else {
-      console.warn('Tu navegador no soporta geolocalización.');
+      console.warn("Tu navegador no soporta geolocalización.");
       setIsGettingLocation(false);
     }
   };
@@ -145,9 +159,12 @@ function GoogleMapComponent({
   // Seguir al conductor en tiempo real cuando followDriver está activo
   useEffect(() => {
     if (!followDriver || !map || !driverLocation) return;
-    const hasMovedSignificantly = !lastDriverLocationRef.current ||
-      Math.abs(lastDriverLocationRef.current.lat - driverLocation.lat) > 0.00005 ||
-      Math.abs(lastDriverLocationRef.current.lng - driverLocation.lng) > 0.00005;
+    const hasMovedSignificantly =
+      !lastDriverLocationRef.current ||
+      Math.abs(lastDriverLocationRef.current.lat - driverLocation.lat) >
+        0.00005 ||
+      Math.abs(lastDriverLocationRef.current.lng - driverLocation.lng) >
+        0.00005;
     if (hasMovedSignificantly) {
       map.panTo({ lat: driverLocation.lat, lng: driverLocation.lng });
     }
@@ -163,11 +180,14 @@ function GoogleMapComponent({
     }
 
     // Solo recalcular si las coordenadas cambiaron significativamente (más de ~10 metros)
-    const hasDriverMoved = !lastDriverLocationRef.current ||
-      Math.abs(lastDriverLocationRef.current.lat - driverLocation.lat) > 0.0001 ||
+    const hasDriverMoved =
+      !lastDriverLocationRef.current ||
+      Math.abs(lastDriverLocationRef.current.lat - driverLocation.lat) >
+        0.0001 ||
       Math.abs(lastDriverLocationRef.current.lng - driverLocation.lng) > 0.0001;
 
-    const hasPickupChanged = !lastPickupRef.current ||
+    const hasPickupChanged =
+      !lastPickupRef.current ||
       Math.abs(lastPickupRef.current.lat - pickup.lat) > 0.0001 ||
       Math.abs(lastPickupRef.current.lng - pickup.lng) > 0.0001;
 
@@ -189,9 +209,9 @@ function GoogleMapComponent({
         if (status === google.maps.DirectionsStatus.OK && result) {
           setDirectionsToPickup(result);
         } else {
-          console.error('Error calculating route to pickup:', status);
+          console.error("Error calculating route to pickup:", status);
         }
-      }
+      },
     );
   }, [isLoaded, driverLocation, pickup]);
 
@@ -204,11 +224,13 @@ function GoogleMapComponent({
     }
 
     // Solo recalcular si las coordenadas cambiaron (pickup o destination)
-    const hasPickupChanged = !lastPickupRef.current ||
+    const hasPickupChanged =
+      !lastPickupRef.current ||
       Math.abs(lastPickupRef.current.lat - pickup.lat) > 0.0001 ||
       Math.abs(lastPickupRef.current.lng - pickup.lng) > 0.0001;
 
-    const hasDestinationChanged = !lastDestinationRef.current ||
+    const hasDestinationChanged =
+      !lastDestinationRef.current ||
       Math.abs(lastDestinationRef.current.lat - destination.lat) > 0.0001 ||
       Math.abs(lastDestinationRef.current.lng - destination.lng) > 0.0001;
 
@@ -230,9 +252,9 @@ function GoogleMapComponent({
         if (status === google.maps.DirectionsStatus.OK && result) {
           setDirectionsToDestination(result);
         } else {
-          console.error('Error calculating route to destination:', status);
+          console.error("Error calculating route to destination:", status);
         }
-      }
+      },
     );
   }, [isLoaded, pickup, destination]);
 
@@ -258,11 +280,23 @@ function GoogleMapComponent({
       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
         <div className="text-center p-6 max-w-md bg-white rounded-2xl shadow-xl">
           <div className="mb-4">
-            <svg className="w-16 h-16 mx-auto text-[#008000]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            <svg
+              className="w-16 h-16 mx-auto text-[#008000]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              />
             </svg>
           </div>
-          <p className="text-red-600 font-semibold text-lg mb-2">Google Maps requiere configuración</p>
+          <p className="text-red-600 font-semibold text-lg mb-2">
+            Google Maps requiere configuración
+          </p>
           <p className="text-sm text-gray-600 mb-4">
             Necesitas activar las APIs de Google Maps en Google Cloud Console.
           </p>
@@ -308,7 +342,7 @@ function GoogleMapComponent({
         onUnmount={onUnmount}
         options={{
           ...defaultOptions,
-          gestureHandling: 'greedy',
+          gestureHandling: "greedy",
         }}
         onClick={clickMode ? handleMapClick : undefined}
       >
@@ -319,9 +353,9 @@ function GoogleMapComponent({
             icon={{
               path: google.maps.SymbolPath.CIRCLE,
               scale: 10,
-              fillColor: '#10b981',
+              fillColor: "#10b981",
               fillOpacity: 1,
-              strokeColor: '#ffffff',
+              strokeColor: "#ffffff",
               strokeWeight: 3,
             }}
             title="Punto de recogida"
@@ -335,9 +369,9 @@ function GoogleMapComponent({
             icon={{
               path: google.maps.SymbolPath.CIRCLE,
               scale: 10,
-              fillColor: '#ef4444',
+              fillColor: "#ef4444",
               fillOpacity: 1,
-              strokeColor: '#ffffff',
+              strokeColor: "#ffffff",
               strokeWeight: 3,
             }}
             title="Destino"
@@ -351,9 +385,9 @@ function GoogleMapComponent({
             icon={{
               path: google.maps.SymbolPath.CIRCLE,
               scale: 8,
-              fillColor: '#3b82f6',
+              fillColor: "#3b82f6",
               fillOpacity: 1,
-              strokeColor: '#ffffff',
+              strokeColor: "#ffffff",
               strokeWeight: 2,
             }}
             title="Tu ubicación"
@@ -365,7 +399,9 @@ function GoogleMapComponent({
           <Marker
             position={driverLocation}
             icon={{
-              url: "data:image/svg+xml," + encodeURIComponent(`
+              url:
+                "data:image/svg+xml," +
+                encodeURIComponent(`
                 <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="11.5" fill="white" stroke="#f97316" stroke-width="2"/>
                   <g transform="translate(4, 6)">
@@ -390,7 +426,9 @@ function GoogleMapComponent({
             key={`nearby-${driver.id}`}
             position={{ lat: driver.lat, lng: driver.lng }}
             icon={{
-              url: "data:image/svg+xml," + encodeURIComponent(`
+              url:
+                "data:image/svg+xml," +
+                encodeURIComponent(`
                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="11" fill="white" stroke="#f97316" stroke-width="1.5"/>
                   <g transform="translate(4, 6)">
@@ -413,18 +451,21 @@ function GoogleMapComponent({
         {/* Marcadores de pasajeros solicitando viaje (con animación pulsante) */}
         {requestingPassengers.map((passenger) => {
           // Determinar icono según género
-          const genderIcon = passenger.gender === 'male'
-            ? '🙋🏻‍♂️'
-            : passenger.gender === 'female'
-            ? '🙋🏻‍♀️'
-            : '🙋';
+          const genderIcon =
+            passenger.gender === "male"
+              ? "🙋🏻‍♂️"
+              : passenger.gender === "female"
+                ? "🙋🏻‍♀️"
+                : "🙋";
 
           return (
             <Marker
               key={`requesting-${passenger.id}`}
               position={{ lat: passenger.lat, lng: passenger.lng }}
               icon={{
-                url: "data:image/svg+xml," + encodeURIComponent(`
+                url:
+                  "data:image/svg+xml," +
+                  encodeURIComponent(`
                   <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
                     <!-- Círculo pulsante exterior (animación de alerta) -->
                     <circle cx="25" cy="25" r="20" fill="#dc2626" opacity="0.3">
@@ -458,7 +499,7 @@ function GoogleMapComponent({
             options={{
               suppressMarkers: true,
               polylineOptions: {
-                strokeColor: '#3b82f6',
+                strokeColor: "#3b82f6",
                 strokeOpacity: 0.8,
                 strokeWeight: 5,
               },
@@ -473,7 +514,7 @@ function GoogleMapComponent({
             options={{
               suppressMarkers: true,
               polylineOptions: {
-                strokeColor: '#10b981',
+                strokeColor: "#10b981",
                 strokeOpacity: 0.8,
                 strokeWeight: 5,
               },
@@ -486,7 +527,7 @@ function GoogleMapComponent({
       <button
         onClick={handleCenterToUserLocation}
         disabled={isGettingLocation}
-        className="absolute bottom-52 right-3 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed z-10"
+        className="absolute  top-20 right-2 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed z-10"
         title="Centrar en mi ubicación"
       >
         {isGettingLocation ? (
@@ -540,7 +581,8 @@ export default memo(GoogleMapComponent, (prevProps, nextProps) => {
     });
 
   const passengersUnchanged =
-    prevProps.requestingPassengers?.length === nextProps.requestingPassengers?.length &&
+    prevProps.requestingPassengers?.length ===
+      nextProps.requestingPassengers?.length &&
     (nextProps.requestingPassengers || []).every((p, i) => {
       const prev = (prevProps.requestingPassengers || [])[i];
       return prev?.id === p.id && prev?.lat === p.lat && prev?.lng === p.lng;

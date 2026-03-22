@@ -27,7 +27,7 @@ interface DriverInfo {
 
 export default function DriverProfilePage() {
   const router = useRouter();
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, refreshUser } = useAuth();
   const [isDriverOfMonth, setIsDriverOfMonth] = useState(false);
   const [driverOfMonth, setDriverOfMonth] = useState<{ full_name: string; avg_rating: number; month_trips: number; municipality?: string } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -58,7 +58,11 @@ export default function DriverProfilePage() {
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'driver')) {
-      router.push('/');
+      if (user?.role === 'passenger') {
+        router.push('/passenger');
+      } else {
+        router.push('/');
+      }
     }
   }, [user, loading, router]);
 
@@ -185,15 +189,17 @@ export default function DriverProfilePage() {
     try {
       const { driversAPI, usersAPI } = await import('@/lib/api-client');
 
-      // Guardar nombre y foto solo si la imagen cambió (es base64 nueva, no URL ya guardada)
+      // Guardar nombre, teléfono y foto
       const isNewImage = formData.profile_image && formData.profile_image.startsWith('data:');
+      const userUpdates: Record<string, any> = {};
+      if (formData.full_name !== user?.full_name) userUpdates.full_name = formData.full_name;
+      if (formData.phone && formData.phone !== user?.phone) userUpdates.phone = formData.phone;
       if (isNewImage) {
-        await usersAPI.updateProfile({
-          full_name: formData.full_name,
-          profile_image: formData.profile_image,
-        });
-      } else if (formData.full_name !== user?.full_name) {
-        await usersAPI.updateProfile({ full_name: formData.full_name });
+        userUpdates.full_name = formData.full_name;
+        userUpdates.profile_image = formData.profile_image;
+      }
+      if (Object.keys(userUpdates).length > 0) {
+        await usersAPI.updateProfile(userUpdates);
       }
 
       // Preparar datos con valores por defecto para campos vacíos
@@ -266,7 +272,7 @@ export default function DriverProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="container-app py-4">
           <div className="flex items-center justify-between">
             <button
@@ -927,6 +933,7 @@ export default function DriverProfilePage() {
                 try {
                   const { apiClient } = await import('@/lib/api-client');
                   await apiClient.put('/users/switch-role', { role: 'passenger' });
+                  await refreshUser();
                   await Swal.fire({ icon: 'success', title: '¡Modo pasajero activado!', confirmButtonColor: '#008000', timer: 2500, timerProgressBar: true });
                   router.push('/passenger');
                 } catch {

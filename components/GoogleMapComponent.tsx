@@ -527,7 +527,7 @@ function GoogleMapComponent({
       <button
         onClick={handleCenterToUserLocation}
         disabled={isGettingLocation}
-        className="absolute  top-20 right-2 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed z-10"
+        className="absolute  top-28 right-2 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed z-10"
         title="Centrar en mi ubicación"
       >
         {isGettingLocation ? (

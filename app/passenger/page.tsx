@@ -972,7 +972,7 @@ export default function PassengerHomePage() {
 
         {/* Trip Request Card - Fija en la parte inferior con scroll */}
         <div
-          className={`absolute bottom-0 left-0 right-0 pb-20 md:left-4 md:bottom-4 md:right-auto md:w-96  bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-30 pointer-events-auto overflow-y-auto transition-all duration-300 ${
+          className={`absolute bottom-0 left-0 right-0 pb-28 md:left-4 md:bottom-4 md:right-auto md:w-96  bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-30 pointer-events-auto overflow-y-auto transition-all duration-300 ${
             isPanelMinimized
               ? "max-h-[60px] md:max-h-[70px]"
               : "max-h-[85vh] md:max-h-[calc(100vh-2rem)]"

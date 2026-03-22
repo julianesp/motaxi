@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useFavorites } from "@/lib/hooks/useFavorites";
@@ -23,6 +23,7 @@ interface NearbyDriver {
   base_fare: number;
   per_km_fare: number;
   distance_km?: number;
+  municipality?: string;
 }
 
 interface FavoriteDriver {
@@ -166,9 +167,31 @@ export default function PassengerHomePage() {
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
   const [isCheckingActiveTrip, setIsCheckingActiveTrip] = useState(false);
 
+  // Tipo de vehículo preferido por el pasajero
+  const [vehicleType, setVehicleType] = useState<'moto' | 'carro' | null>(null);
+  const [showSafetyWarning, setShowSafetyWarning] = useState(false);
+
   // Estado para conductores disponibles y favoritos
   const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<NearbyDriver | null>(null);
+
+  // Ordenar conductores: primero los del municipio más cercano al pasajero
+  const sortedNearbyDrivers = useMemo(() => {
+    if (nearbyDrivers.length === 0) return nearbyDrivers;
+    // Inferir municipio del pasajero: usar el del conductor más cercano (≤1.5km)
+    const closestWithMunicipality = nearbyDrivers.find(
+      (d) => d.municipality && (d.distance_km ?? 99) <= 1.5
+    );
+    const passengerMunicipality = closestWithMunicipality?.municipality;
+    if (!passengerMunicipality) return nearbyDrivers;
+    return [...nearbyDrivers].sort((a, b) => {
+      const aLocal = a.municipality === passengerMunicipality ? 0 : 1;
+      const bLocal = b.municipality === passengerMunicipality ? 0 : 1;
+      if (aLocal !== bLocal) return aLocal - bLocal;
+      return (a.distance_km ?? 99) - (b.distance_km ?? 99);
+    });
+  }, [nearbyDrivers]);
+  const [driverDetailDriver, setDriverDetailDriver] = useState<NearbyDriver | null>(null);
   const [favoriteDrivers, setFavoriteDrivers] = useState<FavoriteDriver[]>([]);
   const [showFavoriteDriversPanel, setShowFavoriteDriversPanel] = useState(false);
   const [loadingFavoriteDrivers, setLoadingFavoriteDrivers] = useState(false);
@@ -188,6 +211,16 @@ export default function PassengerHomePage() {
       }
     }
   }, [user, loading, router, hasCheckedAuth]);
+
+  // Mostrar advertencia de seguridad nocturna al cargar
+  useEffect(() => {
+    if (!user) return;
+    const hour = new Date().getHours();
+    const isNight = hour >= 20 || hour < 6;
+    if (isNight) {
+      setShowSafetyWarning(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     // Obtener ubicación actual del usuario
@@ -492,6 +525,44 @@ export default function PassengerHomePage() {
       return;
     }
 
+    if (!vehicleType) {
+      Swal.fire({
+        icon: "info",
+        title: "Elige tu vehículo",
+        text: "Selecciona si quieres viajar en mototaxi o en carro antes de solicitar.",
+        confirmButtonColor: "#008000",
+      });
+      return;
+    }
+
+    // Advertencia de seguridad al solicitar (siempre, no solo de noche)
+    const hour = new Date().getHours();
+    const isNight = hour >= 20 || hour < 6;
+    const safetyResult = await Swal.fire({
+      title: isNight ? '🌙 Viaje nocturno — Precaución' : '🛡️ Recuerda viajar seguro',
+      html: `
+        <div style="text-align:left;font-size:14px;color:#374151;line-height:1.6;">
+          ${isNight ? '<p style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:12px;font-weight:600;color:#92400e;">⚠️ Estás solicitando un viaje en la noche. Ten especial cuidado.</p>' : ''}
+          <p style="font-weight:600;margin-bottom:8px;">Para tu seguridad:</p>
+          <ul style="padding-left:16px;space-y:4px;">
+            <li style="margin-bottom:6px;">✅ <strong>Viaja solo con conductores que conoces</strong> o que tengan buenas calificaciones</li>
+            <li style="margin-bottom:6px;">✅ Comparte tu ubicación en tiempo real con un familiar o amigo de confianza</li>
+            <li style="margin-bottom:6px;">✅ Verifica la placa y el vehículo antes de subir</li>
+            ${isNight ? '<li style="margin-bottom:6px;">✅ Prefiere conductores de tu lista de <strong>favoritos</strong> en la noche</li>' : ''}
+            <li style="margin-bottom:6px;">✅ Si algo te genera desconfianza, cancela el viaje</li>
+          </ul>
+        </div>
+      `,
+      icon: isNight ? 'warning' : 'info',
+      confirmButtonText: 'Entendido, solicitar viaje',
+      confirmButtonColor: '#008000',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#6b7280',
+    });
+
+    if (!safetyResult.isConfirmed) return;
+
     // Calcular distancia
     const distance = calculateDistance(
       pickup.latitude,
@@ -506,6 +577,9 @@ export default function PassengerHomePage() {
     if (passengerCustomPrice) {
       // El pasajero propuso un precio personalizado
       estimatedFare = passengerCustomPrice;
+    } else if (selectedDriver) {
+      // Usar tarifa del conductor seleccionado
+      estimatedFare = Math.round((selectedDriver.base_fare ?? 5000) + distance * (selectedDriver.per_km_fare ?? 2000));
     } else if (nearbyDrivers.length > 0) {
       // Usar tarifa del conductor más cercano
       const nearestDriver = nearbyDrivers[0];
@@ -532,6 +606,7 @@ export default function PassengerHomePage() {
         dropoff_address: destination.address,
         distance_km: parseFloat(distance.toFixed(2)),
         estimated_fare: estimatedFare,
+        ...(selectedDriver ? { preferred_driver_id: selectedDriver.id } : {}),
       });
 
       // Éxito: solicitud creada
@@ -825,7 +900,7 @@ export default function PassengerHomePage() {
               }))}
             onDriverClick={(driverId) => {
               const driver = nearbyDrivers.find((d) => d.id === driverId);
-              if (driver) setSelectedDriver(driver);
+              if (driver) setDriverDetailDriver(driver);
             }}
           />
         </div>
@@ -906,6 +981,43 @@ export default function PassengerHomePage() {
             {!isPanelMinimized && (
               <>
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">¿A dónde vas?</h2>
+
+            {/* Selector de tipo de vehículo */}
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-gray-600">¿En qué quieres viajar?</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setVehicleType('moto')}
+                  className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-200 ${
+                    vehicleType === 'moto'
+                      ? 'border-[#008000] bg-green-50 shadow-md'
+                      : 'border-gray-200 hover:border-green-300 bg-white'
+                  }`}
+                >
+                  <span className="text-2xl mb-1">🏍️</span>
+                  <span className={`text-sm font-bold ${vehicleType === 'moto' ? 'text-[#008000]' : 'text-gray-700'}`}>Mototaxi</span>
+                  <span className="text-xs text-gray-400">Rápido · económico</span>
+                </button>
+                <button
+                  onClick={() => setVehicleType('carro')}
+                  className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-200 ${
+                    vehicleType === 'carro'
+                      ? 'border-blue-600 bg-blue-50 shadow-md'
+                      : 'border-gray-200 hover:border-blue-300 bg-white'
+                  }`}
+                >
+                  <span className="text-2xl mb-1">🚗</span>
+                  <span className={`text-sm font-bold ${vehicleType === 'carro' ? 'text-blue-700' : 'text-gray-700'}`}>Carro</span>
+                  <span className="text-xs text-gray-400">Cómodo · nocturno</span>
+                </button>
+              </div>
+              {vehicleType === 'carro' && (
+                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-2.5 text-xs text-blue-700">
+                  <span className="shrink-0 mt-0.5">🌙</span>
+                  <span>Los viajes en carro son ideales para la noche. Los conductores disponibles en carro aparecerán en el mapa.</span>
+                </div>
+              )}
+            </div>
 
             {/* Pickup Input */}
             <div className="space-y-2">
@@ -1045,19 +1157,29 @@ export default function PassengerHomePage() {
                   <span className="text-gray-700 font-semibold text-sm">Tarifas de conductores disponibles</span>
                 </div>
                 <p className="text-xs text-gray-500 mb-2">
-                  El precio final lo define el conductor que acepte tu viaje · {estimatedDistance.toFixed(1)} km estimados
+                  Toca un conductor para elegirlo · {estimatedDistance.toFixed(1)} km estimados
                 </p>
                 <div className="space-y-1">
-                  {nearbyDrivers.slice(0, 4).map((driver) => {
+                  {sortedNearbyDrivers.slice(0, 4).map((driver) => {
                     const driverFare = Math.round((driver.base_fare ?? 5000) + estimatedDistance * (driver.per_km_fare ?? 2000));
+                    const isSelected = selectedDriver?.id === driver.id;
                     return (
-                      <div key={driver.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-green-100">
+                      <button
+                        key={driver.id}
+                        onClick={() => setSelectedDriver(isSelected ? null : driver)}
+                        className={`w-full flex items-center justify-between rounded-xl px-3 py-2 border transition-all duration-150 text-left ${
+                          isSelected
+                            ? "bg-green-50 border-[#42CE1D] ring-1 ring-[#42CE1D]"
+                            : "bg-white border-green-100 hover:border-green-300 hover:bg-green-50"
+                        }`}
+                      >
                         <div>
                           <span className="text-sm font-medium text-gray-800">{driver.full_name}</span>
-                          <span className="text-xs text-gray-400 ml-2">{driver.distance_km?.toFixed(1)} km de ti</span>
+                          {isSelected && <span className="ml-2 text-xs text-[#008000] font-semibold">✓ Seleccionado</span>}
+                          <div className="text-xs text-gray-400">{driver.distance_km?.toFixed(1)} km de ti{driver.municipality && <span className="ml-1.5 bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">📍 {driver.municipality.charAt(0).toUpperCase() + driver.municipality.slice(1).replace('_', ' ')}</span>}</div>
                         </div>
                         <span className="text-base font-bold text-[#006600]">${driverFare.toLocaleString()}</span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -1135,7 +1257,11 @@ export default function PassengerHomePage() {
                       <span>Solicitando...</span>
                     </span>
                   ) : (
-                    "Solicitar MoTaxi"
+                    vehicleType === 'carro'
+                      ? '🚗 Solicitar carro'
+                      : vehicleType === 'moto'
+                      ? '🏍️ Solicitar mototaxi'
+                      : 'Solicitar viaje'
                   )}
                 </button>
               </>
@@ -1145,7 +1271,7 @@ export default function PassengerHomePage() {
       </div>
 
       {/* Popup de conductor seleccionado en el mapa */}
-      {selectedDriver && (
+      {driverDetailDriver && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4 sm:items-center">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl">
             <div className="flex items-start justify-between mb-3">
@@ -1157,17 +1283,17 @@ export default function PassengerHomePage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-gray-900">{selectedDriver.full_name}</h3>
-                    {selectedDriver.rating >= 4.5 && selectedDriver.total_trips >= 20 && (
+                    <h3 className="font-bold text-gray-900">{driverDetailDriver.full_name}</h3>
+                    {driverDetailDriver.rating >= 4.5 && driverDetailDriver.total_trips >= 20 && (
                       <span className="inline-flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-xs font-bold">
                         ⭐ Destacado
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500">{selectedDriver.vehicle_color} {selectedDriver.vehicle_model}</p>
+                  <p className="text-sm text-gray-500">{driverDetailDriver.vehicle_color} {driverDetailDriver.vehicle_model}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedDriver(null)} className="text-gray-400 hover:text-gray-600 p-1">
+              <button onClick={() => setDriverDetailDriver(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -1177,18 +1303,18 @@ export default function PassengerHomePage() {
             <div className="grid grid-cols-2 gap-3 mb-4 text-center">
               <div className="bg-yellow-50 rounded-xl p-2">
                 <p className="text-xs text-gray-500">Calificación</p>
-                <p className="font-bold text-yellow-600">⭐ {selectedDriver.rating?.toFixed(1) || "5.0"}</p>
+                <p className="font-bold text-yellow-600">⭐ {driverDetailDriver.rating?.toFixed(1) || "5.0"}</p>
               </div>
               <div className="bg-blue-50 rounded-xl p-2">
                 <p className="text-xs text-gray-500">Viajes</p>
-                <p className="font-bold text-blue-600">{selectedDriver.total_trips || 0}</p>
+                <p className="font-bold text-blue-600">{driverDetailDriver.total_trips || 0}</p>
               </div>
             </div>
 
             <div className="flex gap-2">
-              {selectedDriver.phone && (
+              {driverDetailDriver.phone && (
                 <a
-                  href={`tel:${selectedDriver.phone}`}
+                  href={`tel:${driverDetailDriver.phone}`}
                   className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-medium text-sm text-center hover:bg-green-700 transition-colors flex items-center justify-center space-x-1"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1198,7 +1324,7 @@ export default function PassengerHomePage() {
                 </a>
               )}
               <button
-                onClick={() => { handleAddFavoriteDriver(selectedDriver); setSelectedDriver(null); }}
+                onClick={() => { handleAddFavoriteDriver(driverDetailDriver); setDriverDetailDriver(null); }}
                 className="flex-1 py-2.5 bg-yellow-500 text-white rounded-xl font-medium text-sm hover:bg-yellow-600 transition-colors flex items-center justify-center space-x-1"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1353,6 +1479,48 @@ export default function PassengerHomePage() {
                 className="flex-1 py-3 px-4 bg-[#008000] text-white rounded-xl font-medium hover:bg-[#006600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSavingFavorite ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de advertencia nocturna */}
+      {showSafetyWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            {/* Header nocturno */}
+            <div className="bg-gradient-to-br from-gray-900 to-blue-950 px-6 pt-6 pb-4 text-center">
+              <div className="text-5xl mb-3">🌙</div>
+              <h2 className="text-xl font-bold text-white mb-1">Viaje nocturno</h2>
+              <p className="text-blue-200 text-sm">Son las {new Date().getHours()}:{String(new Date().getMinutes()).padStart(2,'0')} — ten precaución</p>
+            </div>
+            {/* Contenido */}
+            <div className="px-6 py-5 space-y-3">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Recomendaciones de seguridad:</p>
+              {[
+                { icon: '⭐', text: 'Viaja preferiblemente con conductores de tu lista de favoritos' },
+                { icon: '📍', text: 'Comparte tu ubicación en tiempo real con alguien de confianza' },
+                { icon: '🔍', text: 'Verifica la placa y el vehículo antes de subir' },
+                { icon: '❌', text: 'Si algo te genera desconfianza, cancela sin dudarlo' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 bg-gray-50 rounded-xl p-2.5">
+                  <span className="text-base shrink-0">{item.icon}</span>
+                  <span className="text-sm text-gray-700 leading-snug">{item.text}</span>
+                </div>
+              ))}
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-1">
+                <p className="text-xs text-amber-800 font-medium">
+                  💡 En la noche, los viajes en <strong>carro</strong> son una opción más cómoda y segura. Selecciónalo abajo.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 pb-6">
+              <button
+                onClick={() => setShowSafetyWarning(false)}
+                className="w-full py-3 bg-[#008000] text-white rounded-xl font-bold hover:bg-[#006600] transition-colors"
+              >
+                Entendido, proceder con precaución
               </button>
             </div>
           </div>

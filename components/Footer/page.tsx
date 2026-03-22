@@ -43,6 +43,12 @@ export default function Footer() {
             <h4 className="font-bold mb-4">Contacto</h4>
             <p className="text-gray-400">Valle de Sibundoy, Putumayo</p>
             <p className="text-gray-400">Colombia</p>
+            <a
+              href="mailto:admin@neurai.dev"
+              className="inline-block mt-3 text-[#42CE1D] hover:text-green-400 transition-colors text-sm"
+            >
+              admin@neurai.dev
+            </a>
           </div>
         </div>
 

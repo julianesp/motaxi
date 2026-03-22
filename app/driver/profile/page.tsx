@@ -870,6 +870,44 @@ export default function DriverProfilePage() {
               </svg>
             </a>
 
+            {/* Cambiar a modo Pasajero */}
+            <button
+              onClick={async () => {
+                const result = await Swal.fire({
+                  title: '¿Cambiar a modo Pasajero?',
+                  html: `<p style="color:#4b5563;font-size:14px;line-height:1.6;">Podrás solicitar viajes como pasajero.<br/>Tu perfil de conductor seguirá activo — puedes regresar cuando quieras.</p>`,
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonText: '🧍 Sí, modo pasajero',
+                  confirmButtonColor: '#008000',
+                  cancelButtonText: 'Cancelar',
+                  cancelButtonColor: '#6b7280',
+                });
+                if (!result.isConfirmed) return;
+                try {
+                  const { apiClient } = await import('@/lib/api-client');
+                  await apiClient.put('/users/switch-role', { role: 'passenger' });
+                  await Swal.fire({ icon: 'success', title: '¡Modo pasajero activado!', confirmButtonColor: '#008000', timer: 2500, timerProgressBar: true });
+                  router.push('/passenger');
+                } catch {
+                  Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cambiar el modo. Contacta soporte.', confirmButtonColor: '#008000' });
+                }
+              }}
+              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-blue-50 transition-colors border border-blue-100"
+            >
+              <div className="flex items-center">
+                <span className="text-xl mr-3">🧍</span>
+                <div className="text-left">
+                  <span className="font-medium text-blue-600 block">Cambiar a modo Pasajero</span>
+                  <span className="text-xs text-gray-400">Solicita viajes con tu cuenta</span>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {/* Cerrar sesión */}
             <button
               onClick={handleLogout}
               className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors"
@@ -881,6 +919,60 @@ export default function DriverProfilePage() {
                 <span className="font-medium text-red-600">Cerrar Sesión</span>
               </div>
               <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {/* Eliminar cuenta */}
+            <button
+              onClick={async () => {
+                const first = await Swal.fire({
+                  title: '¿Eliminar tu cuenta?',
+                  html: `<p style="color:#4b5563;font-size:14px;">Esta acción es <strong>irreversible</strong>. Se eliminarán todos tus datos, historial y suscripción.</p>`,
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Sí, eliminar',
+                  confirmButtonColor: '#dc2626',
+                  cancelButtonText: 'Cancelar',
+                  cancelButtonColor: '#6b7280',
+                });
+                if (!first.isConfirmed) return;
+                const second = await Swal.fire({
+                  title: 'Confirma escribiendo tu email',
+                  input: 'email',
+                  inputPlaceholder: user?.email,
+                  inputAttributes: { autocomplete: 'off' },
+                  showCancelButton: true,
+                  confirmButtonText: 'Eliminar definitivamente',
+                  confirmButtonColor: '#dc2626',
+                  cancelButtonColor: '#6b7280',
+                  preConfirm: (val) => {
+                    if (val !== user?.email) { Swal.showValidationMessage('El email no coincide'); return false; }
+                    return val;
+                  },
+                });
+                if (!second.isConfirmed) return;
+                try {
+                  const { apiClient } = await import('@/lib/api-client');
+                  await apiClient.delete('/users/account');
+                  await logout();
+                  router.push('/');
+                } catch {
+                  Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar la cuenta. Contacta soporte.', confirmButtonColor: '#008000' });
+                }
+              }}
+              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors border border-red-100"
+            >
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <div className="text-left">
+                  <span className="font-medium text-red-400 block">Eliminar cuenta</span>
+                  <span className="text-xs text-gray-400">Acción irreversible</span>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>

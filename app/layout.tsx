@@ -7,6 +7,7 @@ import { esES } from "@clerk/localizations";
 import Footer from "@/components/Footer/page";
 import Script from "next/script";
 import OpenInBrowser from "@/components/OpenInBrowser";
+import InstallPWAModal from "@/components/InstallPWAModal";
 import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -60,6 +61,7 @@ export default function RootLayout({
         <body className={inter.className}>
           <Analytics />
           <OpenInBrowser />
+          <InstallPWAModal />
           <AuthProvider>{children}</AuthProvider>
           <Footer />
           <Script

@@ -108,7 +108,7 @@ export default function HomePage() {
                     }
                     className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                   >
-                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Ir a mi Dashboard"}
+                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Ir a mi cuenta"}
                   </button>
                 ) : (
                   // Usuario no autenticado - mostrar botones de registro e inicio de sesión
@@ -130,7 +130,7 @@ export default function HomePage() {
               </div>
 
               {/* Estadísticas */}
-              <div className="grid grid-cols-3 gap-6 pt-8">
+              {/* <div className="grid grid-cols-3 gap-6 pt-8">
                 <div>
                   <div className="text-3xl lg:text-4xl font-bold text-white">
                     4
@@ -159,7 +159,7 @@ export default function HomePage() {
                   </div>
                   <div className="text-sm text-green-100">Disponible</div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Mapa */}
@@ -274,7 +274,7 @@ export default function HomePage() {
             </div>
 
             {/* Feature 2 */}
-            <div className="text-center">
+            {/* <div className="text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <svg
                   className="w-10 h-10 text-white"
@@ -295,7 +295,7 @@ export default function HomePage() {
                 Conductores verificados y sistema de calificaciones. Tu
                 seguridad es nuestra prioridad.
               </p>
-            </div>
+            </div> */}
 
             {/* Feature 3 */}
             <div className="text-center">

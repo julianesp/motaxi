@@ -318,10 +318,17 @@ export default function PassengerHomePage() {
 
     const fetchNearbyDrivers = async () => {
       try {
-        const { driversAPI } = await import("@/lib/api-client");
         const lat = currentLocation?.lat || 1.1656;
         const lng = currentLocation?.lng || -77.0;
-        const data = await driversAPI.getNearbyDrivers(lat, lng);
+        const params = new URLSearchParams({
+          lat: String(lat),
+          lng: String(lng),
+        });
+        if (vehicleType) params.set("vehicle_type", vehicleType);
+        const API_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+        const res = await fetch(`${API_URL}/drivers/nearby?${params}`);
+        const data = (await res.json()) as { drivers?: any[] };
         setNearbyDrivers(data.drivers || []);
       } catch (error) {
         // Silencioso - no interrumpir la experiencia
@@ -331,7 +338,7 @@ export default function PassengerHomePage() {
     fetchNearbyDrivers();
     const interval = setInterval(fetchNearbyDrivers, 15000);
     return () => clearInterval(interval);
-  }, [user, currentLocation?.lat, currentLocation?.lng]);
+  }, [user, currentLocation?.lat, currentLocation?.lng, vehicleType]);
 
   // Cargar conductores favoritos
   const loadFavoriteDrivers = async () => {
@@ -972,15 +979,15 @@ export default function PassengerHomePage() {
 
         {/* Trip Request Card - Fija en la parte inferior con scroll */}
         <div
-          className={`absolute bottom-0 left-0 right-0 pb-28 md:left-4 md:bottom-4 md:right-auto md:w-96  bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-30 pointer-events-auto overflow-y-auto transition-all duration-300 ${
+          className={`absolute bottom-0 left-0 right-0 md:left-4 md:bottom-4 md:right-auto md:w-96  bg-white/95 backdrop-blur-sm rounded-t-3xl md:rounded-3xl shadow-2xl z-30 pointer-events-auto overflow-y-auto transition-all duration-300 ${
             isPanelMinimized
               ? "max-h-[60px] md:max-h-[70px]"
               : "max-h-[85vh] md:max-h-[calc(100vh-2rem)]"
           }`}
         >
-          <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+          <div className="p-3 md:p-4 space-y-2">
             {/* Handle para arrastrar en móvil y botón de toggle */}
-            <div className="flex items-center justify-between -mt-2 mb-2">
+            <div className="flex items-center justify-between -mt-1 mb-1">
               {isPanelMinimized ? (
                 <div className="flex items-center space-x-3 flex-1">
                   <div className="flex items-center space-x-2">
@@ -1026,25 +1033,25 @@ export default function PassengerHomePage() {
 
             {!isPanelMinimized && (
               <>
-                <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                <h2 className="text-lg font-bold text-gray-800 mb-1">
                   ¿A dónde vas?
                 </h2>
 
                 {/* Selector de tipo de vehículo */}
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-600">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-gray-600">
                     ¿En qué quieres viajar?
                   </p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => setVehicleType("moto")}
-                      className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-200 ${
+                      className={`flex flex-col items-center justify-center py-2 px-2 rounded-2xl border-2 transition-all duration-200 ${
                         vehicleType === "moto"
                           ? "border-[#008000] bg-green-50 shadow-md"
                           : "border-gray-200 hover:border-green-300 bg-white"
                       }`}
                     >
-                      <span className="text-2xl mb-1">🏍️</span>
+                      <span className="text-xl mb-0.5">🏍️</span>
                       <span
                         className={`text-sm font-bold ${vehicleType === "moto" ? "text-[#008000]" : "text-gray-700"}`}
                       >
@@ -1056,13 +1063,13 @@ export default function PassengerHomePage() {
                     </button>
                     <button
                       onClick={() => setVehicleType("carro")}
-                      className={`flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-200 ${
+                      className={`flex flex-col items-center justify-center py-2 px-2 rounded-2xl border-2 transition-all duration-200 ${
                         vehicleType === "carro"
                           ? "border-blue-600 bg-blue-50 shadow-md"
                           : "border-gray-200 hover:border-blue-300 bg-white"
                       }`}
                     >
-                      <span className="text-2xl mb-1">🚗</span>
+                      <span className="text-xl mb-0.5">🚗</span>
                       <span
                         className={`text-sm font-bold ${vehicleType === "carro" ? "text-blue-700" : "text-gray-700"}`}
                       >
@@ -1113,7 +1120,7 @@ export default function PassengerHomePage() {
                         setMapClickMode("pickup");
                         setIsPanelMinimized(true);
                       }}
-                      className={`py-2.5 px-3 md:px-4 rounded-xl text-xs md:text-sm font-medium transition-all duration-200 ${
+                      className={`py-2 px-3 md:px-4 rounded-xl text-xs font-medium transition-all duration-200 ${
                         mapClickMode === "pickup"
                           ? "bg-green-600 text-white shadow-lg shadow-green-200"
                           : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
@@ -1126,7 +1133,7 @@ export default function PassengerHomePage() {
                     <button
                       onClick={handleGetCurrentLocation}
                       disabled={isLocating}
-                      className="py-2.5 px-3 md:px-4 rounded-xl text-xs md:text-sm font-medium transition-all duration-200 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
+                      className="py-2 px-3 md:px-4 rounded-xl text-xs font-medium transition-all duration-200 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
                     >
                       {isLocating ? (
                         <>
@@ -1216,7 +1223,7 @@ export default function PassengerHomePage() {
                       setMapClickMode("destination");
                       setIsPanelMinimized(true);
                     }}
-                    className={`w-full py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`w-full py-2 px-4 rounded-xl text-xs font-medium transition-all duration-200 ${
                       mapClickMode === "destination"
                         ? "bg-red-600 text-white shadow-lg shadow-red-200"
                         : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
@@ -1232,7 +1239,7 @@ export default function PassengerHomePage() {
                 {destination.latitude && destination.longitude && (
                   <button
                     onClick={() => setShowSaveFavoriteDialog(true)}
-                    className="w-full py-2.5 px-4 text-sm text-[#008000] hover:text-[#006600] font-medium flex items-center justify-center space-x-2 bg-green-50 hover:bg-green-100 rounded-xl transition-colors border border-green-200"
+                    className="w-full py-2 px-4 text-xs text-[#008000] hover:text-[#006600] font-medium flex items-center justify-center space-x-2 bg-green-50 hover:bg-green-100 rounded-xl transition-colors border border-green-200"
                   >
                     <svg
                       className="w-5 h-5"
@@ -1418,7 +1425,7 @@ export default function PassengerHomePage() {
                   disabled={
                     !pickup.latitude || !destination.latitude || showTripRequest
                   }
-                  className="btn btn-primary w-full py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 bg-gradient-to-r from-[#008000] to-[#006600] hover:from-[#006600] hover:to-[#004d00] text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="btn btn-primary w-full py-3 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 bg-gradient-to-r from-[#008000] to-[#006600] hover:from-[#006600] hover:to-[#004d00] text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {showTripRequest ? (
                     <span className="flex items-center justify-center space-x-2">

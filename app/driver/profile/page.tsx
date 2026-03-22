@@ -23,6 +23,7 @@ interface DriverInfo {
   intercity_fare?: number;
   rural_fare?: number;
   per_km_fare?: number;
+  vehicle_types?: string;
 }
 
 export default function DriverProfilePage() {
@@ -54,6 +55,7 @@ export default function DriverProfilePage() {
     intercity_fare: '' as number | string,
     rural_fare: '' as number | string,
     per_km_fare: '' as number | string,
+    vehicle_types: 'moto' as 'moto' | 'carro' | 'ambos',
   });
 
   useEffect(() => {
@@ -111,6 +113,7 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || 5000,
           rural_fare: driver.rural_fare || 4000,
           per_km_fare: driver.per_km_fare || 500,
+          vehicle_types: driver.vehicle_types || 'moto',
         });
 
         // Inicializar formData del conductor
@@ -126,6 +129,7 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || '',
           rural_fare: driver.rural_fare || '',
           per_km_fare: driver.per_km_fare || '',
+          vehicle_types: (driver.vehicle_types as 'moto' | 'carro' | 'ambos') || 'moto',
         });
       }
     } catch (error) {
@@ -482,6 +486,42 @@ export default function DriverProfilePage() {
                 <>
                   <div className="pt-6 border-t border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Vehículo</h3>
+
+                    {/* Tipo de Vehículo */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de vehículo
+                      </label>
+                      {isEditing ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { value: 'moto', label: '🏍️ Moto', desc: 'Solo mototaxi' },
+                            { value: 'carro', label: '🚗 Carro', desc: 'Solo carro' },
+                            { value: 'ambos', label: '🏍️🚗 Ambos', desc: 'Moto y carro' },
+                          ] as const).map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setDriverFormData({ ...driverFormData, vehicle_types: opt.value })}
+                              className={`flex flex-col items-center py-2 px-1 rounded-xl border-2 transition-all text-center ${
+                                driverFormData.vehicle_types === opt.value
+                                  ? 'border-[#008000] bg-green-50'
+                                  : 'border-gray-200 hover:border-green-300'
+                              }`}
+                            >
+                              <span className="text-lg">{opt.label.split(' ')[0]}{opt.label.split(' ')[1] || ''}</span>
+                              <span className={`text-xs font-semibold mt-1 ${driverFormData.vehicle_types === opt.value ? 'text-[#008000]' : 'text-gray-600'}`}>{opt.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <span className="text-gray-900">
+                            {driverInfo.vehicle_types === 'carro' ? '🚗 Carro' : driverInfo.vehicle_types === 'ambos' ? '🏍️🚗 Moto y Carro' : '🏍️ Mototaxi'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Vehicle Model */}
                     <div className="mb-4">

@@ -94,7 +94,8 @@ driverRoutes.put('/profile', async (c) => {
       base_fare,
       intercity_fare,
       rural_fare,
-      per_km_fare
+      per_km_fare,
+      vehicle_types
     } = body;
 
     const updates: string[] = [];
@@ -143,6 +144,13 @@ driverRoutes.put('/profile', async (c) => {
     if (per_km_fare !== undefined) {
       updates.push('per_km_fare = ?');
       values.push(per_km_fare);
+    }
+    if (vehicle_types !== undefined) {
+      if (!['moto', 'carro', 'ambos'].includes(vehicle_types)) {
+        return c.json({ error: 'vehicle_types must be: moto, carro, or ambos' }, 400);
+      }
+      updates.push('vehicle_types = ?');
+      values.push(vehicle_types);
     }
 
     if (updates.length === 0) {
@@ -264,17 +272,28 @@ driverRoutes.get('/nearby', async (c) => {
   try {
     const lat = parseFloat(c.req.query('lat') || '0');
     const lng = parseFloat(c.req.query('lng') || '0');
+    const vehicleType = c.req.query('vehicle_type'); // 'moto' | 'carro' | undefined
+
+    let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'
+         AND d.current_latitude IS NOT NULL AND d.current_longitude IS NOT NULL`;
+
+    // Filtrar por tipo de vehículo si se especifica
+    if (vehicleType === 'moto') {
+      whereClause += ` AND (d.vehicle_types = 'moto' OR d.vehicle_types = 'ambos')`;
+    } else if (vehicleType === 'carro') {
+      whereClause += ` AND (d.vehicle_types = 'carro' OR d.vehicle_types = 'ambos')`;
+    }
 
     const drivers = await c.env.DB.prepare(
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
               d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
+              COALESCE(d.vehicle_types, 'moto') AS vehicle_types,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,
               u.full_name, u.phone
        FROM drivers d
        JOIN users u ON d.id = u.id
-       WHERE d.is_available = 1 AND d.verification_status = 'approved'
-         AND d.current_latitude IS NOT NULL AND d.current_longitude IS NOT NULL`
+       WHERE ${whereClause}`
     )
       .all();
 

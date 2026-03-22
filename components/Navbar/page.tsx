@@ -187,7 +187,7 @@ export default function Navbar() {
                         : "bg-green-100 text-[#008000] hover:bg-green-200"
                     }`}
                   >
-                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi Dashboard"}
+                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi cuenta"}
                   </button>
                   <button
                     onClick={handleLogout}
@@ -313,7 +313,7 @@ export default function Navbar() {
                     }}
                     className="w-full text-center px-4 py-3 rounded-xl font-semibold transition-all bg-[#008000] text-white hover:bg-[#006600] shadow-md"
                   >
-                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi Dashboard"}
+                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi cuenta"}
                   </button>
                   <button
                     onClick={() => {

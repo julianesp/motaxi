@@ -28,7 +28,8 @@ self.addEventListener('push', (event) => {
     actions: data.data?.type === 'new_trip'
       ? [{ action: 'open', title: 'Ver viaje' }]
       : [],
-    vibrate: [200, 100, 200],
+    vibrate: [200, 100, 200, 100, 200],
+    silent: false, // Usar el sonido del sistema del dispositivo
   };
 
   event.waitUntil(self.registration.showNotification(title, options));

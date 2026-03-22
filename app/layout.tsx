@@ -61,7 +61,7 @@ export default function RootLayout({
         <body className={inter.className}>
           <Analytics />
           <OpenInBrowser />
-          <InstallPWAModal />
+          {/* <InstallPWAModal /> */}
           <AuthProvider>{children}</AuthProvider>
           <Footer />
           <Script

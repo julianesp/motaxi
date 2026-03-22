@@ -132,10 +132,19 @@ export default function TripTrackingPage() {
             }, 3000);
           }
 
-          // Si el viaje fue completado y ya fue calificado, redirigir inmediatamente
-          if (data.trip.status === 'completed' && data.trip.driver_comment !== null && data.trip.driver_comment !== undefined) {
-            // Ya fue calificado, redirigir
-            router.push('/passenger');
+          // Si el viaje ya está completado al cargar la página:
+          // redirigir si el pasajero ya calificó al conductor (driver_rating existe)
+          // o si lleva más de 10 minutos completado (venció el tiempo para calificar)
+          if (data.trip.status === 'completed') {
+            const alreadyRated = data.trip.driver_rating != null;
+            const completedAt = (data.trip as any).completed_at;
+            const tenMinutesAgo = Math.floor(Date.now() / 1000) - 600;
+            if (alreadyRated || (completedAt && completedAt < tenMinutesAgo)) {
+              router.push('/passenger');
+            } else {
+              // Marcar como ya calificado si existe rating para que muestre el panel
+              if (alreadyRated) setIsRated(true);
+            }
           }
         }
       } catch (error) {

@@ -323,3 +323,54 @@ driverRoutes.get('/earnings', async (c) => {
     return c.json({ error: error.message || 'Failed to get earnings' }, 500);
   }
 });
+
+/**
+ * GET /drivers/of-the-month
+ * Conductor del mes actual (público)
+ */
+driverRoutes.get('/of-the-month', async (c) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    // Buscar ganador ya calculado este mes
+    const winner = await c.env.DB.prepare(
+      `SELECT dom.*, u.full_name, d.rating, d.total_trips, d.vehicle_model, d.vehicle_color, d.municipality
+       FROM driver_of_month dom
+       JOIN users u ON dom.driver_id = u.id
+       JOIN drivers d ON dom.driver_id = d.id
+       WHERE dom.month = ? AND dom.year = ?`
+    ).bind(month, year).first() as any;
+
+    if (winner) {
+      return c.json({ winner });
+    }
+
+    // Calcular conductor del mes: mejor rating promedio con ≥5 viajes este mes
+    const monthStart = Math.floor(new Date(year, month - 1, 1).getTime() / 1000);
+    const monthEnd = Math.floor(new Date(year, month, 0, 23, 59, 59).getTime() / 1000);
+
+    const top = await c.env.DB.prepare(
+      `SELECT d.id, u.full_name, d.rating, d.total_trips, d.vehicle_model, d.municipality,
+              COUNT(t.id) as month_trips, AVG(t.rating) as month_rating
+       FROM drivers d
+       JOIN users u ON d.id = u.id
+       LEFT JOIN trips t ON d.id = t.driver_id AND t.status = 'completed'
+         AND t.completed_at BETWEEN ? AND ?
+       WHERE d.rating IS NOT NULL
+       GROUP BY d.id
+       HAVING month_trips >= 3
+       ORDER BY month_rating DESC, month_trips DESC
+       LIMIT 1`
+    ).bind(monthStart, monthEnd).first() as any;
+
+    if (!top) {
+      return c.json({ winner: null });
+    }
+
+    return c.json({ winner: { ...top, month, year, reward_type: 'free_month' } });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get driver of the month' }, 500);
+  }
+});

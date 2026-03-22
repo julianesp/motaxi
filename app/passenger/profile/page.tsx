@@ -123,11 +123,12 @@ export default function PassengerProfilePage() {
   const handleSave = async () => {
     try {
       const { usersAPI } = await import("@/lib/api-client");
-      await usersAPI.updateProfile({
-        full_name: formData.full_name,
-        phone: formData.phone,
-        gender: formData.gender || null,
-      });
+      const updates: Record<string, any> = { full_name: formData.full_name, gender: formData.gender || null };
+      // Solo enviar phone si realmente cambió para evitar UNIQUE constraint
+      if (formData.phone && formData.phone !== user?.phone) {
+        updates.phone = formData.phone;
+      }
+      await usersAPI.updateProfile(updates);
       setIsEditing(false);
       alert("✅ Perfil actualizado correctamente");
       // Recargar para reflejar cambios

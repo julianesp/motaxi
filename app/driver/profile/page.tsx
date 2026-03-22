@@ -28,6 +28,8 @@ interface DriverInfo {
 export default function DriverProfilePage() {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const [isDriverOfMonth, setIsDriverOfMonth] = useState(false);
+  const [driverOfMonth, setDriverOfMonth] = useState<{ full_name: string; avg_rating: number; month_trips: number; municipality?: string } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [driverInfo, setDriverInfo] = useState<DriverInfo | null>(null);
@@ -75,7 +77,16 @@ export default function DriverProfilePage() {
 
   const fetchDriverInfo = async () => {
     try {
-      const { driversAPI } = await import('@/lib/api-client');
+      const { driversAPI, apiClient } = await import('@/lib/api-client');
+      // Verificar conductor del mes
+      try {
+        const domRes = await apiClient.get('/drivers/of-the-month');
+        const winner = domRes.data?.winner;
+        if (winner) {
+          setDriverOfMonth(winner);
+          if (user && winner.id === user.id) setIsDriverOfMonth(true);
+        }
+      } catch (_) {}
       const response = await driversAPI.getProfile();
 
       if (response.driver) {
@@ -174,13 +185,15 @@ export default function DriverProfilePage() {
     try {
       const { driversAPI, usersAPI } = await import('@/lib/api-client');
 
-      // Guardar foto de perfil si cambió
-      if (formData.profile_image) {
+      // Guardar nombre y foto solo si la imagen cambió (es base64 nueva, no URL ya guardada)
+      const isNewImage = formData.profile_image && formData.profile_image.startsWith('data:');
+      if (isNewImage) {
         await usersAPI.updateProfile({
           full_name: formData.full_name,
-          phone: formData.phone,
           profile_image: formData.profile_image,
         });
+      } else if (formData.full_name !== user?.full_name) {
+        await usersAPI.updateProfile({ full_name: formData.full_name });
       }
 
       // Preparar datos con valores por defecto para campos vacíos
@@ -274,6 +287,26 @@ export default function DriverProfilePage() {
       {/* Main Content */}
       <div className="container-app py-6">
         <div className="max-w-2xl mx-auto">
+          {/* Conductor del Mes */}
+          {driverOfMonth && (
+            <div className="mb-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center gap-3">
+              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">🏆</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-yellow-700 uppercase tracking-wide">Conductor del Mes</p>
+                <p className="text-sm font-bold text-gray-800 truncate">{driverOfMonth.full_name}</p>
+                <p className="text-xs text-gray-500">
+                  ⭐ {driverOfMonth.avg_rating?.toFixed(1)} · {driverOfMonth.month_trips} viajes
+                  {driverOfMonth.municipality && ` · ${driverOfMonth.municipality.charAt(0).toUpperCase() + driverOfMonth.municipality.slice(1).replace('_', ' ')}`}
+                </p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">1 mes gratis</span>
+              </div>
+            </div>
+          )}
+
           {/* Trial / Subscription Banner */}
           <div className="mb-4">
             <TrialBanner user={{ id: user.id, full_name: user.full_name, email: user.email, phone: user.phone }} />
@@ -328,6 +361,12 @@ export default function DriverProfilePage() {
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-1">{user.full_name}</h2>
                 <p className="text-green-100 mb-2">Conductor</p>
+                {/* Badge Conductor del Mes */}
+                {isDriverOfMonth && (
+                  <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold mb-1 shadow-md">
+                    🏆 Conductor del Mes — ¡Mes gratis!
+                  </div>
+                )}
                 {/* Badge Conductor Destacado */}
                 {driverInfo && driverInfo.rating >= 4.5 && driverInfo.total_trips >= 20 && (
                   <div className="flex items-center gap-1.5 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold mb-2 shadow-md">

@@ -503,6 +503,36 @@ paymentRoutes.get('/subscription/status', async (c) => {
     const isSubscriptionActive = subscription.status === 'active' && subscription.current_period_end && now < (subscription.current_period_end as number);
     const hasAccess = isTrialActive || isSubscriptionActive;
 
+    // Si el trial venció sin pago, bloquear email para evitar re-registro
+    if (!hasAccess && subscription.status === 'trial' && now >= trialEndsAt) {
+      try {
+        await c.env.DB.prepare(
+          `INSERT OR IGNORE INTO blocked_emails (id, email, reason, blocked_at) VALUES (?, ?, 'trial_expired', ?)`
+        ).bind(uuidv4(), user.email.toLowerCase(), now).run();
+      } catch (_) {}
+    }
+
+    // Notificación proactiva a 3 días: crear una sola vez
+    if (isTrialActive && daysLeft <= 3 && daysLeft > 0) {
+      try {
+        const notifKey = `trial_3days_${subscription.id}`;
+        const existing = await c.env.DB.prepare(
+          `SELECT id FROM notifications WHERE user_id = ? AND data LIKE ? LIMIT 1`
+        ).bind(user.id, `%${notifKey}%`).first();
+        if (!existing) {
+          const expiryDate = new Date(trialEndsAt * 1000).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' });
+          await c.env.DB.prepare(
+            `INSERT INTO notifications (id, user_id, type, title, message, data, created_at) VALUES (?, ?, 'subscription_reminder', ?, ?, ?, ?)`
+          ).bind(
+            uuidv4(), user.id, `⚠️ Tu prueba vence en ${daysLeft} día${daysLeft === 1 ? '' : 's'}`,
+            `Tu período de prueba gratuito termina el ${expiryDate}. Suscríbete por $14.900/mes para seguir usando MoTaxi sin interrupciones. ¡Puedes pagar ahora o después!`,
+            JSON.stringify({ key: notifKey, days_left: daysLeft }),
+            now
+          ).run();
+        }
+      } catch (_) {}
+    }
+
     return c.json({
       subscription,
       days_left: daysLeft,

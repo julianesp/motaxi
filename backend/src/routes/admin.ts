@@ -545,6 +545,67 @@ adminRoutes.put('/subscriptions/:userId/activate', async (c) => {
 });
 
 /**
+ * POST /admin/driver-of-month
+ * Asignar conductor del mes y aplicar mes gratis
+ */
+adminRoutes.post('/driver-of-month', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { driver_id, month, year } = body;
+    if (!driver_id || !month || !year) {
+      return c.json({ error: 'driver_id, month, year required' }, 400);
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+
+    // Obtener datos del conductor
+    const driver = await c.env.DB.prepare(
+      `SELECT d.rating, d.total_trips, u.full_name FROM drivers d JOIN users u ON d.id = u.id WHERE d.id = ?`
+    ).bind(driver_id).first() as any;
+    if (!driver) return c.json({ error: 'Driver not found' }, 404);
+
+    // Insertar o reemplazar en driver_of_month
+    await c.env.DB.prepare(
+      `INSERT OR REPLACE INTO driver_of_month (id, driver_id, month, year, avg_rating, total_trips, reward_type, reward_applied, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'free_month', 0, ?)`
+    ).bind(crypto.randomUUID(), driver_id, month, year, driver.rating || 0, driver.total_trips || 0, now).run();
+
+    // Aplicar mes gratis: extender suscripción 30 días
+    const existing = await c.env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(driver_id).first() as any;
+    const periodStart = now;
+    const periodEnd = now + 30 * 24 * 60 * 60;
+    if (existing) {
+      await c.env.DB.prepare(
+        `UPDATE subscriptions SET status = 'active', current_period_start = ?, current_period_end = ?, updated_at = ? WHERE user_id = ?`
+      ).bind(periodStart, periodEnd, now, driver_id).run();
+    } else {
+      await c.env.DB.prepare(
+        `INSERT INTO subscriptions (id, user_id, status, plan, amount, current_period_start, current_period_end, created_at, updated_at) VALUES (?, ?, 'active', 'monthly', 0, ?, ?, ?, ?)`
+      ).bind(crypto.randomUUID(), driver_id, periodStart, periodEnd, now, now).run();
+    }
+
+    // Marcar reward como aplicado
+    await c.env.DB.prepare(`UPDATE driver_of_month SET reward_applied = 1 WHERE driver_id = ? AND month = ? AND year = ?`)
+      .bind(driver_id, month, year).run();
+
+    // Notificar al conductor
+    const monthName = new Date(year, month - 1, 1).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+    await c.env.DB.prepare(
+      `INSERT INTO notifications (id, user_id, type, title, message, created_at) VALUES (?, ?, 'general', ?, ?, ?)`
+    ).bind(
+      crypto.randomUUID(), driver_id,
+      `🏆 ¡Eres el Conductor del Mes de ${monthName}!`,
+      `¡Felicitaciones ${driver.full_name}! Fuiste elegido Conductor del Mes por tu excelente calificación y servicio. Como premio, tienes 1 mes de suscripción GRATIS en MoTaxi. ¡Sigue así!`,
+      now
+    ).run();
+
+    return c.json({ message: 'Driver of the month assigned and free month applied', driver_name: driver.full_name });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to assign driver of the month' }, 500);
+  }
+});
+
+/**
  * GET /admin/revenue
  * Ingresos por período
  */

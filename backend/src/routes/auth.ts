@@ -39,6 +39,19 @@ authRoutes.post('/register', async (c) => {
       return c.json({ error: 'Email or phone already registered' }, 409);
     }
 
+    // Verificar si el email está bloqueado (conductor con trial vencido sin pago)
+    if (role === 'driver') {
+      const blocked = await c.env.DB.prepare(
+        'SELECT id FROM blocked_emails WHERE email = ?'
+      ).bind(email.toLowerCase()).first();
+      if (blocked) {
+        return c.json({
+          error: 'Este email no puede registrarse como conductor. Tu período de prueba venció y no se realizó el pago. Contáctanos en admin@neurai.dev para regularizar tu situación.',
+          code: 'EMAIL_BLOCKED'
+        }, 403);
+      }
+    }
+
     // Hash de contraseña
     const passwordHash = await AuthUtils.hashPassword(password);
     const userId = uuidv4();

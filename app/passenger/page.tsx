@@ -312,23 +312,16 @@ export default function PassengerHomePage() {
     }
   }, []);
 
-  // Cargar conductores cercanos disponibles cada 15 segundos
+  // Cargar conductores cercanos disponibles cada 10 segundos
   useEffect(() => {
     if (!user || user.role !== "passenger") return;
 
     const fetchNearbyDrivers = async () => {
       try {
+        const { driversAPI } = await import("@/lib/api-client");
         const lat = currentLocation?.lat || 1.1656;
         const lng = currentLocation?.lng || -77.0;
-        const params = new URLSearchParams({
-          lat: String(lat),
-          lng: String(lng),
-        });
-        if (vehicleType) params.set("vehicle_type", vehicleType);
-        const API_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
-        const res = await fetch(`${API_URL}/drivers/nearby?${params}`);
-        const data = (await res.json()) as { drivers?: any[] };
+        const data = await driversAPI.getNearbyDrivers(lat, lng, vehicleType || undefined);
         setNearbyDrivers(data.drivers || []);
       } catch (error) {
         // Silencioso - no interrumpir la experiencia
@@ -336,7 +329,7 @@ export default function PassengerHomePage() {
     };
 
     fetchNearbyDrivers();
-    const interval = setInterval(fetchNearbyDrivers, 15000);
+    const interval = setInterval(fetchNearbyDrivers, 10000);
     return () => clearInterval(interval);
   }, [user, currentLocation?.lat, currentLocation?.lng, vehicleType]);
 

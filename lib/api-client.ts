@@ -245,9 +245,9 @@ export const driversAPI = {
     return response.data;
   },
 
-  getNearbyDrivers: async (lat: number, lng: number) => {
+  getNearbyDrivers: async (lat: number, lng: number, vehicle_type?: string) => {
     const response = await apiClient.get('/drivers/nearby', {
-      params: { lat, lng }
+      params: vehicle_type ? { lat, lng, vehicle_type } : { lat, lng }
     });
     return response.data;
   },

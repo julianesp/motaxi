@@ -33,14 +33,9 @@ export default function DriverHomePage() {
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
-  const [isPanelMinimized, setIsPanelMinimized] = useState(true);
+  const [isPanelMinimized, setIsPanelMinimized] = useState(false);
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
   const [rejectedTripIds, setRejectedTripIds] = useState<Set<string>>(new Set());
-  const [earnings, setEarnings] = useState({
-    today: 0,
-    week: 0,
-    month: 0,
-  });
 
   // Estado para ver la ruta de un viaje disponible
   const [selectedTripForMap, setSelectedTripForMap] = useState<any>(null);
@@ -207,7 +202,13 @@ export default function DriverHomePage() {
         const data = await tripsAPI.getActiveTrips();
         // Filtrar viajes rechazados localmente
         const filteredTrips = (data.trips || []).filter((trip: any) => !rejectedTripIds.has(trip.id));
-        setAvailableTrips(filteredTrips);
+        setAvailableTrips(prev => {
+          // Si llega una solicitud nueva, expandir el panel automáticamente
+          if (filteredTrips.length > prev.length) {
+            setIsPanelMinimized(false);
+          }
+          return filteredTrips;
+        });
       } catch (error) {
         console.error('Error fetching available trips:', error);
       }
@@ -627,9 +628,11 @@ export default function DriverHomePage() {
                     <span className="text-sm font-medium text-gray-600">
                       {isAvailable ? '🟢 Conectado' : '⚫ Desconectado'}
                     </span>
-                    <span className="text-sm text-gray-600">
-                      Hoy: <span className="font-bold text-[#008000]">${earnings.today.toLocaleString()}</span>
-                    </span>
+                    {isAvailable && availableTrips.length > 0 && (
+                      <span className="text-sm font-medium text-[#008000]">
+                        {availableTrips.length} {availableTrips.length === 1 ? 'solicitud' : 'solicitudes'}
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <div className="flex justify-center flex-1">
@@ -661,23 +664,6 @@ export default function DriverHomePage() {
 
               {!isPanelMinimized && (
                 <>
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Resumen de Ganancias</h2>
-
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600">Hoy</p>
-                      <p className="text-2xl font-bold text-[#008000]">${earnings.today.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600">Semana</p>
-                      <p className="text-2xl font-bold text-[#008000]">${earnings.week.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600">Mes</p>
-                      <p className="text-2xl font-bold text-[#008000]">${earnings.month.toLocaleString()}</p>
-                    </div>
-                  </div>
-
                   {!isAvailable && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
                       <p className="text-yellow-800">

@@ -104,9 +104,8 @@ export default function DriverHomePage() {
           // Si teníamos un viaje activo pero ya no existe en el backend, limpiarlo
           setActiveTrip(null);
         }
-      } catch (error) {
-        // No hay viaje activo o error
-        console.log('No active trip or error:', error);
+      } catch (error: any) {
+        console.error('checkActiveTrip error:', error?.response?.data || error?.message || error);
       }
     };
 

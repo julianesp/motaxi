@@ -12,7 +12,7 @@ tripRoutes.use('*', authMiddleware);
 tripRoutes.use('/active', subscriptionMiddleware);
 tripRoutes.use('/:id/accept', subscriptionMiddleware);
 tripRoutes.use('/:id/status', subscriptionMiddleware);
-tripRoutes.use('/current-driver', subscriptionMiddleware);
+// /current-driver NO requiere suscripción: el conductor debe poder ver su viaje asignado siempre
 
 /**
  * POST /trips

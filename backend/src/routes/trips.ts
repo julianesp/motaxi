@@ -784,7 +784,7 @@ tripRoutes.get('/:id', async (c) => {
     if (trip.driver_id) {
       // Obtener información del conductor (nombre, teléfono, rating, ubicación)
       const driver = await c.env.DB.prepare(
-        `SELECT u.full_name, u.phone, d.rating, d.vehicle_model, d.vehicle_color, d.vehicle_plate,
+        `SELECT u.full_name, u.phone, d.rating AS driver_avg_rating, d.vehicle_model, d.vehicle_color, d.vehicle_plate,
                 d.current_latitude, d.current_longitude
          FROM users u
          LEFT JOIN drivers d ON d.id = u.id
@@ -796,7 +796,7 @@ tripRoutes.get('/:id', async (c) => {
       if (driver) {
         tripWithDetails.driver_name = driver.full_name;
         tripWithDetails.driver_phone = driver.phone;
-        tripWithDetails.driver_rating = driver.rating;
+        tripWithDetails.driver_avg_rating = driver.driver_avg_rating;
         tripWithDetails.vehicle_model = driver.vehicle_model;
         tripWithDetails.vehicle_color = driver.vehicle_color;
         tripWithDetails.vehicle_plate = driver.vehicle_plate;

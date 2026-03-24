@@ -178,7 +178,7 @@ export default function DriverHomePage() {
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 30000, // Cachear por 30 segundos
+          maximumAge: 0, // Siempre pedir posición fresca al GPS
         }
       );
 

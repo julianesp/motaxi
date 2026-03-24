@@ -32,7 +32,8 @@ interface TripData {
   driver_id?: string;
   driver_name?: string;
   driver_phone?: string;
-  driver_rating?: number; // Rating promedio del conductor
+  driver_rating?: number; // Calificación que el pasajero dio en ESTE viaje (null = sin calificar)
+  driver_avg_rating?: number; // Rating promedio del conductor
   passenger_rating?: number; // Calificación que el conductor le dio al pasajero
   driver_comment?: string; // Comentario del pasajero sobre el conductor
   vehicle_model?: string;
@@ -133,17 +134,12 @@ export default function TripTrackingPage() {
           }
 
           // Si el viaje ya está completado al cargar la página:
-          // redirigir si el pasajero ya calificó al conductor (driver_rating existe)
-          // o si lleva más de 10 minutos completado (venció el tiempo para calificar)
+          // redirigir solo si el pasajero ya calificó este viaje (driver_rating != null)
           if (data.trip.status === 'completed') {
             const alreadyRated = data.trip.driver_rating != null;
-            const completedAt = (data.trip as any).completed_at;
-            const tenMinutesAgo = Math.floor(Date.now() / 1000) - 600;
-            if (alreadyRated || (completedAt && completedAt < tenMinutesAgo)) {
-              router.push('/passenger');
-            } else {
-              // Marcar como ya calificado si existe rating para que muestre el panel
-              if (alreadyRated) setIsRated(true);
+            if (alreadyRated) {
+              setIsRated(true);
+              setTimeout(() => router.push('/passenger'), 3000);
             }
           }
         }
@@ -362,7 +358,7 @@ export default function TripTrackingPage() {
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                       <span className="font-semibold text-gray-900">
-                        {trip.driver_rating ? trip.driver_rating.toFixed(1) : 'Sin calificar'}
+                        {trip.driver_avg_rating ? trip.driver_avg_rating.toFixed(1) : 'Sin calificar'}
                       </span>
                     </div>
                   </div>

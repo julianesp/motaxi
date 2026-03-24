@@ -115,13 +115,11 @@ export default function DriverHomePage() {
       }
     };
 
-    // Solo hacer polling si NO hay viaje activo
-    if (!activeTrip) {
-      checkActiveTrip();
-      const interval = setInterval(checkActiveTrip, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [user, activeTrip]);
+    // Siempre hacer polling para detectar cuando el pasajero acepta una oferta de precio
+    checkActiveTrip();
+    const interval = setInterval(checkActiveTrip, 5000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     // Cargar estado de disponibilidad desde el backend
@@ -763,9 +761,6 @@ export default function DriverHomePage() {
                                     try {
                                       const { tripsAPI } = await import('@/lib/api-client');
                                       await tripsAPI.acceptTrip(trip.id);
-
-                                      // Obtener información completa del viaje incluyendo datos del pasajero
-                                      const tripData = await tripsAPI.getTrip(trip.id);
 
                                       // Actualizar el viaje activo con los datos completos del viaje aceptado
                                       setActiveTrip({
@@ -1523,8 +1518,6 @@ export default function DriverHomePage() {
                           try {
                             const { tripsAPI } = await import('@/lib/api-client');
                             await tripsAPI.acceptTrip(selectedTripForMap.id);
-
-                            const tripData = await tripsAPI.getTrip(selectedTripForMap.id);
 
                             setActiveTrip({
                               id: selectedTripForMap.id,

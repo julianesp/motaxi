@@ -274,8 +274,7 @@ driverRoutes.get('/nearby', async (c) => {
     const lng = parseFloat(c.req.query('lng') || '0');
     const vehicleType = c.req.query('vehicle_type'); // 'moto' | 'carro' | undefined
 
-    let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'
-         AND d.current_latitude IS NOT NULL AND d.current_longitude IS NOT NULL`;
+    let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'`;
 
     // Filtrar por tipo de vehículo si se especifica
     if (vehicleType === 'moto') {
@@ -287,6 +286,7 @@ driverRoutes.get('/nearby', async (c) => {
     const drivers = await c.env.DB.prepare(
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
               d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
+              d.municipality,
               COALESCE(d.vehicle_types, 'moto') AS vehicle_types,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,
@@ -297,8 +297,11 @@ driverRoutes.get('/nearby', async (c) => {
     )
       .all();
 
-    // Calcular distancia y ordenar por proximidad (fórmula Haversine simplificada)
+    // Calcular distancia solo para conductores con ubicación conocida
     const driversWithDistance = (drivers.results || []).map((driver: any) => {
+      if (!driver.current_latitude || !driver.current_longitude) {
+        return { ...driver, distance_km: null };
+      }
       const dLat = ((driver.current_latitude - lat) * Math.PI) / 180;
       const dLng = ((driver.current_longitude - lng) * Math.PI) / 180;
       const a =
@@ -310,10 +313,15 @@ driverRoutes.get('/nearby', async (c) => {
       return { ...driver, distance_km: parseFloat(distance_km.toFixed(2)) };
     });
 
-    // Ordenar por distancia ascendente y limitar a 20 conductores
-    driversWithDistance.sort((a: any, b: any) => a.distance_km - b.distance_km);
+    // Primero los que tienen ubicación (ordenados por distancia), luego los sin ubicación
+    driversWithDistance.sort((a: any, b: any) => {
+      if (a.distance_km === null && b.distance_km === null) return 0;
+      if (a.distance_km === null) return 1;
+      if (b.distance_km === null) return -1;
+      return a.distance_km - b.distance_km;
+    });
 
-    return c.json({ drivers: driversWithDistance.slice(0, 20) });
+    return c.json({ drivers: driversWithDistance });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to get nearby drivers' }, 500);
   }

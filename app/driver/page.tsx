@@ -34,6 +34,7 @@ export default function DriverHomePage() {
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+  const [isActiveTripPanelMinimized, setIsActiveTripPanelMinimized] = useState(false);
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
   const [rejectedTripIds, setRejectedTripIds] = useState<Set<string>>(new Set());
 
@@ -881,15 +882,36 @@ export default function DriverHomePage() {
 
         {/* Active Trip Panel - Mostrar cuando hay un viaje activo */}
         {activeTrip && (
-          <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-t-3xl shadow-2xl z-20 max-h-[60vh] overflow-y-auto">
+          <div className={`absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-t-3xl shadow-2xl z-20 transition-all duration-300 ${
+            isActiveTripPanelMinimized ? 'h-[60px]' : 'max-h-[60vh] overflow-y-auto'
+          }`}>
             <div className="p-4 md:p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-800">Viaje Activo</h2>
-                <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                  En curso
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    {activeTrip.status === 'in_progress' ? 'En curso' : 'Aceptado'}
+                  </div>
+                  <button
+                    onClick={() => setIsActiveTripPanelMinimized(!isActiveTripPanelMinimized)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title={isActiveTripPanelMinimized ? "Expandir panel" : "Minimizar panel"}
+                  >
+                    <svg
+                      className={`w-5 h-5 text-gray-600 transition-transform duration-300 ${
+                        isActiveTripPanelMinimized ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
+              {!isActiveTripPanelMinimized && (<>
               {/* Información del Pasajero */}
               <div className="bg-gradient-to-r from-green-50 to-purple-50 border-2 border-green-200 rounded-xl p-4">
                 <div className="flex items-center mb-3">
@@ -1059,6 +1081,7 @@ export default function DriverHomePage() {
                   </button>
                 )}
               </div>
+              </>)}
             </div>
           </div>
         )}

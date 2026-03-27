@@ -131,16 +131,18 @@ export default function TripTrackingPage() {
             setTimeout(() => {
               router.push('/passenger');
             }, 3000);
+            return; // Detener polling
           }
 
-          // Si el viaje ya está completado al cargar la página:
-          // redirigir solo si el pasajero ya calificó este viaje (driver_rating != null)
+          // Si el viaje está completado, detener el polling
+          // Solo redirigir automáticamente si ya fue calificado previamente
           if (data.trip.status === 'completed') {
             const alreadyRated = data.trip.driver_rating != null;
             if (alreadyRated) {
               setIsRated(true);
               setTimeout(() => router.push('/passenger'), 3000);
             }
+            return; // Detener polling — no seguir actualizando mientras califica
           }
         }
       } catch (error) {

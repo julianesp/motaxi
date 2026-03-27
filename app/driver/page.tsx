@@ -39,7 +39,6 @@ export default function DriverHomePage() {
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
   const [rejectedTripIds, setRejectedTripIds] = useState<Set<string>>(new Set());
   const [pendingOfferTrip, setPendingOfferTrip] = useState<any>(null); // Viaje con oferta enviada esperando respuesta del pasajero
-  const pendingOfferTripRef = useRef<any>(null);
 
   // Estado para ver la ruta de un viaje disponible
   const [selectedTripForMap, setSelectedTripForMap] = useState<any>(null);
@@ -71,14 +70,10 @@ export default function DriverHomePage() {
     }
   }, [user, loading, router]);
 
-  // Mantener refs actualizados para usarlos en closures del polling
+  // Mantener ref actualizado con activeTrip para usarlo en closures
   useEffect(() => {
     activeTripRef.current = activeTrip;
   }, [activeTrip]);
-
-  useEffect(() => {
-    pendingOfferTripRef.current = pendingOfferTrip;
-  }, [pendingOfferTrip]);
 
   // Verificar si el conductor tiene un viaje activo asignado
   useEffect(() => {
@@ -89,11 +84,10 @@ export default function DriverHomePage() {
         const { tripsAPI } = await import('@/lib/api-client');
 
         // Si hay oferta pendiente, verificar directamente ese viaje por su ID
-        const pendingTrip = pendingOfferTripRef.current;
-        if (pendingTrip) {
-          const tripData = await tripsAPI.getTrip(pendingTrip.id);
-          if (tripData.trip && tripData.trip.status === 'accepted' && tripData.trip.driver_id) {
-            // Usar getCurrentDriverTrip para obtener passenger_name y passenger_phone
+        if (pendingOfferTrip) {
+          const tripData = await tripsAPI.getTrip(pendingOfferTrip.id);
+          if (tripData.trip && tripData.trip.status === 'accepted') {
+            // El pasajero aceptó — obtener datos completos con passenger_name/phone
             const currentData = await tripsAPI.getCurrentDriverTrip();
             if (currentData.trip) {
               const trip = currentData.trip;
@@ -120,12 +114,14 @@ export default function DriverHomePage() {
               return;
             }
           }
+          // Oferta todavía pendiente, no hacer más consultas este ciclo
+          return;
         }
 
+        // Sin oferta pendiente: buscar viaje activo normalmente
         const data = await tripsAPI.getCurrentDriverTrip();
 
         if (data.trip) {
-          // El conductor tiene un viaje activo
           const trip = data.trip;
           setActiveTrip({
             id: trip.id,
@@ -145,12 +141,8 @@ export default function DriverHomePage() {
             passengerPhone: trip.passenger_phone,
             status: trip.status,
           });
-
-          // Limpiar viajes disponibles y oferta pendiente
           setAvailableTrips([]);
-          setPendingOfferTrip(null);
         } else if (activeTripRef.current && !data.trip) {
-          // Si teníamos un viaje activo pero ya no existe en el backend, limpiarlo
           setActiveTrip(null);
         }
       } catch (error: any) {
@@ -158,11 +150,10 @@ export default function DriverHomePage() {
       }
     };
 
-    // Siempre hacer polling para detectar cuando el pasajero acepta una oferta de precio
     checkActiveTrip();
     const interval = setInterval(checkActiveTrip, 2000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, pendingOfferTrip]);
 
   useEffect(() => {
     // Cargar estado de disponibilidad desde el backend

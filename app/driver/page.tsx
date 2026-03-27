@@ -38,6 +38,7 @@ export default function DriverHomePage() {
   const [isActiveTripPanelMinimized, setIsActiveTripPanelMinimized] = useState(false);
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
   const [rejectedTripIds, setRejectedTripIds] = useState<Set<string>>(new Set());
+  const [pendingOfferTrip, setPendingOfferTrip] = useState<any>(null); // Viaje con oferta enviada esperando respuesta del pasajero
 
   // Estado para ver la ruta de un viaje disponible
   const [selectedTripForMap, setSelectedTripForMap] = useState<any>(null);
@@ -84,7 +85,7 @@ export default function DriverHomePage() {
         const data = await tripsAPI.getCurrentDriverTrip();
 
         if (data.trip) {
-          // El conductor tiene un viaje activo que no está mostrando
+          // El conductor tiene un viaje activo
           const trip = data.trip;
           setActiveTrip({
             id: trip.id,
@@ -105,8 +106,9 @@ export default function DriverHomePage() {
             status: trip.status,
           });
 
-          // Limpiar viajes disponibles solo si hay un viaje activo
+          // Limpiar viajes disponibles y oferta pendiente
           setAvailableTrips([]);
+          setPendingOfferTrip(null);
         } else if (activeTripRef.current && !data.trip) {
           // Si teníamos un viaje activo pero ya no existe en el backend, limpiarlo
           setActiveTrip(null);
@@ -678,7 +680,31 @@ export default function DriverHomePage() {
                     </div>
                   )}
 
-                  {isAvailable && availableTrips.length === 0 && (
+                  {isAvailable && availableTrips.length === 0 && pendingOfferTrip && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-blue-800 font-medium text-center mb-2">Oferta enviada — esperando respuesta del pasajero</p>
+                      <div className="text-sm text-blue-700 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full shrink-0"></div>
+                          <p className="line-clamp-1">{pendingOfferTrip.pickup_address}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full shrink-0"></div>
+                          <p className="line-clamp-1">{pendingOfferTrip.dropoff_address}</p>
+                        </div>
+                        <p className="text-center font-bold text-blue-900 mt-2">Tu oferta: ${pendingOfferTrip.offeredPrice?.toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center justify-center mt-3">
+                        <div className="animate-pulse flex space-x-2">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isAvailable && availableTrips.length === 0 && !pendingOfferTrip && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
                       <p className="text-green-800 font-medium">Esperando solicitudes de viaje...</p>
                       <div className="flex items-center justify-center mt-2">
@@ -845,16 +871,16 @@ export default function DriverHomePage() {
                                       await Swal.fire({
                                         icon: 'success',
                                         title: 'Oferta enviada',
-                                        text: `Tu oferta de $${customPrice.toLocaleString()} ha sido enviada al pasajero.`,
+                                        text: `Tu oferta de $${customPrice.toLocaleString()} ha sido enviada al pasajero. Esperando respuesta...`,
                                         confirmButtonColor: '#10b981',
                                         timer: 3000,
                                         timerProgressBar: true,
                                       });
 
-                                      // Actualizar el precio en la lista local
-                                      setAvailableTrips(prev => prev.map(t =>
-                                        t.id === trip.id ? { ...t, fare: customPrice, hasCustomOffer: true } : t
-                                      ));
+                                      // Mover el viaje a "pendiente de respuesta" y quitarlo de disponibles
+                                      // Cuando el pasajero acepte, el polling lo convertirá en activeTrip
+                                      setPendingOfferTrip({ ...trip, offeredPrice: customPrice });
+                                      setAvailableTrips(prev => prev.filter(t => t.id !== trip.id));
                                     } catch (error: any) {
                                       console.error('Error sending custom price:', error);
                                       const errorMessage = error?.response?.data?.error || error?.message || 'No se pudo enviar la oferta. Intenta nuevamente.';

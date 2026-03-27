@@ -14,18 +14,18 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   manifest: "/manifest.json",
-  title: "MoTaxi - Transporte Rápido y Desde la Comodidad de tu Hogar",
+  title: "MoTaxi - Transporte Desde la Comodidad de tu Hogar",
   description:
-    "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación actual",
+    "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación",
   icons: {
     icon: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
     apple:
       "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
   },
   openGraph: {
-    title: "MoTaxi - Transporte Rápido y Desde la Comodidad de tu Hogar",
+    title: "MoTaxi - Transporte Desde la Comodidad de tu Hogar",
     description:
-      "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación actual",
+      "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación",
     url: "https://motaxi.dev",
     siteName: "MoTaxi",
     images: [
@@ -41,9 +41,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "MoTaxi - Transporte Rápido y Desde la Comodidad de tu Hogar",
+    title: "MoTaxi - Transporte Desde la Comodidad de tu Hogar",
     description:
-      "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación actual",
+      "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación",
     images: [
       "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
     ],

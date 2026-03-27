@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useSubscription } from '@/lib/hooks/useSubscription';
@@ -33,6 +33,7 @@ export default function DriverHomePage() {
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
+  const activeTripRef = useRef<any>(null);
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
   const [isActiveTripPanelMinimized, setIsActiveTripPanelMinimized] = useState(false);
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
@@ -68,6 +69,11 @@ export default function DriverHomePage() {
     }
   }, [user, loading, router]);
 
+  // Mantener ref actualizado con el activeTrip para usarlo en closures del polling
+  useEffect(() => {
+    activeTripRef.current = activeTrip;
+  }, [activeTrip]);
+
   // Verificar si el conductor tiene un viaje activo asignado
   useEffect(() => {
     const checkActiveTrip = async () => {
@@ -101,7 +107,7 @@ export default function DriverHomePage() {
 
           // Limpiar viajes disponibles solo si hay un viaje activo
           setAvailableTrips([]);
-        } else if (activeTrip && !data.trip) {
+        } else if (activeTripRef.current && !data.trip) {
           // Si teníamos un viaje activo pero ya no existe en el backend, limpiarlo
           setActiveTrip(null);
         }
@@ -112,7 +118,7 @@ export default function DriverHomePage() {
 
     // Siempre hacer polling para detectar cuando el pasajero acepta una oferta de precio
     checkActiveTrip();
-    const interval = setInterval(checkActiveTrip, 5000);
+    const interval = setInterval(checkActiveTrip, 2000);
     return () => clearInterval(interval);
   }, [user]);
 

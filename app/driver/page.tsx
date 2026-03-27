@@ -39,6 +39,7 @@ export default function DriverHomePage() {
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
   const [rejectedTripIds, setRejectedTripIds] = useState<Set<string>>(new Set());
   const [pendingOfferTrip, setPendingOfferTrip] = useState<any>(null); // Viaje con oferta enviada esperando respuesta del pasajero
+  const pendingOfferTripRef = useRef<any>(null);
 
   // Estado para ver la ruta de un viaje disponible
   const [selectedTripForMap, setSelectedTripForMap] = useState<any>(null);
@@ -70,10 +71,14 @@ export default function DriverHomePage() {
     }
   }, [user, loading, router]);
 
-  // Mantener ref actualizado con el activeTrip para usarlo en closures del polling
+  // Mantener refs actualizados para usarlos en closures del polling
   useEffect(() => {
     activeTripRef.current = activeTrip;
   }, [activeTrip]);
+
+  useEffect(() => {
+    pendingOfferTripRef.current = pendingOfferTrip;
+  }, [pendingOfferTrip]);
 
   // Verificar si el conductor tiene un viaje activo asignado
   useEffect(() => {
@@ -82,6 +87,41 @@ export default function DriverHomePage() {
 
       try {
         const { tripsAPI } = await import('@/lib/api-client');
+
+        // Si hay oferta pendiente, verificar directamente ese viaje por su ID
+        const pendingTrip = pendingOfferTripRef.current;
+        if (pendingTrip) {
+          const tripData = await tripsAPI.getTrip(pendingTrip.id);
+          if (tripData.trip && tripData.trip.status === 'accepted' && tripData.trip.driver_id) {
+            // Usar getCurrentDriverTrip para obtener passenger_name y passenger_phone
+            const currentData = await tripsAPI.getCurrentDriverTrip();
+            if (currentData.trip) {
+              const trip = currentData.trip;
+              setActiveTrip({
+                id: trip.id,
+                pickup: {
+                  lat: trip.pickup_latitude,
+                  lng: trip.pickup_longitude,
+                  address: trip.pickup_address,
+                },
+                destination: {
+                  lat: trip.dropoff_latitude,
+                  lng: trip.dropoff_longitude,
+                  address: trip.dropoff_address,
+                },
+                fare: trip.fare,
+                distance: trip.distance_km,
+                passengerName: trip.passenger_name,
+                passengerPhone: trip.passenger_phone,
+                status: trip.status,
+              });
+              setAvailableTrips([]);
+              setPendingOfferTrip(null);
+              return;
+            }
+          }
+        }
+
         const data = await tripsAPI.getCurrentDriverTrip();
 
         if (data.trip) {

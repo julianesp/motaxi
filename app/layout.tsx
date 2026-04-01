@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
-import { ClerkProvider } from "@clerk/nextjs";
-import { esES } from "@clerk/localizations";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import Footer from "@/components/Footer/page";
 import Script from "next/script";
 import OpenInBrowser from "@/components/OpenInBrowser";
@@ -56,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider localization={esES}>
+    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
       <html lang="es">
         <body className={inter.className}>
           <Analytics />
@@ -70,6 +69,6 @@ export default function RootLayout({
           />
         </body>
       </html>
-    </ClerkProvider>
+    </GoogleOAuthProvider>
   );
 }

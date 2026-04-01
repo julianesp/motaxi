@@ -5,15 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { UserRole } from "@/lib/types";
-import { SignUp, useSignUp, useClerk } from "@clerk/nextjs";
+import { GoogleLogin } from "@react-oauth/google";
 import Navbar from "@/components/Navbar/page";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { register } = useAuth();
-  const { isLoaded } = useSignUp();
-  const clerk = useClerk();
+  const { register, loginWithGoogle } = useAuth();
 
   const roleParam = searchParams.get("role") as UserRole | null;
 
@@ -28,19 +26,6 @@ function RegisterForm() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [useClerkAuth, setUseClerkAuth] = useState(false);
-
-  // Cerrar sesión de Clerk al cambiar a modo social
-  const handleToggleClerk = async (value: boolean) => {
-    if (value) {
-      try {
-        await clerk.signOut();
-      } catch (err) {
-        console.log("No active Clerk session to sign out");
-      }
-    }
-    setUseClerkAuth(value);
-  };
 
   useEffect(() => {
     if (!roleParam) {
@@ -59,7 +44,6 @@ function RegisterForm() {
     e.preventDefault();
     setError("");
 
-    // Validaciones
     if (formData.password !== formData.confirmPassword) {
       setError("Las contraseñas no coinciden");
       return;
@@ -86,33 +70,31 @@ function RegisterForm() {
         role: formData.role,
       });
 
-      // El AuthContext y el componente HomePage manejarán la redirección
       router.push("/");
     } catch (err: any) {
       console.error("Register error:", err);
 
-      // Manejo específico de errores según el código de respuesta
       if (err.response?.status === 409) {
-        setError(
-          "Este correo electrónico o número de teléfono ya está registrado. Por favor, usa otros datos o inicia sesión.",
-        );
+        setError("Este correo electrónico o número de teléfono ya está registrado. Por favor, usa otros datos o inicia sesión.");
       } else if (err.response?.status === 400) {
-        setError(
-          err.response?.data?.error ||
-            "Datos inválidos. Por favor, verifica la información ingresada.",
-        );
+        setError(err.response?.data?.error || "Datos inválidos. Por favor, verifica la información ingresada.");
       } else if (err.response?.status === 500) {
-        setError(
-          "Error del servidor. Por favor, intenta nuevamente más tarde.",
-        );
+        setError("Error del servidor. Por favor, intenta nuevamente más tarde.");
       } else {
-        setError(
-          err.response?.data?.error ||
-            "Error al registrar. Por favor, verifica tus datos e intenta nuevamente.",
-        );
+        setError(err.response?.data?.error || "Error al registrar. Por favor, verifica tus datos e intenta nuevamente.");
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError("");
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+      router.push("/");
+    } catch (err: any) {
+      setError("Error al registrarse con Google. Intenta nuevamente.");
     }
   };
 
@@ -132,47 +114,15 @@ function RegisterForm() {
             <h1 className="text-4xl font-bold text-green-400 mb-2">MoTaxi</h1>
             <h2 className="text-2xl font-semibold text-white">Crear Cuenta</h2>
             <p className="mt-2 text-gray-300">
-              {!useClerkAuth &&
-                `Regístrate como ${formData.role === "passenger" ? "Pasajero" : "Conductor"}`}
-              {useClerkAuth && "Elige cómo quieres registrarte"}
+              Regístrate como {formData.role === "passenger" ? "Pasajero" : "Conductor"}
             </p>
-          </div>
-
-          {/* Toggle entre métodos de registro */}
-          <div className="flex gap-2 bg-gray-800 p-1 rounded-lg">
-            <button
-              type="button"
-              onClick={() => handleToggleClerk(false)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                !useClerkAuth
-                  ? "bg-green-600 text-white shadow-lg"
-                  : "text-gray-300 hover:text-white"
-              }`}
-            >
-              Formulario
-            </button>
-            <button
-              type="button"
-              onClick={() => handleToggleClerk(true)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                useClerkAuth
-                  ? "bg-green-600 text-white shadow-lg"
-                  : "text-gray-300 hover:text-white"
-              }`}
-            >
-              Registro Social
-            </button>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg shadow-md animate-shake">
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg shadow-md">
               <div className="flex items-start">
-                <svg
-                  className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
+                <svg className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -184,170 +134,141 @@ function RegisterForm() {
             </div>
           )}
 
-          {/* Clerk SignUp Component */}
-          {useClerkAuth && isLoaded ? (
-            <div className="mt-6">
-              <SignUp
-                appearance={{
-                  elements: {
-                    rootBox: "w-full",
-                    card: "shadow-none",
-                    formButtonPrimary: "bg-[#008000] hover:bg-[#006600]",
-                  },
-                  layout: {
-                    socialButtonsPlacement: "top",
-                    socialButtonsVariant: "blockButton",
-                  },
-                }}
-                signInUrl="/auth/login"
+          {/* Botón Google */}
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Error al registrarse con Google.")}
+              text="signup_with"
+              shape="rectangular"
+              width="360"
+            />
+          </div>
+
+          {/* Divisor */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-600" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-900 text-gray-400">O regístrate con formulario</span>
+            </div>
+          </div>
+
+          {/* Register Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="full_name" className="block text-sm font-medium text-gray-300 mb-1">
+                Nombre Completo
+              </label>
+              <input
+                id="full_name"
+                name="full_name"
+                type="text"
+                value={formData.full_name}
+                onChange={handleChange}
+                required
+                className="input text-black"
+                placeholder="Juan Pérez"
               />
             </div>
-          ) : null}
 
-          {/* Register Form tradicional */}
-          {!useClerkAuth && (
-            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-              <div>
-                <label
-                  htmlFor="full_name"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  Nombre Completo
-                </label>
-                <input
-                  id="full_name"
-                  name="full_name"
-                  type="text"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  required
-                  className="input text-black"
-                  placeholder="Juan Pérez"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  Correo Electrónico
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="input text-black"
-                  placeholder="tu@email.com"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  Teléfono
-                </label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="input text-black"
-                  placeholder="3001234567"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  Contraseña
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="input text-black"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  Confirmar Contraseña
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="input text-black"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <div className="flex items-start">
-                <input
-                  id="terms"
-                  type="checkbox"
-                  required
-                  className="h-4 w-4 text-[#008000] focus:ring-green-500 border-gray-300 rounded mt-1"
-                />
-                <label
-                  htmlFor="terms"
-                  className="ml-2 block text-sm text-gray-300"
-                >
-                  Acepto los{" "}
-                  <a href="#" className="text-[#008000] hover:text-green-500">
-                    términos y condiciones
-                  </a>{" "}
-                  y la{" "}
-                  <a href="#" className="text-[#008000] hover:text-green-500">
-                    política de privacidad
-                  </a>
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Creando cuenta..." : "Crear Cuenta"}
-              </button>
-            </form>
-          )}
-
-          {/* Login Link - Solo mostrar en modo tradicional */}
-          {!useClerkAuth && (
-            <div className="text-center">
-              <p className="text-gray-600">
-                ¿Ya tienes una cuenta?{" "}
-                <Link
-                  href="/auth/login"
-                  className="font-medium text-[#008000] hover:text-green-500"
-                >
-                  Inicia sesión
-                </Link>
-              </p>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+                Correo Electrónico
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="input text-black"
+                placeholder="tu@email.com"
+              />
             </div>
-          )}
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-1">
+                Teléfono
+              </label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="input text-black"
+                placeholder="3001234567"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                Contraseña
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="input text-black"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                Confirmar Contraseña
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="input text-black"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div className="flex items-start">
+              <input
+                id="terms"
+                type="checkbox"
+                required
+                className="h-4 w-4 text-[#008000] focus:ring-green-500 border-gray-300 rounded mt-1"
+              />
+              <label htmlFor="terms" className="ml-2 block text-sm text-gray-300">
+                Acepto los{" "}
+                <a href="#" className="text-[#008000] hover:text-green-500">términos y condiciones</a>{" "}
+                y la{" "}
+                <a href="#" className="text-[#008000] hover:text-green-500">política de privacidad</a>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Creando cuenta..." : "Crear Cuenta"}
+            </button>
+          </form>
+
+          <div className="text-center">
+            <p className="text-gray-600">
+              ¿Ya tienes una cuenta?{" "}
+              <Link href="/auth/login" className="font-medium text-[#008000] hover:text-green-500">
+                Inicia sesión
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

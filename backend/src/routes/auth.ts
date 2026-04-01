@@ -164,6 +164,71 @@ authRoutes.post('/login', async (c) => {
 });
 
 /**
+ * POST /auth/google
+ * Iniciar sesión o registrarse con Google OAuth
+ */
+authRoutes.post('/google', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { credential } = body;
+
+    if (!credential) {
+      return c.json({ error: 'Google credential required' }, 400);
+    }
+
+    // Verificar el token de Google
+    const googleResponse = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
+    );
+
+    if (!googleResponse.ok) {
+      return c.json({ error: 'Invalid Google token' }, 401);
+    }
+
+    const googleData: any = await googleResponse.json();
+
+    if (!googleData.email || !googleData.sub) {
+      return c.json({ error: 'Invalid Google token data' }, 401);
+    }
+
+    const { email, name, sub: googleId } = googleData;
+
+    // Buscar si ya existe el usuario
+    let user: any = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE email = ?'
+    ).bind(email).first();
+
+    if (!user) {
+      // Crear nuevo usuario con Google (role: passenger por defecto)
+      const userId = uuidv4();
+      const full_name = name || email.split('@')[0];
+      const phone = `G-${googleId.substring(0, 9)}`; // placeholder único
+
+      await c.env.DB.prepare(
+        'INSERT INTO users (id, email, password_hash, phone, full_name, role) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(userId, email, '', phone, full_name, 'passenger').run();
+
+      await c.env.DB.prepare('INSERT INTO passengers (id) VALUES (?)')
+        .bind(userId).run();
+
+      user = await c.env.DB.prepare(
+        'SELECT id, email, phone, full_name, role, created_at FROM users WHERE id = ?'
+      ).bind(userId).first();
+    }
+
+    const { password_hash, ...userWithoutPassword } = user;
+
+    // Crear sesión
+    const { token, expiresAt } = await AuthUtils.createSession(c.env.DB, user.id as string);
+
+    return c.json({ user: userWithoutPassword, token, expiresAt });
+  } catch (error: any) {
+    console.error('Google auth error:', error);
+    return c.json({ error: error.message || 'Google authentication failed' }, 500);
+  }
+});
+
+/**
  * POST /auth/forgot-password
  * Solicitar recuperación de contraseña
  */

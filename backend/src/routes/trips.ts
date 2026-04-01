@@ -768,7 +768,12 @@ tripRoutes.get('/:id', async (c) => {
     const user = c.get('user');
     const tripId = c.req.param('id');
 
-    const trip = await c.env.DB.prepare('SELECT * FROM trips WHERE id = ?')
+    const trip = await c.env.DB.prepare(
+      `SELECT t.*, u.full_name as passenger_name, u.phone as passenger_phone
+       FROM trips t
+       JOIN users u ON t.passenger_id = u.id
+       WHERE t.id = ?`
+    )
       .bind(tripId)
       .first();
 

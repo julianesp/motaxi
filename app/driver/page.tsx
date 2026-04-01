@@ -87,32 +87,29 @@ export default function DriverHomePage() {
         if (pendingOfferTrip) {
           const tripData = await tripsAPI.getTrip(pendingOfferTrip.id);
           if (tripData.trip && tripData.trip.status === 'accepted') {
-            // El pasajero aceptó — obtener datos completos con passenger_name/phone
-            const currentData = await tripsAPI.getCurrentDriverTrip();
-            if (currentData.trip) {
-              const trip = currentData.trip;
-              setActiveTrip({
-                id: trip.id,
-                pickup: {
-                  lat: trip.pickup_latitude,
-                  lng: trip.pickup_longitude,
-                  address: trip.pickup_address,
-                },
-                destination: {
-                  lat: trip.dropoff_latitude,
-                  lng: trip.dropoff_longitude,
-                  address: trip.dropoff_address,
-                },
-                fare: trip.fare,
-                distance: trip.distance_km,
-                passengerName: trip.passenger_name,
-                passengerPhone: trip.passenger_phone,
-                status: trip.status,
-              });
-              setAvailableTrips([]);
-              setPendingOfferTrip(null);
-              return;
-            }
+            // El pasajero aceptó — usar los datos del viaje directamente
+            const trip = tripData.trip;
+            setActiveTrip({
+              id: trip.id,
+              pickup: {
+                lat: trip.pickup_latitude,
+                lng: trip.pickup_longitude,
+                address: trip.pickup_address,
+              },
+              destination: {
+                lat: trip.dropoff_latitude,
+                lng: trip.dropoff_longitude,
+                address: trip.dropoff_address,
+              },
+              fare: trip.fare,
+              distance: trip.distance_km,
+              passengerName: trip.passenger_name,
+              passengerPhone: trip.passenger_phone,
+              status: trip.status,
+            });
+            setAvailableTrips([]);
+            setPendingOfferTrip(null);
+            return;
           }
           // Oferta todavía pendiente, no hacer más consultas este ciclo
           return;

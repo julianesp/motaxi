@@ -787,6 +787,19 @@ export default function DriverHomePage() {
                               </div>
                             )}
 
+                            {/* Badge de envío de paquete */}
+                            {trip.trip_type === 'delivery' && (
+                              <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 mb-3">
+                                <span className="text-lg">📦</span>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-xs font-bold text-orange-700 uppercase tracking-wide">Envío de paquete</span>
+                                  {trip.delivery_note && (
+                                    <p className="text-xs text-orange-600 mt-0.5 line-clamp-2">{trip.delivery_note}</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center mb-2">

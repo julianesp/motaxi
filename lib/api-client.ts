@@ -146,8 +146,10 @@ export const tripsAPI = {
     dropoff_longitude: number;
     dropoff_address: string;
     distance_km: number;
-    estimated_fare: number; // Precio estimado calculado en frontend
-    preferred_driver_id?: string; // Conductor preferido seleccionado por el pasajero
+    estimated_fare: number;
+    preferred_driver_id?: string;
+    trip_type?: 'ride' | 'delivery';
+    delivery_note?: string;
   }) => {
     const response = await apiClient.post('/trips', tripData);
     return response.data;

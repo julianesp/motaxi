@@ -32,6 +32,8 @@ tripRoutes.post('/', async (c) => {
       dropoff_address,
       distance_km,
       estimated_fare, // Precio estimado calculado por el frontend
+      trip_type = 'ride', // 'ride' o 'delivery'
+      delivery_note,      // Nota/descripción del paquete (solo para delivery)
     } = body;
 
     if (user.role !== 'passenger') {
@@ -44,8 +46,9 @@ tripRoutes.post('/', async (c) => {
     await c.env.DB.prepare(
       `INSERT INTO trips (
         id, passenger_id, pickup_latitude, pickup_longitude, pickup_address,
-        dropoff_latitude, dropoff_longitude, dropoff_address, fare, distance_km, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested')`
+        dropoff_latitude, dropoff_longitude, dropoff_address, fare, distance_km, status,
+        trip_type, delivery_note
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?)`
     )
       .bind(
         tripId,
@@ -56,8 +59,10 @@ tripRoutes.post('/', async (c) => {
         dropoff_latitude,
         dropoff_longitude,
         dropoff_address,
-        estimated_fare || 0, // Usar estimated_fare o 0 si no viene
-        distance_km
+        estimated_fare || 0,
+        distance_km,
+        trip_type,
+        delivery_note || null
       )
       .run();
 
@@ -77,8 +82,9 @@ tripRoutes.post('/', async (c) => {
 
         const subscriptions = pushSubs.results || [];
         const fareStr = estimated_fare ? `$${Number(estimated_fare).toLocaleString('es-CO')}` : '';
+        const isDelivery = trip_type === 'delivery';
         const notifPayload = {
-          title: '¡Nueva solicitud de viaje!',
+          title: isDelivery ? '📦 ¡Nueva solicitud de envío!' : '🏍️ ¡Nueva solicitud de viaje!',
           body: `${pickup_address}${fareStr ? ' · ' + fareStr : ''}`,
           data: { type: 'new_trip', tripId },
           icon: '/logo.png',

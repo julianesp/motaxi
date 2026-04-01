@@ -173,6 +173,10 @@ export default function PassengerHomePage() {
   const [vehicleType, setVehicleType] = useState<"moto" | "carro" | null>(null);
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
+  // Modo de solicitud: viaje normal o envío de paquete
+  const [tripMode, setTripMode] = useState<"ride" | "delivery">("ride");
+  const [deliveryNote, setDeliveryNote] = useState("");
+
   // Estado para conductores disponibles y favoritos
   const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<NearbyDriver | null>(
@@ -655,16 +659,20 @@ export default function PassengerHomePage() {
         dropoff_address: destination.address,
         distance_km: parseFloat(distance.toFixed(2)),
         estimated_fare: estimatedFare,
+        trip_type: tripMode,
+        ...(tripMode === "delivery" && deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
         ...(selectedDriver ? { preferred_driver_id: selectedDriver.id } : {}),
       });
 
       // Éxito: solicitud creada
       await Swal.fire({
         icon: "success",
-        title: "¡Solicitud enviada!",
-        text: "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
+        title: tripMode === "delivery" ? "¡Envío solicitado!" : "¡Solicitud enviada!",
+        text: tripMode === "delivery"
+          ? "Tu solicitud de envío está visible en el tablero de conductores. Un conductor irá a recoger el paquete."
+          : "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
         confirmButtonColor: "#008000",
-        confirmButtonText: "Seguir viaje",
+        confirmButtonText: tripMode === "delivery" ? "Seguir envío" : "Seguir viaje",
         timer: 3000,
         timerProgressBar: true,
       });
@@ -1026,8 +1034,36 @@ export default function PassengerHomePage() {
 
             {!isPanelMinimized && (
               <>
+                {/* Toggle: Viaje normal vs Envío de paquete */}
+                <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setTripMode("ride")}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                      tripMode === "ride"
+                        ? "bg-white text-[#008000] shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <span>🏍️</span>
+                    <span>Viaje</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTripMode("delivery")}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                      tripMode === "delivery"
+                        ? "bg-white text-orange-600 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <span>📦</span>
+                    <span>Envío</span>
+                  </button>
+                </div>
+
                 <h2 className="text-lg font-bold text-gray-800 mb-1">
-                  ¿A dónde vas?
+                  {tripMode === "delivery" ? "¿A dónde va el paquete?" : "¿A dónde vas?"}
                 </h2>
 
                 {/* Selector de tipo de vehículo */}
@@ -1227,6 +1263,25 @@ export default function PassengerHomePage() {
                       : "🗺️ Seleccionar en el mapa"}
                   </button>
                 </div>
+
+                {/* Campo de nota para envío de paquete */}
+                {tripMode === "delivery" && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-orange-500">📦</span>
+                      <span className="text-sm font-semibold text-orange-700">Detalles del paquete</span>
+                    </div>
+                    <textarea
+                      value={deliveryNote}
+                      onChange={(e) => setDeliveryNote(e.target.value)}
+                      placeholder="Ej: Caja pequeña de ropa, llama al llegar · Nombre del destinatario: Juan · Frágil"
+                      rows={3}
+                      maxLength={300}
+                      className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none placeholder-gray-400"
+                    />
+                    <p className="text-xs text-gray-400 text-right">{deliveryNote.length}/300</p>
+                  </div>
+                )}
 
                 {/* Botón para guardar destino como favorito */}
                 {destination.latitude && destination.longitude && (
@@ -1444,6 +1499,8 @@ export default function PassengerHomePage() {
                       </svg>
                       <span>Solicitando...</span>
                     </span>
+                  ) : tripMode === "delivery" ? (
+                    "📦 Solicitar envío"
                   ) : vehicleType === "carro" ? (
                     "🚗 Solicitar carro"
                   ) : vehicleType === "moto" ? (

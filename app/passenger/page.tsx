@@ -1062,6 +1062,16 @@ export default function PassengerHomePage() {
                   </button>
                 </div>
 
+                {/* Explicación del modo envío */}
+                {tripMode === "delivery" && (
+                  <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 text-xs text-orange-700">
+                    <span className="shrink-0 mt-0.5">ℹ️</span>
+                    <span>
+                      El conductor <strong>no lleva pasajero</strong>. Irá a recoger tu paquete y lo entregará en el destino indicado.
+                    </span>
+                  </div>
+                )}
+
                 <h2 className="text-lg font-bold text-gray-800 mb-1">
                   {tripMode === "delivery" ? "¿A dónde va el paquete?" : "¿A dónde vas?"}
                 </h2>

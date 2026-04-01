@@ -87,28 +87,32 @@ export default function DriverHomePage() {
         if (pendingOfferTrip) {
           const tripData = await tripsAPI.getTrip(pendingOfferTrip.id);
           if (tripData.trip && tripData.trip.status === 'accepted') {
-            // El pasajero aceptó — usar los datos del viaje directamente
-            const trip = tripData.trip;
-            setActiveTrip({
-              id: trip.id,
-              pickup: {
-                lat: trip.pickup_latitude,
-                lng: trip.pickup_longitude,
-                address: trip.pickup_address,
-              },
-              destination: {
-                lat: trip.dropoff_latitude,
-                lng: trip.dropoff_longitude,
-                address: trip.dropoff_address,
-              },
-              fare: trip.fare,
-              distance: trip.distance_km,
-              passengerName: trip.passenger_name,
-              passengerPhone: trip.passenger_phone,
-              status: trip.status,
-            });
-            setAvailableTrips([]);
-            setPendingOfferTrip(null);
+            // El pasajero aceptó — obtener datos completos con passenger_name/phone
+            const currentData = await tripsAPI.getCurrentDriverTrip();
+            if (currentData.trip) {
+              const trip = currentData.trip;
+              setActiveTrip({
+                id: trip.id,
+                pickup: {
+                  lat: trip.pickup_latitude,
+                  lng: trip.pickup_longitude,
+                  address: trip.pickup_address,
+                },
+                destination: {
+                  lat: trip.dropoff_latitude,
+                  lng: trip.dropoff_longitude,
+                  address: trip.dropoff_address,
+                },
+                fare: trip.fare,
+                distance: trip.distance_km,
+                passengerName: trip.passenger_name,
+                passengerPhone: trip.passenger_phone,
+                status: trip.status,
+              });
+              setAvailableTrips([]);
+              setPendingOfferTrip(null);
+            }
+            // Si getCurrentDriverTrip aún no refleja el viaje, reintenta en el próximo ciclo
             return;
           }
           // Oferta todavía pendiente, no hacer más consultas este ciclo
@@ -997,10 +1001,10 @@ export default function DriverHomePage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Nombre:</span>
-                    <span className="font-semibold text-gray-900">{activeTrip.passengerName || 'N/A'}</span>
+                    <span className="font-semibold text-gray-900">{activeTrip.passengerName || 'Pasajero'}</span>
                   </div>
 
-                  {activeTrip.passengerPhone && (
+                  {activeTrip.passengerPhone ? (
                     <>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-600">Teléfono:</span>
@@ -1038,6 +1042,10 @@ export default function DriverHomePage() {
                         </div>
                       </div>
                     </>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic pt-1">
+                      El pasajero no registró número de teléfono
+                    </p>
                   )}
                 </div>
               </div>

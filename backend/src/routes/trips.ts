@@ -781,10 +781,17 @@ tripRoutes.get('/:id', async (c) => {
       return c.json({ error: 'Trip not found' }, 404);
     }
 
-    // Verificar permisos
+    // Verificar permisos: pasajero, conductor asignado, o conductor que hizo una oferta
+    const hasOffer = user.role === 'driver'
+      ? await c.env.DB.prepare(
+          'SELECT 1 FROM driver_price_offers WHERE trip_id = ? AND driver_id = ?'
+        ).bind(tripId, user.id).first()
+      : null;
+
     if (
       trip.passenger_id !== user.id &&
-      trip.driver_id !== user.id
+      trip.driver_id !== user.id &&
+      !hasOffer
     ) {
       return c.json({ error: 'Unauthorized' }, 403);
     }

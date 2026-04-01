@@ -88,7 +88,10 @@ export default function DriverHomePage() {
         if (pendingOfferTrip) {
           const tripData = await tripsAPI.getTrip(pendingOfferTrip.id);
           if (tripData.trip && tripData.trip.status === 'accepted') {
-            // El pasajero aceptó — obtener datos completos con passenger_name/phone
+            // El pasajero aceptó — limpiar estado de oferta inmediatamente
+            setPendingOfferTrip(null);
+            setAvailableTrips([]);
+            // Obtener datos completos con passenger_name/phone
             const currentData = await tripsAPI.getCurrentDriverTrip();
             if (currentData.trip) {
               const trip = currentData.trip;
@@ -110,13 +113,9 @@ export default function DriverHomePage() {
                 passengerPhone: trip.passenger_phone,
                 status: trip.status,
               });
-              setAvailableTrips([]);
-              setPendingOfferTrip(null);
             }
-            // Si getCurrentDriverTrip aún no refleja el viaje, reintenta en el próximo ciclo
-            return;
           }
-          // Oferta todavía pendiente, no hacer más consultas este ciclo
+          // Oferta todavía pendiente (o recién limpiada), no hacer más consultas este ciclo
           return;
         }
 

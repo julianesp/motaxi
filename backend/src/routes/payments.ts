@@ -503,12 +503,12 @@ paymentRoutes.get('/subscription/status', async (c) => {
     const isSubscriptionActive = subscription.status === 'active' && subscription.current_period_end && now < (subscription.current_period_end as number);
     const hasAccess = isTrialActive || isSubscriptionActive;
 
-    // Si el trial venció sin pago, bloquear email para evitar re-registro
+    // Si el trial venció sin pago, bloquear email y teléfono para evitar re-registro
     if (!hasAccess && subscription.status === 'trial' && now >= trialEndsAt) {
       try {
         await c.env.DB.prepare(
-          `INSERT OR IGNORE INTO blocked_emails (id, email, reason, blocked_at) VALUES (?, ?, 'trial_expired', ?)`
-        ).bind(uuidv4(), user.email.toLowerCase(), now).run();
+          `INSERT OR IGNORE INTO blocked_emails (id, email, phone, reason, blocked_at) VALUES (?, ?, ?, 'trial_expired', ?)`
+        ).bind(uuidv4(), user.email.toLowerCase(), user.phone || null, now).run();
       } catch (_) {}
     }
 

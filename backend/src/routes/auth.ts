@@ -39,16 +39,28 @@ authRoutes.post('/register', async (c) => {
       return c.json({ error: 'Email or phone already registered' }, 409);
     }
 
-    // Verificar si el email está bloqueado (conductor con trial vencido sin pago)
+    // Verificar si el email o teléfono está bloqueado (conductor con trial vencido sin pago)
     if (role === 'driver') {
-      const blocked = await c.env.DB.prepare(
+      const blockedByEmail = await c.env.DB.prepare(
         'SELECT id FROM blocked_emails WHERE email = ?'
       ).bind(email.toLowerCase()).first();
-      if (blocked) {
+      if (blockedByEmail) {
         return c.json({
           error: 'Este email no puede registrarse como conductor. Tu período de prueba venció y no se realizó el pago. Contáctanos en admin@neurai.dev para regularizar tu situación.',
           code: 'EMAIL_BLOCKED'
         }, 403);
+      }
+
+      if (phone) {
+        const blockedByPhone = await c.env.DB.prepare(
+          'SELECT id FROM blocked_emails WHERE phone = ?'
+        ).bind(phone).first();
+        if (blockedByPhone) {
+          return c.json({
+            error: 'Este número de teléfono no puede registrarse como conductor. Tu período de prueba venció y no se realizó el pago. Contáctanos en admin@neurai.dev para regularizar tu situación.',
+            code: 'PHONE_BLOCKED'
+          }, 403);
+        }
       }
     }
 
@@ -81,8 +93,8 @@ authRoutes.post('/register', async (c) => {
         .bind(userId, tempLicense, tempPlate, 'PENDING', 'PENDING', null, 'approved', 1, Math.floor(Date.now() / 1000))
         .run();
 
-      // Crear trial de 15 días al registrarse
-      const trialEndsAt = Math.floor(Date.now() / 1000) + (15 * 24 * 60 * 60);
+      // Crear trial de 30 días al registrarse
+      const trialEndsAt = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
       await c.env.DB.prepare(
         `INSERT INTO subscriptions (id, user_id, status, plan, amount, trial_ends_at) VALUES (?, ?, 'trial', 'monthly', 14900, ?)`
       ).bind(uuidv4(), userId, trialEndsAt).run();

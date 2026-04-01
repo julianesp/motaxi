@@ -60,6 +60,7 @@ export default function TripTrackingPage() {
   const [isAddingToFavorites, setIsAddingToFavorites] = useState(false);
   const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
   const consecutiveErrorsRef = useRef(0);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
   if (!initialMapCenter.current && trip) {
@@ -128,23 +129,24 @@ export default function TripTrackingPage() {
             setDriverOffers([]);
           }
 
-          // Si el viaje fue cancelado, redirigir después de 3 segundos
+          // Si el viaje fue cancelado, detener polling y redirigir después de 3 segundos
           if (data.trip.status === 'cancelled') {
+            if (pollingRef.current) clearInterval(pollingRef.current);
             setTimeout(() => {
               router.push('/passenger');
             }, 3000);
-            return; // Detener polling
+            return;
           }
 
-          // Si el viaje está completado, detener el polling
-          // Solo redirigir automáticamente si ya fue calificado previamente
+          // Si el viaje está completado, detener polling definitivamente
           if (data.trip.status === 'completed') {
+            if (pollingRef.current) clearInterval(pollingRef.current);
             const alreadyRated = data.trip.driver_rating != null;
             if (alreadyRated) {
               setIsRated(true);
               setTimeout(() => router.push('/passenger'), 3000);
             }
-            return; // Detener polling — no seguir actualizando mientras califica
+            // No hacer return aquí — dejar que el estado se establezca y la UI de calificación aparezca
           }
         }
       } catch (error) {
@@ -172,9 +174,11 @@ export default function TripTrackingPage() {
     fetchTripData();
 
     // Poll every 2 seconds for real-time updates
-    const interval = setInterval(fetchTripData, 2000);
+    pollingRef.current = setInterval(fetchTripData, 2000);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, [params.id, router]);
 
   // AHORA SÍ PODEMOS HACER RETURNS CONDICIONALES

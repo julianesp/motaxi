@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 
 /**
@@ -62,6 +63,11 @@ export default function Footer() {
 
         {/* Línea divisoria y derechos de autor */}
         <div className="border-t border-gray-800 mt-6 pt-6 flex flex-col items-center gap-3 text-gray-400">
+          <div className="flex gap-4 text-sm text-gray-500">
+            <Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidad</Link>
+            <span>·</span>
+            <Link href="/terms" className="hover:text-white transition-colors">Términos y Condiciones</Link>
+          </div>
           <p>&copy; {currentYear} MoTaxi. Todos los derechos reservados.</p>
           <a
             href="https://neurai.dev/"

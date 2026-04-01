@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 
 /**
@@ -60,8 +61,24 @@ export default function Footer() {
         </div>
 
         {/* Línea divisoria y derechos de autor */}
-        <div className="border-t border-gray-800 mt-6 pt-6 text-center text-gray-400">
+        <div className="border-t border-gray-800 mt-6 pt-6 flex flex-col items-center gap-3 text-gray-400">
           <p>&copy; {currentYear} MoTaxi. Todos los derechos reservados.</p>
+          <a
+            href="https://neurai.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors"
+          >
+            <span>Creado por:</span>
+            <Image
+              src="https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/logo.png"
+              alt="Neurai logo"
+              width={20}
+              height={20}
+              className="rounded-sm"
+            />
+            <span className="font-semibold text-[#42CE1D] hover:text-green-400 transition-colors">neurai.dev</span>
+          </a>
         </div>
       </div>
     </footer>

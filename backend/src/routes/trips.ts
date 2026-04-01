@@ -752,6 +752,48 @@ tripRoutes.put('/:id/status', async (c) => {
       .bind(tripId)
       .first();
 
+    // Si se canceló un viaje activo (accepted/in_progress), notificar a la otra parte
+    if (status === 'cancelled' && (trip.status === 'accepted' || trip.status === 'in_progress')) {
+      const cancelledBy = user.role === 'driver' ? 'El conductor' : 'El pasajero';
+      const notifyUserId = user.role === 'driver' ? trip.passenger_id : trip.driver_id;
+
+      if (notifyUserId) {
+        await c.env.DB.prepare(
+          `INSERT INTO notifications (id, user_id, title, message, type, data)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+          .bind(
+            uuidv4(),
+            notifyUserId,
+            'Viaje cancelado',
+            `${cancelledBy} canceló el viaje en curso.`,
+            'trip_cancelled',
+            JSON.stringify({ trip_id: tripId, cancelled_by: user.role })
+          )
+          .run();
+
+        // Push notification a la otra parte
+        if (c.env.VAPID_PUBLIC_KEY && c.env.VAPID_PRIVATE_KEY) {
+          const pushSubs = await c.env.DB.prepare(
+            'SELECT endpoint, p256dh, auth FROM web_push_subscriptions WHERE user_id = ?'
+          ).bind(notifyUserId).all();
+
+          for (const sub of (pushSubs.results || []) as any[]) {
+            await sendWebPush(
+              { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+              {
+                title: 'Viaje cancelado',
+                body: `${cancelledBy} canceló el viaje en curso.`,
+                data: { type: 'trip_cancelled', tripId },
+              },
+              c.env.VAPID_PUBLIC_KEY,
+              c.env.VAPID_PRIVATE_KEY
+            ).catch(() => {});
+          }
+        }
+      }
+    }
+
     return c.json({ trip: updatedTrip });
   } catch (error: any) {
     console.error('Update trip status error:', error);

@@ -59,6 +59,7 @@ export default function TripTrackingPage() {
   const [showFavoriteOption, setShowFavoriteOption] = useState(false);
   const [isAddingToFavorites, setIsAddingToFavorites] = useState(false);
   const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
+  const consecutiveErrorsRef = useRef(0);
 
   // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
   if (!initialMapCenter.current && trip) {
@@ -109,6 +110,7 @@ export default function TripTrackingPage() {
         const data = await tripsAPI.getTrip(params.id as string);
 
         if (data.trip) {
+          consecutiveErrorsRef.current = 0;
           setTrip(data.trip);
 
           // Si el viaje está en estado 'requested', cargar ofertas de conductores
@@ -147,6 +149,20 @@ export default function TripTrackingPage() {
         }
       } catch (error) {
         console.error('Error fetching trip:', error);
+        // Contar errores consecutivos — si hay viaje activo y falla mucho, cancelar
+        if (trip && (trip.status === 'accepted' || trip.status === 'in_progress')) {
+          consecutiveErrorsRef.current += 1;
+          if (consecutiveErrorsRef.current >= 5) {
+            consecutiveErrorsRef.current = 0;
+            try {
+              const { tripsAPI } = await import('@/lib/api-client');
+              await tripsAPI.updateTripStatus(trip.id, 'cancelled');
+            } catch (cancelErr) {
+              console.error('Error auto-cancelling trip:', cancelErr);
+            }
+            router.push('/passenger');
+          }
+        }
       } finally {
         setIsLoading(false);
       }

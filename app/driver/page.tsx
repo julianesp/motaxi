@@ -34,6 +34,7 @@ export default function DriverHomePage() {
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
   const activeTripRef = useRef<any>(null);
+  const consecutiveErrorsRef = useRef(0);
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
   const [isActiveTripPanelMinimized, setIsActiveTripPanelMinimized] = useState(false);
   const [availableTrips, setAvailableTrips] = useState<any[]>([]);
@@ -121,6 +122,7 @@ export default function DriverHomePage() {
 
         // Sin oferta pendiente: buscar viaje activo normalmente
         const data = await tripsAPI.getCurrentDriverTrip();
+        consecutiveErrorsRef.current = 0;
 
         if (data.trip) {
           const trip = data.trip;
@@ -148,6 +150,20 @@ export default function DriverHomePage() {
         }
       } catch (error: any) {
         console.error('checkActiveTrip error:', error?.response?.data || error?.message || error);
+        // Si hay viaje activo y falla repetidamente, cancelar y notificar al pasajero
+        if (activeTripRef.current && (activeTripRef.current.status === 'accepted' || activeTripRef.current.status === 'in_progress')) {
+          consecutiveErrorsRef.current += 1;
+          if (consecutiveErrorsRef.current >= 5) {
+            consecutiveErrorsRef.current = 0;
+            try {
+              const { tripsAPI } = await import('@/lib/api-client');
+              await tripsAPI.updateTripStatus(activeTripRef.current.id, 'cancelled');
+            } catch (cancelErr) {
+              console.error('Error auto-cancelling trip:', cancelErr);
+            }
+            setActiveTrip(null);
+          }
+        }
       }
     };
 
@@ -423,8 +439,8 @@ export default function DriverHomePage() {
     );
   }
 
-  // Bloquear acceso si la suscripción expiró
-  if (subStatus && !subStatus.has_access) {
+  // Bloquear acceso si la suscripción expiró, pero NO si hay un viaje activo en curso
+  if (subStatus && !subStatus.has_access && !activeTrip) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">

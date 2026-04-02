@@ -583,36 +583,6 @@ export default function PassengerHomePage() {
       return;
     }
 
-    // Advertencia de seguridad al solicitar (siempre, no solo de noche)
-    const hour = new Date().getHours();
-    const isNight = hour >= 20 || hour < 6;
-    const safetyResult = await Swal.fire({
-      title: isNight
-        ? "🌙 Viaje nocturno — Precaución"
-        : "🛡️ Recuerda viajar seguro",
-      html: `
-        <div style="text-align:left;font-size:14px;color:#374151;line-height:1.6;">
-          ${isNight ? '<p style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:12px;font-weight:600;color:#92400e;">⚠️ Estás solicitando un viaje en la noche. Ten especial cuidado.</p>' : ""}
-          <p style="font-weight:600;margin-bottom:8px;">Para tu seguridad:</p>
-          <ul style="padding-left:16px;space-y:4px;">
-            <li style="margin-bottom:6px;">✅ <strong>Viaja solo con conductores que conoces</strong> o que tengan buenas calificaciones</li>
-            <li style="margin-bottom:6px;">✅ Comparte tu ubicación en tiempo real con un familiar o amigo de confianza</li>
-            <li style="margin-bottom:6px;">✅ Verifica la placa y el vehículo antes de subir</li>
-            ${isNight ? '<li style="margin-bottom:6px;">✅ Prefiere conductores de tu lista de <strong>favoritos</strong> en la noche</li>' : ""}
-            <li style="margin-bottom:6px;">✅ Si algo te genera desconfianza, cancela el viaje</li>
-          </ul>
-        </div>
-      `,
-      icon: isNight ? "warning" : "info",
-      confirmButtonText: "Entendido, solicitar viaje",
-      confirmButtonColor: "#008000",
-      showCancelButton: true,
-      cancelButtonText: "Cancelar",
-      cancelButtonColor: "#6b7280",
-    });
-
-    if (!safetyResult.isConfirmed) return;
-
     // Calcular distancia
     const distance = calculateDistance(
       pickup.latitude,

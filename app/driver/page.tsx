@@ -88,34 +88,31 @@ export default function DriverHomePage() {
         if (pendingOfferTrip) {
           const tripData = await tripsAPI.getTrip(pendingOfferTrip.id);
           if (tripData.trip && tripData.trip.status === 'accepted') {
-            // El pasajero aceptó — limpiar estado de oferta inmediatamente
-            setPendingOfferTrip(null);
-            setAvailableTrips([]);
-            // Obtener datos completos con passenger_name/phone
+            // El pasajero aceptó — intentar obtener datos completos
             const currentData = await tripsAPI.getCurrentDriverTrip();
-            if (currentData.trip) {
-              const trip = currentData.trip;
-              setActiveTrip({
-                id: trip.id,
-                pickup: {
-                  lat: trip.pickup_latitude,
-                  lng: trip.pickup_longitude,
-                  address: trip.pickup_address,
-                },
-                destination: {
-                  lat: trip.dropoff_latitude,
-                  lng: trip.dropoff_longitude,
-                  address: trip.dropoff_address,
-                },
-                fare: trip.fare,
-                distance: trip.distance_km,
-                passengerName: trip.passenger_name,
-                passengerPhone: trip.passenger_phone,
-                status: trip.status,
-              });
-            }
+            const trip = currentData.trip || tripData.trip;
+            setActiveTrip({
+              id: trip.id,
+              pickup: {
+                lat: trip.pickup_latitude,
+                lng: trip.pickup_longitude,
+                address: trip.pickup_address,
+              },
+              destination: {
+                lat: trip.dropoff_latitude,
+                lng: trip.dropoff_longitude,
+                address: trip.dropoff_address,
+              },
+              fare: trip.fare,
+              distance: trip.distance_km,
+              passengerName: trip.passenger_name,
+              passengerPhone: trip.passenger_phone,
+              status: trip.status,
+            });
+            setAvailableTrips([]);
+            setPendingOfferTrip(null);
           }
-          // Oferta todavía pendiente (o recién limpiada), no hacer más consultas este ciclo
+          // Mientras haya oferta pendiente (o esté en transición), no continuar
           return;
         }
 

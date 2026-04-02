@@ -248,10 +248,12 @@ export default function DriverHomePage() {
       try {
         const { tripsAPI } = await import('@/lib/api-client');
         const data = await tripsAPI.getActiveTrips();
-        // Filtrar viajes rechazados localmente
-        const filteredTrips = (data.trips || []).filter((trip: any) => !rejectedTripIds.has(trip.id));
+        // Filtrar viajes rechazados y el viaje con oferta pendiente
+        const filteredTrips = (data.trips || []).filter((trip: any) =>
+          !rejectedTripIds.has(trip.id) &&
+          trip.id !== pendingOfferTripRef.current?.id
+        );
         setAvailableTrips(prev => {
-          // Si llega una solicitud nueva, expandir el panel automáticamente
           if (filteredTrips.length > prev.length) {
             setIsPanelMinimized(false);
           }

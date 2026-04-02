@@ -85,51 +85,50 @@ export default function DriverHomePage() {
       try {
         const { tripsAPI } = await import('@/lib/api-client');
 
-        // Si hay oferta pendiente, verificar directamente ese viaje por su ID
+        // Si hay oferta pendiente, verificar en paralelo por ID y por viaje activo del conductor
         if (pendingOfferTrip) {
+          // Siempre verificar getCurrentDriverTrip — si el pasajero aceptó, ya aparece aquí
+          const currentData = await tripsAPI.getCurrentDriverTrip();
+          if (currentData.trip) {
+            // El conductor ya tiene un viaje activo asignado
+            const trip = currentData.trip;
+            setActiveTrip({
+              id: trip.id,
+              pickup: {
+                lat: trip.pickup_latitude,
+                lng: trip.pickup_longitude,
+                address: trip.pickup_address,
+              },
+              destination: {
+                lat: trip.dropoff_latitude,
+                lng: trip.dropoff_longitude,
+                address: trip.dropoff_address,
+              },
+              fare: trip.fare,
+              distance: trip.distance_km,
+              passengerName: trip.passenger_name,
+              passengerPhone: trip.passenger_phone,
+              status: trip.status,
+            });
+            setAvailableTrips([]);
+            setPendingOfferTrip(null);
+            return;
+          }
+          // Si getCurrentDriverTrip no devuelve nada, verificar el estado del viaje ofertado
           try {
             const tripData = await tripsAPI.getTrip(pendingOfferTrip.id);
             pendingOfferErrorsRef.current = 0;
             const tripStatus = tripData.trip?.status;
-            if (tripStatus === 'accepted' || tripStatus === 'in_progress') {
-              // El pasajero aceptó — intentar obtener datos completos, con fallback
-              let trip = tripData.trip;
-              try {
-                const currentData = await tripsAPI.getCurrentDriverTrip();
-                if (currentData.trip) trip = currentData.trip;
-              } catch (_) { /* usar tripData como fallback */ }
-              setActiveTrip({
-                id: trip.id,
-                pickup: {
-                  lat: trip.pickup_latitude,
-                  lng: trip.pickup_longitude,
-                  address: trip.pickup_address,
-                },
-                destination: {
-                  lat: trip.dropoff_latitude,
-                  lng: trip.dropoff_longitude,
-                  address: trip.dropoff_address,
-                },
-                fare: trip.fare,
-                distance: trip.distance_km,
-                passengerName: trip.passenger_name,
-                passengerPhone: trip.passenger_phone,
-                status: trip.status,
-              });
-              setAvailableTrips([]);
-              setPendingOfferTrip(null);
-            } else if (tripStatus === 'cancelled' || tripStatus === 'completed') {
-              // El viaje fue cancelado o ya no aplica — liberar estado
+            if (tripStatus === 'cancelled' || tripStatus === 'completed') {
               setPendingOfferTrip(null);
             }
+            // Si sigue en 'requested', seguir esperando
           } catch (offerErr: any) {
-            const status = offerErr?.response?.status;
-            if (status === 403 || status === 404) {
-              // El viaje ya no es accesible — liberar estado pendiente
+            const httpStatus = offerErr?.response?.status;
+            if (httpStatus === 403 || httpStatus === 404) {
               pendingOfferErrorsRef.current = 0;
               setPendingOfferTrip(null);
             } else {
-              // Error transitorio — contar y liberar tras 5 fallos consecutivos
               pendingOfferErrorsRef.current += 1;
               if (pendingOfferErrorsRef.current >= 5) {
                 pendingOfferErrorsRef.current = 0;
@@ -137,7 +136,6 @@ export default function DriverHomePage() {
               }
             }
           }
-          // Mientras haya oferta pendiente (o esté en transición), no continuar
           return;
         }
 

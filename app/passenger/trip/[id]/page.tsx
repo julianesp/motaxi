@@ -655,10 +655,9 @@ export default function TripTrackingPage() {
                       await tripsAPI.updateTripStatus(trip.id, 'in_progress');
                       // Actualizar estado local
                       setTrip({ ...trip, status: 'in_progress' });
-                      alert('✅ Viaje iniciado. ¡Disfruta tu viaje!');
                     } catch (error) {
                       console.error('Error starting trip:', error);
-                      alert('Error al iniciar el viaje. Intenta nuevamente.');
+                      await Swal.fire({ icon: 'error', title: 'Error', text: 'Error al iniciar el viaje. Intenta nuevamente.', confirmButtonColor: '#008000' });
                     }
                   }}
                   className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"
@@ -675,18 +674,14 @@ export default function TripTrackingPage() {
               <div className="pt-4 border-t border-gray-200">
                 <button
                   onClick={async () => {
-                    const confirmed = confirm('¿Confirmas que has llegado a tu destino?');
-                    if (!confirmed) return;
-
                     try {
                       const { tripsAPI } = await import('@/lib/api-client');
                       await tripsAPI.updateTripStatus(trip.id, 'completed');
                       // Actualizar estado local
                       setTrip({ ...trip, status: 'completed' });
-                      alert('✅ ¡Viaje completado! Por favor califica tu experiencia.');
                     } catch (error) {
                       console.error('Error completing trip:', error);
-                      alert('Error al completar el viaje. Intenta nuevamente.');
+                      await Swal.fire({ icon: 'error', title: 'Error', text: 'Error al completar el viaje. Intenta nuevamente.', confirmButtonColor: '#008000' });
                     }
                   }}
                   className="w-full py-4 px-6 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"
@@ -760,7 +755,7 @@ export default function TripTrackingPage() {
                     <button
                       onClick={async () => {
                         if (rating === 0) {
-                          alert('Por favor selecciona una calificación');
+                          await Swal.fire({ icon: 'warning', title: 'Calificación requerida', text: 'Por favor selecciona una calificación', confirmButtonColor: '#008000' });
                           return;
                         }
 
@@ -785,7 +780,7 @@ export default function TripTrackingPage() {
                           }
                         } catch (error) {
                           console.error('Error rating trip:', error);
-                          alert('Error al enviar la calificación. Intenta nuevamente.');
+                          await Swal.fire({ icon: 'error', title: 'Error', text: 'Error al enviar la calificación. Intenta nuevamente.', confirmButtonColor: '#008000' });
                         } finally {
                           setIsSubmittingRating(false);
                         }

@@ -19,8 +19,6 @@ export interface Env {
   CACHE?: KVNamespace;
   JWT_SECRET: string;
   CORS_ORIGIN: string;
-  WOMPI_PUBLIC_KEY?: string;
-  WOMPI_PRIVATE_KEY?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
   EPAYCO_PUBLIC_KEY?: string;

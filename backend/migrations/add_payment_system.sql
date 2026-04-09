@@ -24,9 +24,6 @@ CREATE TABLE IF NOT EXISTS payment_methods (
   -- Para Nequi/Daviplata
   phone_number TEXT,
 
-  -- Token de Wompi (encriptado)
-  wompi_token TEXT,
-
   created_at INTEGER DEFAULT (strftime('%s', 'now')),
   updated_at INTEGER DEFAULT (strftime('%s', 'now'))
 );
@@ -44,7 +41,7 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'approved', 'declined', 'failed', 'refunded')),
 
   -- Información del procesador de pagos
-  provider TEXT DEFAULT 'wompi', -- wompi, mercadopago, stripe
+  provider TEXT DEFAULT 'epayco',
   provider_transaction_id TEXT UNIQUE,
   provider_reference TEXT,
 

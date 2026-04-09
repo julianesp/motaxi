@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { MUNICIPALITIES } from '@/lib/constants/municipalities';
 
-const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
+const libraries: ('places' | 'geometry' | 'marker')[] = ['places', 'geometry', 'marker'];
 
 interface PlacesAutocompleteProps {
   value: string;

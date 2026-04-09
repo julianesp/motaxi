@@ -10,10 +10,6 @@ export default function RoleSelectionPage() {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
-  const handleRoleSelect = (role: UserRole) => {
-    setSelectedRole(role);
-  };
-
   const handleContinue = () => {
     if (selectedRole) {
       router.push(`/auth/register?role=${selectedRole}`);
@@ -21,159 +17,93 @@ export default function RoleSelectionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "#000000", backgroundImage: "linear-gradient(to top, #008000, #000000)" }}
+    >
       <Navbar />
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
-        <div className="max-w-4xl w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
+
+      <div className="flex-1 flex items-center justify-center px-4 py-4">
+        <div className="w-full max-w-md bg-white bg-opacity-95 rounded-2xl shadow-2xl p-6 space-y-5">
+
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-[#008000] mb-2">MoTaxi</h1>
-            <h2 className="text-2xl font-semibold text-gray-800">
-              ¿Cómo quieres usar MoTaxi?
-            </h2>
-            <p className="mt-2 text-gray-600">
-              Selecciona tu rol para continuar
-            </p>
+            <h1 className="text-3xl font-bold text-[#008000]">MoTaxi</h1>
+            <h2 className="text-lg font-semibold text-gray-800 mt-1">¿Cómo quieres usar MoTaxi?</h2>
           </div>
 
-          {/* Role Cards */}
-          <div className="grid md:grid-cols-2 gap-6 mt-8">
-            {/* Passenger Card */}
+          {/* Role Cards — horizontal compacto */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Pasajero */}
             <button
-              onClick={() => handleRoleSelect("passenger")}
-              className={`p-8 rounded-2xl border-2 transition-all duration-200 text-left ${
+              onClick={() => setSelectedRole("passenger")}
+              className={`rounded-xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 selectedRole === "passenger"
-                  ? "border-[#008000] bg-green-50 shadow-lg scale-105"
-                  : "border-gray-200 hover:border-green-300 hover:shadow-md"
+                  ? "border-[#42CE1D] bg-green-50 shadow-md"
+                  : "border-gray-200 hover:border-green-300"
               }`}
             >
-              <div className="flex flex-col items-center text-center">
-                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <svg
-                    className="w-12 h-12 text-[#008000]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Pasajero
-                </h3>
-                <p className="text-gray-600">
-                  Solicita viajes en moto o carro, de día o de noche, con conductores verificados
-                </p>
-                <ul className="mt-4 space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    🏍️ Mototaxi o 🚗 Carro
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Conductores verificados
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Seguimiento en tiempo real
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    🌙 Disponible de noche
-                  </li>
-                </ul>
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
               </div>
+              <span className="text-base font-bold text-gray-800">Pasajero</span>
+              <ul className="text-xs text-gray-500 space-y-1 text-left w-full">
+                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Solicita viajes</li>
+                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Conductores verificados</li>
+                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Día y noche</li>
+              </ul>
+              {selectedRole === "passenger" && (
+                <span className="text-xs font-semibold text-[#42CE1D]">Seleccionado ✓</span>
+              )}
             </button>
 
-            {/* Driver Card */}
+            {/* Conductor */}
             <button
-              onClick={() => handleRoleSelect("driver")}
-              className={`p-8 rounded-2xl border-2 transition-all duration-200 text-left ${
+              onClick={() => setSelectedRole("driver")}
+              className={`rounded-xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 selectedRole === "driver"
-                  ? "border-[#008000] bg-green-50 shadow-lg scale-105"
-                  : "border-gray-200 hover:border-green-300 hover:shadow-md"
+                  ? "border-[#42CE1D] bg-green-50 shadow-md"
+                  : "border-gray-200 hover:border-green-300"
               }`}
             >
-              <div className="flex flex-col items-center text-center">
-                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <svg
-                    className="w-12 h-12 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Conductor
-                </h3>
-                <p className="text-gray-600">
-                  Genera ingresos con tu moto o tu carro, en el horario que más te convenga
-                </p>
-                <ul className="mt-4 space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    🏍️ Moto o 🚗 Carro
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Horarios flexibles — día y noche
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Genera ingresos extras
-                  </li>
-                </ul>
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
               </div>
+              <span className="text-base font-bold text-gray-800">Conductor</span>
+              <ul className="text-xs text-gray-500 space-y-1 text-left w-full">
+                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Genera ingresos</li>
+                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Horarios flexibles</li>
+                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Moto o carro</li>
+              </ul>
+              {selectedRole === "driver" && (
+                <span className="text-xs font-semibold text-[#42CE1D]">Seleccionado ✓</span>
+              )}
             </button>
           </div>
 
-          {/* Continue Button */}
+          {/* Continuar */}
           <button
             onClick={handleContinue}
             disabled={!selectedRole}
-            className="btn btn-primary w-full py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 rounded-xl text-white font-semibold text-base transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: selectedRole ? "#42CE1D" : "#9ca3af" }}
           >
             Continuar
           </button>
 
           {/* Login Link */}
-          <div className="text-center">
-            <p className="text-gray-600">
-              ¿Ya tienes una cuenta?{" "}
-              <Link
-                href="/auth/login"
-                className="font-medium text-[#008000] hover:text-green-500"
-              >
-                Inicia sesión
-              </Link>
-            </p>
-          </div>
+          <p className="text-center text-sm text-gray-600">
+            ¿Ya tienes una cuenta?{" "}
+            <Link href="/auth/login" className="font-semibold text-[#008000] hover:text-green-500">
+              Inicia sesión
+            </Link>
+          </p>
         </div>
       </div>
     </div>

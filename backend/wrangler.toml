@@ -24,6 +24,8 @@ EPAYCO_TEST_MODE = "false"
 # VAPID keys para Web Push Notifications
 VAPID_PUBLIC_KEY = "BHJV_6ebHmDfg30ECb_VMCHT_e78Y_FeYxNhwFmitLwbjKqHI52v5KszEDywHvZ-bZJsXJCH8XjPPJXH6zIHmOY"
 VAPID_PRIVATE_KEY = "8rM6Ee9ZWZpgui6mZNERt82SPoxcATV0EI3z6-kyI5k"
+# Telegram Bot Token — para producción usar: wrangler secret put TELEGRAM_BOT_TOKEN
+# TELEGRAM_BOT_TOKEN = ""  # no poner aquí en producción
 
 # Configuración de D1 Database
 # Usa la misma base de datos para desarrollo y producción

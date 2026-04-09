@@ -11,6 +11,7 @@ import { paymentRoutes } from './routes/payments';
 import { chatRoutes } from './routes/chat';
 import { analyticsRoutes } from './routes/analytics';
 import favoriteRoutes from './routes/favorites';
+import { telegramRoutes } from './routes/telegram';
 
 export interface Env {
   DB: D1Database;
@@ -27,6 +28,7 @@ export interface Env {
   SITE_URL?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
+  TELEGRAM_BOT_TOKEN?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -72,6 +74,7 @@ app.route('/payments', paymentRoutes);
 app.route('/chat', chatRoutes);
 app.route('/analytics', analyticsRoutes);
 app.route('/favorites', favoriteRoutes);
+app.route('/telegram', telegramRoutes);
 
 // Error handler
 app.onError((err, c) => {

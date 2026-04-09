@@ -37,6 +37,8 @@ export default function DriverProfilePage() {
   const [showCamera, setShowCamera] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [telegramLoading, setTelegramLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -78,6 +80,7 @@ export default function DriverProfilePage() {
       });
       setPhotoPreview((user as any).profile_image || null);
       fetchDriverInfo();
+      checkTelegramStatus();
     }
   }, [user]);
 
@@ -145,6 +148,66 @@ export default function DriverProfilePage() {
         rating: 5.0,
         total_trips: 0,
       });
+    }
+  };
+
+  const handleLinkTelegram = async () => {
+    setTelegramLoading(true);
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      const res = await apiClient.get('/telegram/link-token');
+      if (res.data.linked) {
+        setTelegramLinked(true);
+        Swal.fire({ icon: 'info', title: 'Ya vinculado', text: 'Tu cuenta de Telegram ya está conectada.', confirmButtonColor: '#42CE1D' });
+      } else {
+        window.open(res.data.deepLink, '_blank');
+        setTelegramLinked(false);
+        Swal.fire({
+          icon: 'success',
+          title: '¡Abre Telegram!',
+          html: 'Se abrió el bot de MoTaxi. Toca <b>INICIAR</b> para vincular tu cuenta y recibir notificaciones de viajes.',
+          confirmButtonColor: '#42CE1D',
+          confirmButtonText: 'Listo',
+        }).then(() => {
+          // Re-verificar si ya vinculó
+          checkTelegramStatus();
+        });
+      }
+    } catch {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el enlace de Telegram.', confirmButtonColor: '#42CE1D' });
+    } finally {
+      setTelegramLoading(false);
+    }
+  };
+
+  const handleUnlinkTelegram = async () => {
+    const result = await Swal.fire({
+      title: '¿Desvincular Telegram?',
+      text: 'Dejarás de recibir notificaciones de viajes en Telegram.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, desvincular',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ef4444',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient.delete('/telegram/unlink');
+      setTelegramLinked(false);
+      Swal.fire({ icon: 'success', title: 'Desvinculado', text: 'Telegram desconectado correctamente.', confirmButtonColor: '#42CE1D' });
+    } catch {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo desvincular Telegram.', confirmButtonColor: '#42CE1D' });
+    }
+  };
+
+  const checkTelegramStatus = async () => {
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      const res = await apiClient.get('/telegram/link-token');
+      setTelegramLinked(!!res.data.linked);
+    } catch {
+      // silencioso
     }
   };
 
@@ -993,6 +1056,41 @@ export default function DriverProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
+
+            {/* Notificaciones por Telegram */}
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 mr-3 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="12" fill="#29B6F6"/>
+                    <path d="M5.5 11.5l10-4-3.5 10-2-3.5-4.5-2.5z" fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round"/>
+                    <path d="M10 13.5l1.5 1.5 2-3" stroke="#29B6F6" strokeWidth="1" strokeLinecap="round"/>
+                  </svg>
+                  <div>
+                    <p className="font-medium text-gray-800 text-sm">Notificaciones Telegram</p>
+                    <p className="text-xs text-gray-500">
+                      {telegramLinked ? '✅ Vinculado — recibes alertas de viajes' : 'Recibe alertas aunque el navegador esté cerrado'}
+                    </p>
+                  </div>
+                </div>
+                {telegramLinked ? (
+                  <button
+                    onClick={handleUnlinkTelegram}
+                    className="text-xs text-red-500 hover:text-red-700 font-medium ml-2 flex-shrink-0"
+                  >
+                    Desvincular
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLinkTelegram}
+                    disabled={telegramLoading}
+                    className="bg-[#29B6F6] text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-[#0288D1] transition-colors disabled:opacity-50 flex-shrink-0 ml-2"
+                  >
+                    {telegramLoading ? 'Cargando...' : 'Vincular'}
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* Cerrar sesión */}
             <button

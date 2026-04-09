@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
 import { sendWebPush } from '../services/web-push';
+import { TelegramService } from '../services/telegram';
 
 export const tripRoutes = new Hono<{ Bindings: Env }>();
 
@@ -111,6 +112,43 @@ tripRoutes.post('/', async (c) => {
         c.executionCtx?.waitUntil(Promise.all(sends));
       } catch (pushError) {
         console.error('Error sending push notifications:', pushError);
+      }
+    }
+
+    // Enviar notificación por Telegram a conductores disponibles con chat_id vinculado
+    if (c.env.TELEGRAM_BOT_TOKEN) {
+      try {
+        const telegramDrivers = await c.env.DB.prepare(`
+          SELECT u.telegram_chat_id, u.full_name
+          FROM users u
+          JOIN drivers d ON d.id = u.id
+          WHERE d.is_available = 1
+            AND d.verification_status = 'approved'
+            AND u.telegram_chat_id IS NOT NULL
+        `).all();
+
+        const passengerUser = await c.env.DB.prepare('SELECT full_name FROM users WHERE id = ?')
+          .bind(user.id).first() as any;
+
+        const telegramSends = (telegramDrivers.results || []).map((row: any) =>
+          TelegramService.notifyDriverNewTrip(
+            c.env.TELEGRAM_BOT_TOKEN!,
+            row.telegram_chat_id,
+            {
+              tripId,
+              pickupAddress: pickup_address,
+              dropoffAddress: dropoff_address,
+              fare: estimated_fare || 0,
+              distanceKm: distance_km || 0,
+              tripType: trip_type,
+              passengerName: passengerUser?.full_name || 'Pasajero',
+            }
+          ).catch(() => {})
+        );
+
+        c.executionCtx?.waitUntil(Promise.all(telegramSends));
+      } catch (telegramError) {
+        console.error('Error sending Telegram notifications:', telegramError);
       }
     }
 

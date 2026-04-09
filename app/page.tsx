@@ -28,10 +28,14 @@ export default function HomePage() {
   const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!user) return;
     const fetchStats = async () => {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-        const res = await fetch(`${API_URL}/drivers/nearby?lat=1.1656&lng=-77.0`);
+        const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
+        const res = await fetch(`${API_URL}/drivers/nearby?lat=1.1656&lng=-77.0`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         if (res.ok) {
           const data = await res.json();
           setActiveDriversCount((data.drivers || []).length);
@@ -43,7 +47,7 @@ export default function HomePage() {
     fetchStats();
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (

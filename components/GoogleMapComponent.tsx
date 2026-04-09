@@ -4,11 +4,10 @@ import { useEffect, useRef, useState, useCallback, memo } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
-  Marker,
   DirectionsRenderer,
 } from "@react-google-maps/api";
 
-const libraries: ("places" | "geometry")[] = ["places", "geometry"];
+const libraries: ("places" | "geometry" | "marker")[] = ["places", "geometry", "marker"];
 
 interface NearbyDriverMarker {
   id: string;
@@ -58,6 +57,7 @@ const defaultOptions = {
   mapTypeControl: false,
   fullscreenControl: false,
   rotateControl: false,
+  mapId: 'motaxi_map',
 };
 
 function GoogleMapComponent({
@@ -97,9 +97,15 @@ function GoogleMapComponent({
   // Referencias para evitar recalcular rutas innecesariamente
   const lastPickupRef = useRef<{ lat: number; lng: number } | null>(null);
   const lastDestinationRef = useRef<{ lat: number; lng: number } | null>(null);
-  const lastDriverLocationRef = useRef<{ lat: number; lng: number } | null>(
-    null,
-  );
+  const lastDriverLocationRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  // Referencias para AdvancedMarkerElements
+  const pickupMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const destinationMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const userMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const driverMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const nearbyMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const passengerMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -275,6 +281,93 @@ function GoogleMapComponent({
     }
   }, [map, pickup, destination, disableAutoFit]); // Removido driverLocation de las dependencias
 
+  // Helpers para crear pin SVG circular de color sólido
+  const makeDotPin = (color: string, size = 20) => {
+    const el = document.createElement('div');
+    el.innerHTML = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${size/2 - 2}" fill="${color}" stroke="white" stroke-width="2"/></svg>`;
+    return el;
+  };
+
+  // Marcador pickup (verde)
+  useEffect(() => {
+    if (!map) { pickupMarkerRef.current && (pickupMarkerRef.current.map = null); return; }
+    if (!pickup) { pickupMarkerRef.current && (pickupMarkerRef.current.map = null); pickupMarkerRef.current = null; return; }
+    if (!pickupMarkerRef.current) {
+      pickupMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ map, position: pickup, content: makeDotPin('#10b981'), title: 'Punto de recogida' });
+    } else {
+      pickupMarkerRef.current.position = pickup;
+      pickupMarkerRef.current.map = map;
+    }
+  }, [map, pickup]);
+
+  // Marcador destino (rojo)
+  useEffect(() => {
+    if (!map) { destinationMarkerRef.current && (destinationMarkerRef.current.map = null); return; }
+    if (!destination) { destinationMarkerRef.current && (destinationMarkerRef.current.map = null); destinationMarkerRef.current = null; return; }
+    if (!destinationMarkerRef.current) {
+      destinationMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ map, position: destination, content: makeDotPin('#ef4444'), title: 'Destino' });
+    } else {
+      destinationMarkerRef.current.position = destination;
+      destinationMarkerRef.current.map = map;
+    }
+  }, [map, destination]);
+
+  // Marcador usuario (azul)
+  useEffect(() => {
+    if (!map) return;
+    if (!userLocation) { userMarkerRef.current && (userMarkerRef.current.map = null); userMarkerRef.current = null; return; }
+    if (!userMarkerRef.current) {
+      userMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ map, position: userLocation, content: makeDotPin('#3b82f6', 16), title: 'Tu ubicación' });
+    } else {
+      userMarkerRef.current.position = userLocation;
+      userMarkerRef.current.map = map;
+    }
+  }, [map, userLocation]);
+
+  // Marcador conductor (moto naranja)
+  useEffect(() => {
+    if (!map) return;
+    if (!driverLocation) { driverMarkerRef.current && (driverMarkerRef.current.map = null); driverMarkerRef.current = null; return; }
+    const el = document.createElement('div');
+    el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11.5" fill="white" stroke="#f97316" stroke-width="2"/><g transform="translate(4,6)"><circle cx="3" cy="9" r="2" fill="#374151"/><circle cx="13" cy="9" r="2" fill="#374151"/><path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="2" r="1.2" fill="#f97316"/></g></svg>`;
+    if (!driverMarkerRef.current) {
+      driverMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ map, position: driverLocation, content: el, title: 'Tu conductor' });
+    } else {
+      driverMarkerRef.current.position = driverLocation;
+      driverMarkerRef.current.content = el;
+      driverMarkerRef.current.map = map;
+    }
+  }, [map, driverLocation]);
+
+  // Marcadores conductores cercanos
+  useEffect(() => {
+    if (!map) return;
+    nearbyMarkersRef.current.forEach((m) => (m.map = null));
+    nearbyMarkersRef.current = [];
+    nearbyDrivers.forEach((driver) => {
+      const el = document.createElement('div');
+      el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="white" stroke="#f97316" stroke-width="1.5"/><g transform="translate(4,6)"><circle cx="3" cy="9" r="2" fill="#374151"/><circle cx="13" cy="9" r="2" fill="#374151"/><path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="2" r="1.2" fill="#f97316"/></g></svg>`;
+      const marker = new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: driver.lat, lng: driver.lng }, content: el, title: `${driver.name} — ${driver.vehicle} ⭐ ${driver.rating}` });
+      marker.addListener('click', () => onDriverClick && onDriverClick(driver.id));
+      nearbyMarkersRef.current.push(marker);
+    });
+  }, [map, nearbyDrivers]);
+
+  // Marcadores pasajeros solicitando
+  useEffect(() => {
+    if (!map) return;
+    passengerMarkersRef.current.forEach((m) => (m.map = null));
+    passengerMarkersRef.current = [];
+    requestingPassengers.forEach((passenger) => {
+      const genderIcon = passenger.gender === 'male' ? '🙋🏻‍♂️' : passenger.gender === 'female' ? '🙋🏻‍♀️' : '🙋';
+      const el = document.createElement('div');
+      el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="#dc2626" opacity="0.3"><animate attributeName="r" values="18;24;18" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.5s" repeatCount="indefinite"/></circle><circle cx="25" cy="25" r="16" fill="#ef4444" opacity="0.5"><animate attributeName="r" values="16;20;16" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.5s" repeatCount="indefinite"/></circle><circle cx="25" cy="25" r="14" fill="#dc2626" stroke="white" stroke-width="2"/><text x="25" y="33" font-size="18" text-anchor="middle" fill="white">${genderIcon}</text></svg>`;
+      const marker = new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: passenger.lat, lng: passenger.lng }, content: el, title: `${passenger.name} solicita viaje · ${passenger.distance_km.toFixed(1)} km` });
+      marker.addListener('click', () => onPassengerClick && onPassengerClick(passenger.id));
+      passengerMarkersRef.current.push(marker);
+    });
+  }, [map, requestingPassengers]);
+
   if (loadError) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
@@ -346,151 +439,7 @@ function GoogleMapComponent({
         }}
         onClick={clickMode ? handleMapClick : undefined}
       >
-        {/* Marcador de pickup (verde) */}
-        {pickup && (
-          <Marker
-            position={pickup}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: "#10b981",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 3,
-            }}
-            title="Punto de recogida"
-          />
-        )}
-
-        {/* Marcador de destino (rojo) */}
-        {destination && (
-          <Marker
-            position={destination}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: "#ef4444",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 3,
-            }}
-            title="Destino"
-          />
-        )}
-
-        {/* Marcador de ubicación del usuario (azul) */}
-        {userLocation && (
-          <Marker
-            position={userLocation}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: "#3b82f6",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-            }}
-            title="Tu ubicación"
-          />
-        )}
-
-        {/* Marcador del conductor (moto naranja) */}
-        {driverLocation && (
-          <Marker
-            position={driverLocation}
-            icon={{
-              url:
-                "data:image/svg+xml," +
-                encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="11.5" fill="white" stroke="#f97316" stroke-width="2"/>
-                  <g transform="translate(4, 6)">
-                    <circle cx="3" cy="9" r="2" fill="#374151"/>
-                    <circle cx="13" cy="9" r="2" fill="#374151"/>
-                    <path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                    <path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                    <circle cx="8" cy="2" r="1.2" fill="#f97316"/>
-                  </g>
-                </svg>
-              `),
-              scaledSize: new google.maps.Size(44, 44),
-              anchor: new google.maps.Point(22, 22),
-            }}
-            title="Tu conductor"
-          />
-        )}
-
-        {/* Marcadores de conductores disponibles cercanos (mototaxi naranja) */}
-        {nearbyDrivers.map((driver) => (
-          <Marker
-            key={`nearby-${driver.id}`}
-            position={{ lat: driver.lat, lng: driver.lng }}
-            icon={{
-              url:
-                "data:image/svg+xml," +
-                encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="11" fill="white" stroke="#f97316" stroke-width="1.5"/>
-                  <g transform="translate(4, 6)">
-                    <circle cx="3" cy="9" r="2" fill="#374151"/>
-                    <circle cx="13" cy="9" r="2" fill="#374151"/>
-                    <path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                    <path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                    <circle cx="8" cy="2" r="1.2" fill="#f97316"/>
-                  </g>
-                </svg>
-              `),
-              scaledSize: new google.maps.Size(36, 36),
-              anchor: new google.maps.Point(18, 18),
-            }}
-            title={`${driver.name} — ${driver.vehicle} ⭐ ${driver.rating}`}
-            onClick={() => onDriverClick && onDriverClick(driver.id)}
-          />
-        ))}
-
-        {/* Marcadores de pasajeros solicitando viaje (con animación pulsante) */}
-        {requestingPassengers.map((passenger) => {
-          // Determinar icono según género
-          const genderIcon =
-            passenger.gender === "male"
-              ? "🙋🏻‍♂️"
-              : passenger.gender === "female"
-                ? "🙋🏻‍♀️"
-                : "🙋";
-
-          return (
-            <Marker
-              key={`requesting-${passenger.id}`}
-              position={{ lat: passenger.lat, lng: passenger.lng }}
-              icon={{
-                url:
-                  "data:image/svg+xml," +
-                  encodeURIComponent(`
-                  <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
-                    <!-- Círculo pulsante exterior (animación de alerta) -->
-                    <circle cx="25" cy="25" r="20" fill="#dc2626" opacity="0.3">
-                      <animate attributeName="r" values="18;24;18" dur="1.5s" repeatCount="indefinite"/>
-                      <animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.5s" repeatCount="indefinite"/>
-                    </circle>
-                    <!-- Círculo pulsante intermedio -->
-                    <circle cx="25" cy="25" r="16" fill="#ef4444" opacity="0.5">
-                      <animate attributeName="r" values="16;20;16" dur="1.5s" repeatCount="indefinite"/>
-                      <animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.5s" repeatCount="indefinite"/>
-                    </circle>
-                    <!-- Círculo principal -->
-                    <circle cx="25" cy="25" r="14" fill="#dc2626" stroke="white" stroke-width="2"/>
-                    <!-- Icono de persona -->
-                    <text x="25" y="33" font-size="18" text-anchor="middle" fill="white">${genderIcon}</text>
-                  </svg>
-                `),
-                scaledSize: new google.maps.Size(50, 50),
-                anchor: new google.maps.Point(25, 25),
-              }}
-              title={`${passenger.name} solicita viaje · ${passenger.distance_km.toFixed(1)} km`}
-              onClick={() => onPassengerClick && onPassengerClick(passenger.id)}
-            />
-          );
-        })}
+        {/* Marcadores gestionados imperativamente via useEffect con AdvancedMarkerElement */}
 
         {/* Ruta desde el conductor hasta el punto de recogida (azul) */}
         {directionsToPickup && (

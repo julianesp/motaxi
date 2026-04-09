@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { GoogleMap, useJsApiLoader, Circle } from '@react-google-maps/api';
 import { MUNICIPALITIES, VALLE_SIBUNDOY_CENTER } from '@/lib/constants/municipalities';
 
-const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
+const libraries: ('places' | 'geometry' | 'marker')[] = ['places', 'geometry', 'marker'];
 
 const mapContainerStyle = {
   width: '100%',
@@ -18,13 +18,7 @@ const defaultOptions = {
   streetViewControl: false,
   mapTypeControl: false,
   fullscreenControl: true,
-  styles: [
-    {
-      featureType: 'poi',
-      elementType: 'labels',
-      stylers: [{ visibility: 'off' }],
-    },
-  ],
+  mapId: 'motaxi_landing_map',
 };
 
 export default function LandingMap() {
@@ -36,14 +30,53 @@ export default function LandingMap() {
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedMunicipality, setSelectedMunicipality] = useState<string | null>(null);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
   }, []);
 
   const onUnmount = useCallback(() => {
+    markersRef.current.forEach((m) => (m.map = null));
+    markersRef.current = [];
     setMap(null);
   }, []);
+
+  // Crear AdvancedMarkerElement para cada municipio cuando el mapa esté listo
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    // Limpiar marcadores anteriores
+    markersRef.current.forEach((m) => (m.map = null));
+    markersRef.current = [];
+
+    MUNICIPALITIES.forEach((municipality) => {
+      const pin = document.createElement('div');
+      pin.innerHTML = `
+        <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad${municipality.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <circle cx="20" cy="20" r="18" fill="url(#grad${municipality.id})" stroke="white" stroke-width="3"/>
+          <text x="20" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="white" font-family="system-ui, -apple-system, sans-serif">
+            ${municipality.name[0]}
+          </text>
+        </svg>`;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map,
+        position: municipality.coordinates,
+        content: pin,
+        title: municipality.name,
+      });
+
+      marker.addListener('click', () => setSelectedMunicipality(municipality.id));
+      markersRef.current.push(marker);
+    });
+  }, [map, isLoaded]);
 
   if (loadError) {
     return (
@@ -95,33 +128,7 @@ export default function LandingMap() {
           }}
         />
 
-        {/* Marcadores para cada municipio */}
-        {MUNICIPALITIES.map((municipality) => (
-          <Marker
-            key={municipality.id}
-            position={municipality.coordinates}
-            icon={{
-              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <linearGradient id="grad${municipality.id}" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-                    </linearGradient>
-                  </defs>
-                  <circle cx="20" cy="20" r="18" fill="url(#grad${municipality.id})" stroke="white" stroke-width="3"/>
-                  <text x="20" y="26" text-anchor="middle" font-size="16" font-weight="bold" fill="white" font-family="system-ui, -apple-system, sans-serif">
-                    ${municipality.name[0]}
-                  </text>
-                </svg>
-              `)}`,
-              scaledSize: new google.maps.Size(40, 40),
-              anchor: new google.maps.Point(20, 20),
-            }}
-            onClick={() => setSelectedMunicipality(municipality.id)}
-            title={municipality.name}
-          />
-        ))}
+        {/* Marcadores creados imperativamente via useEffect con AdvancedMarkerElement */}
       </GoogleMap>
 
       {/* Info card para municipio seleccionado */}

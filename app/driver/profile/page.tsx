@@ -1092,6 +1092,45 @@ export default function DriverProfilePage() {
               </div>
             </div>
 
+            {/* Compartir con un amigo */}
+            <button
+              onClick={() => {
+                const url = window.location.origin;
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'MoTaxi',
+                    text: '¡Te invito a ser conductor en MoTaxi! Genera ingresos con tu moto.',
+                    url,
+                  });
+                } else {
+                  navigator.clipboard.writeText(url).then(() => {
+                    Swal.fire({
+                      icon: 'success',
+                      title: '¡Enlace copiado!',
+                      text: 'Comparte el enlace con tus amigos.',
+                      confirmButtonColor: '#008000',
+                      timer: 2500,
+                      timerProgressBar: true,
+                    });
+                  });
+                }
+              }}
+              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-green-50 transition-colors border border-green-100"
+            >
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <div className="text-left">
+                  <span className="font-medium text-[#008000] block">Compartir con un amigo</span>
+                  <span className="text-xs text-gray-400">Invita a alguien a ser conductor</span>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
             {/* Cerrar sesión */}
             <button
               onClick={handleLogout}

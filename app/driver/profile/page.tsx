@@ -973,92 +973,106 @@ export default function DriverProfilePage() {
           </div>
 
           {/* Additional Options */}
-          <div className="mt-6 space-y-3">
-            <button
-              onClick={() => router.push('/driver/earnings')}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mt-6">
+            {/* Grid 2 columnas */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Ganancias */}
+              <button
+                onClick={() => router.push('/driver/earnings')}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="font-medium text-gray-900">Mis Ganancias</span>
-              </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+                <span className="text-sm font-medium text-gray-800">Ganancias</span>
+              </button>
 
-            <button
-              onClick={() => router.push('/driver/history')}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Historial */}
+              <button
+                onClick={() => router.push('/driver/history')}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="font-medium text-gray-900">Historial de Viajes</span>
-              </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+                <span className="text-sm font-medium text-gray-800">Historial</span>
+              </button>
 
-            <a
-              href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
-              className="w-full bg-gradient-to-r from-purple-600 to-[#008000] rounded-xl shadow-md p-4 flex items-center justify-between hover:from-purple-700 hover:to-[#006600] transition-all"
-            >
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Soporte */}
+              <a
+                href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span className="font-medium text-white">Contactar Soporte</span>
-              </div>
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
+                <span className="text-sm font-medium text-gray-800">Soporte</span>
+              </a>
 
-            {/* Cambiar a modo Pasajero */}
-            <button
-              onClick={async () => {
-                const result = await Swal.fire({
-                  title: '¿Cambiar a modo Pasajero?',
-                  html: `<p style="color:#4b5563;font-size:14px;line-height:1.6;">Podrás solicitar viajes como pasajero.<br/>Tu perfil de conductor seguirá activo — puedes regresar cuando quieras.</p>`,
-                  icon: 'question',
-                  showCancelButton: true,
-                  confirmButtonText: '🧍 Sí, modo pasajero',
-                  confirmButtonColor: '#008000',
-                  cancelButtonText: 'Cancelar',
-                  cancelButtonColor: '#6b7280',
-                });
-                if (!result.isConfirmed) return;
-                try {
-                  const { apiClient } = await import('@/lib/api-client');
-                  await apiClient.put('/users/switch-role', { role: 'passenger' });
-                  await refreshUser();
-                  await Swal.fire({ icon: 'success', title: '¡Modo pasajero activado!', confirmButtonColor: '#008000', timer: 2500, timerProgressBar: true });
-                  router.push('/passenger');
-                } catch {
-                  Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cambiar el modo. Contacta soporte.', confirmButtonColor: '#008000' });
-                }
-              }}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-blue-50 transition-colors border border-blue-100"
-            >
-              <div className="flex items-center">
-                <span className="text-xl mr-3">🧍</span>
-                <div className="text-left">
-                  <span className="font-medium text-blue-600 block">Cambiar a modo Pasajero</span>
-                  <span className="text-xs text-gray-400">Solicita viajes con tu cuenta</span>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              {/* Ser Pasajero */}
+              <button
+                onClick={async () => {
+                  const result = await Swal.fire({
+                    title: '¿Cambiar a modo Pasajero?',
+                    html: `<p style="color:#4b5563;font-size:14px;line-height:1.6;">Podrás solicitar viajes como pasajero.<br/>Tu perfil de conductor seguirá activo — puedes regresar cuando quieras.</p>`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: '🧍 Sí, modo pasajero',
+                    confirmButtonColor: '#008000',
+                    cancelButtonText: 'Cancelar',
+                    cancelButtonColor: '#6b7280',
+                  });
+                  if (!result.isConfirmed) return;
+                  try {
+                    const { apiClient } = await import('@/lib/api-client');
+                    await apiClient.put('/users/switch-role', { role: 'passenger' });
+                    await refreshUser();
+                    await Swal.fire({ icon: 'success', title: '¡Modo pasajero activado!', confirmButtonColor: '#008000', timer: 2500, timerProgressBar: true });
+                    router.push('/passenger');
+                  } catch {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cambiar el modo. Contacta soporte.', confirmButtonColor: '#008000' });
+                  }
+                }}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-blue-50 transition-colors border border-blue-100 min-h-[90px]"
+              >
+                <span className="text-2xl">🧍</span>
+                <span className="text-sm font-medium text-blue-600">Ser Pasajero</span>
+              </button>
 
-            {/* Notificaciones por Telegram */}
-            <div className="bg-white rounded-xl shadow-md p-4">
+              {/* Compartir */}
+              <button
+                onClick={() => {
+                  const url = window.location.origin;
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'MoTaxi',
+                      text: 'Te invito a usar esta aplicación MoTaxi. Regístrate cómo pasajero o conductor',
+                      url,
+                    });
+                  } else {
+                    navigator.clipboard.writeText(url).then(() => {
+                      Swal.fire({
+                        icon: 'success',
+                        title: '¡Enlace copiado!',
+                        text: 'Comparte el enlace con tus amigos.',
+                        confirmButtonColor: '#008000',
+                        timer: 2500,
+                        timerProgressBar: true,
+                      });
+                    });
+                  }
+                }}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <span className="text-sm font-medium text-[#008000]">Compartir</span>
+              </button>
+            </div>
+
+            {/* Notificaciones por Telegram — ancho completo por su complejidad */}
+            <div className="mt-3 bg-white rounded-xl shadow-md p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <svg className="w-6 h-6 mr-3 flex-shrink-0" viewBox="0 0 24 24" fill="none">
@@ -1067,7 +1081,7 @@ export default function DriverProfilePage() {
                     <path d="M10 13.5l1.5 1.5 2-3" stroke="#29B6F6" strokeWidth="1" strokeLinecap="round"/>
                   </svg>
                   <div>
-                    <p className="font-medium text-gray-800 text-sm">Notificaciones Telegram</p>
+                    <p className="font-medium text-gray-800 text-sm">Telegram</p>
                     <p className="text-xs text-gray-500">
                       {telegramLinked ? '✅ Vinculado — recibes alertas de viajes' : 'Recibe alertas aunque el navegador esté cerrado'}
                     </p>
@@ -1092,49 +1106,10 @@ export default function DriverProfilePage() {
               </div>
             </div>
 
-            {/* Compartir con un amigo */}
-            <button
-              onClick={() => {
-                const url = window.location.origin;
-                if (navigator.share) {
-                  navigator.share({
-                    title: 'MoTaxi',
-                    text: 'Te invito a usar esta aplicación MoTaxi. Regístrate cómo pasajero o conductor',
-                    url,
-                  });
-                } else {
-                  navigator.clipboard.writeText(url).then(() => {
-                    Swal.fire({
-                      icon: 'success',
-                      title: '¡Enlace copiado!',
-                      text: 'Comparte el enlace con tus amigos.',
-                      confirmButtonColor: '#008000',
-                      timer: 2500,
-                      timerProgressBar: true,
-                    });
-                  });
-                }
-              }}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-green-50 transition-colors border border-green-100"
-            >
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                <div className="text-left">
-                  <span className="font-medium text-[#008000] block">Compartir con un amigo</span>
-                  <span className="text-xs text-gray-400">Invita a alguien a ser conductor</span>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
             {/* Cerrar sesión */}
             <button
               onClick={handleLogout}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors"
+              className="mt-3 w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors"
             >
               <div className="flex items-center">
                 <svg className="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1185,7 +1160,7 @@ export default function DriverProfilePage() {
                   Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar la cuenta. Contacta soporte.', confirmButtonColor: '#008000' });
                 }
               }}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors border border-red-100"
+              className="mt-3 w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors border border-red-100"
             >
               <div className="flex items-center">
                 <svg className="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

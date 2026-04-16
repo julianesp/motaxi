@@ -434,156 +434,87 @@ export default function PassengerProfilePage() {
           </div>
 
           {/* Additional Options */}
-          <div className="mt-6 space-y-3">
-            <button
-              onClick={() => router.push("/passenger/history")}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <svg
-                  className="w-6 h-6 text-[#008000] mr-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="font-medium text-black">
-                  Historial de Viajes
-                </span>
-              </div>
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="mt-6">
+            {/* Grid 2 columnas */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Historial */}
+              <button
+                onClick={() => router.push("/passenger/history")}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors min-h-[90px]"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => router.push("/passenger/favorites")}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <svg
-                  className="w-6 h-6 text-[#008000] mr-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                  />
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="font-medium text-black">
-                  Lugares Favoritos
-                </span>
-              </div>
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+                <span className="text-sm font-medium text-gray-800">Historial</span>
+              </button>
 
-            <a
-              href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Favoritos */}
+              <button
+                onClick={() => router.push("/passenger/favorites")}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                <span className="text-sm font-medium text-gray-800">Favoritos</span>
+              </button>
+
+              {/* Soporte */}
+              <a
+                href="mailto:admin@neurai.dev?subject=Soporte%20MoTaxi&body=Hola,%20necesito%20ayuda%20con%20MoTaxi..."
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span className="font-medium text-black">Contactar Soporte</span>
-              </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
+                <span className="text-sm font-medium text-gray-800">Soporte</span>
+              </a>
 
-            {/* Cambiar a modo Conductor */}
-            <button
-              onClick={handleSwitchToDriver}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-green-50 transition-colors border border-green-100"
-            >
-              <div className="flex items-center">
-                <span className="text-xl mr-3">🏍️</span>
-                <div className="text-left">
-                  <span className="font-medium text-[#008000] block">Cambiar a modo Conductor</span>
-                  <span className="text-xs text-gray-400">Recibe viajes y genera ingresos</span>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              {/* Ser Conductor */}
+              <button
+                onClick={handleSwitchToDriver}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
+              >
+                <span className="text-2xl">🏍️</span>
+                <span className="text-sm font-medium text-[#008000]">Ser Conductor</span>
+              </button>
 
-            {/* Compartir con un amigo */}
-            <button
-              onClick={() => {
-                const url = window.location.origin;
-                if (navigator.share) {
-                  navigator.share({
-                    title: 'MoTaxi',
-                    text: 'Te invito a usar esta aplicación MoTaxi. Regístrate cómo pasajero o conductor',
-                    url,
-                  });
-                } else {
-                  navigator.clipboard.writeText(url).then(() => {
-                    Swal.fire({
-                      icon: 'success',
-                      title: '¡Enlace copiado!',
-                      text: 'Comparte el enlace con tus amigos.',
-                      confirmButtonColor: '#008000',
-                      timer: 2500,
-                      timerProgressBar: true,
+              {/* Compartir */}
+              <button
+                onClick={() => {
+                  const url = window.location.origin;
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'MoTaxi',
+                      text: 'Te invito a usar esta aplicación MoTaxi. Regístrate cómo pasajero o conductor',
+                      url,
                     });
-                  });
-                }
-              }}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-green-50 transition-colors border border-green-100"
-            >
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  } else {
+                    navigator.clipboard.writeText(url).then(() => {
+                      Swal.fire({
+                        icon: 'success',
+                        title: '¡Enlace copiado!',
+                        text: 'Comparte el enlace con tus amigos.',
+                        confirmButtonColor: '#008000',
+                        timer: 2500,
+                        timerProgressBar: true,
+                      });
+                    });
+                  }
+                }}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
-                <div className="text-left">
-                  <span className="font-medium text-[#008000] block">Compartir con un amigo</span>
-                  <span className="text-xs text-gray-400">Invita a alguien a usar MoTaxi</span>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+                <span className="text-sm font-medium text-[#008000]">Compartir</span>
+              </button>
+            </div>
 
             {/* Cerrar sesión */}
             <button
               onClick={handleLogout}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors"
+              className="mt-3 w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors"
             >
               <div className="flex items-center">
                 <svg className="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -599,7 +530,7 @@ export default function PassengerProfilePage() {
             {/* Eliminar cuenta */}
             <button
               onClick={handleDeleteAccount}
-              className="w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors border border-red-100"
+              className="mt-3 w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors border border-red-100"
             >
               <div className="flex items-center">
                 <svg className="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

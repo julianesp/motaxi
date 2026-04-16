@@ -548,7 +548,7 @@ export default function PassengerProfilePage() {
                 if (navigator.share) {
                   navigator.share({
                     title: 'MoTaxi',
-                    text: '¡Te invito a usar MoTaxi! Pide tu mototaxi fácil y rápido.',
+                    text: 'Te invito a usar esta aplicación MoTaxi. Regístrate cómo pasajero o conductor',
                     url,
                   });
                 } else {

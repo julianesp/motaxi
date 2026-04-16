@@ -1099,7 +1099,7 @@ export default function DriverProfilePage() {
                 if (navigator.share) {
                   navigator.share({
                     title: 'MoTaxi',
-                    text: '¡Te invito a ser conductor en MoTaxi! Genera ingresos con tu moto.',
+                    text: 'Te invito a usar esta aplicación MoTaxi. Regístrate cómo pasajero o conductor',
                     url,
                   });
                 } else {

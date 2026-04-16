@@ -290,7 +290,7 @@ driverRoutes.get('/nearby', async (c) => {
               COALESCE(d.vehicle_types, 'moto') AS vehicle_types,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,
-              u.full_name, u.phone
+              u.full_name, u.phone, u.profile_image
        FROM drivers d
        JOIN users u ON d.id = u.id
        WHERE ${whereClause}`

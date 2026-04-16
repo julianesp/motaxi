@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Swal from "sweetalert2";
+import dynamic from "next/dynamic";
+
+const NamedPlacesManager = dynamic(() => import("@/components/NamedPlacesManager"), { ssr: false });
 
 export default function PassengerProfilePage() {
   const router = useRouter();
@@ -431,6 +434,11 @@ export default function PassengerProfilePage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Lugares conocidos */}
+          <div className="mt-6">
+            <NamedPlacesManager userId={user.id} />
           </div>
 
           {/* Additional Options */}

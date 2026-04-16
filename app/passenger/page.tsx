@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useFavorites } from "@/lib/hooks/useFavorites";
+import { useNamedPlaces } from "@/lib/hooks/useNamedPlaces";
 import dynamic from "next/dynamic";
 import Swal from "sweetalert2";
 
@@ -24,6 +25,7 @@ interface NearbyDriver {
   per_km_fare: number;
   distance_km?: number;
   municipality?: string;
+  profile_image?: string | null;
 }
 
 interface FavoriteDriver {
@@ -137,6 +139,7 @@ export default function PassengerHomePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { favorites, addFavorite, deleteFavorite } = useFavorites();
+  const { searchResults: namedPlaceResults, search: searchNamedPlaces, createPlace } = useNamedPlaces();
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   const [pickup, setPickup] = useState<LocationInput>({
@@ -970,7 +973,9 @@ export default function PassengerHomePage() {
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                     <span className="text-sm text-gray-600 truncate max-w-[120px] md:max-w-[200px]">
-                      {destination.address || "Destino"}
+                      {destination.address
+                        ? destination.address.split(",")[0]
+                        : "Destino"}
                     </span>
                   </div>
                 </div>
@@ -1121,6 +1126,8 @@ export default function PassengerHomePage() {
                       className="text-black"
                       icon="pickup"
                       favorites={[]}
+                      namedPlaces={namedPlaceResults}
+                      onNamedPlaceSearch={searchNamedPlaces}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -1225,6 +1232,8 @@ export default function PassengerHomePage() {
                           place_id: favorite.place_id,
                         });
                       }}
+                      namedPlaces={namedPlaceResults}
+                      onNamedPlaceSearch={searchNamedPlaces}
                     />
                   </div>
                   <button
@@ -1321,13 +1330,29 @@ export default function PassengerHomePage() {
                               onClick={() =>
                                 setSelectedDriver(isSelected ? null : driver)
                               }
-                              className={`w-full flex items-center justify-between rounded-xl px-3 py-2 border transition-all duration-150 text-left ${
+                              className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 border transition-all duration-150 text-left ${
                                 isSelected
                                   ? "bg-green-50 border-[#42CE1D] ring-1 ring-[#42CE1D]"
                                   : "bg-white border-green-100 hover:border-green-300 hover:bg-green-50"
                               }`}
                             >
-                              <div>
+                              {/* Foto del conductor */}
+                              <div className="flex-shrink-0">
+                                {driver.profile_image ? (
+                                  <img
+                                    src={driver.profile_image}
+                                    alt={driver.full_name}
+                                    className="w-10 h-10 rounded-full object-cover border-2 border-green-200"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-green-100 border-2 border-green-200 flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
                                 <span className="text-sm font-medium text-gray-800">
                                   {driver.full_name}
                                 </span>
@@ -1351,7 +1376,7 @@ export default function PassengerHomePage() {
                                   )}
                                 </div>
                               </div>
-                              <span className="text-base font-bold text-[#006600]">
+                              <span className="text-base font-bold text-[#006600] flex-shrink-0">
                                 ${driverFare.toLocaleString()}
                               </span>
                             </button>

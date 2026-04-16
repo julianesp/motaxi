@@ -6,6 +6,9 @@ import { useAuth } from '@/lib/auth-context';
 import { MUNICIPALITIES } from '@/lib/constants/municipalities';
 import TrialBanner from '@/components/TrialBanner';
 import Swal from 'sweetalert2';
+import dynamic from 'next/dynamic';
+
+const NamedPlacesManager = dynamic(() => import('@/components/NamedPlacesManager'), { ssr: false });
 
 interface DriverInfo {
   vehicle_model: string;
@@ -30,6 +33,10 @@ export default function DriverProfilePage() {
   const router = useRouter();
   const { user, loading, logout, refreshUser } = useAuth();
   const [isDriverOfMonth, setIsDriverOfMonth] = useState(false);
+  const [showFreeModal, setShowFreeModal] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('motaxi_free_notice_seen') !== '1';
+  });
   const [driverOfMonth, setDriverOfMonth] = useState<{ full_name: string; avg_rating: number; month_trips: number; municipality?: string } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -376,6 +383,42 @@ export default function DriverProfilePage() {
               </div>
               <div className="text-right flex-shrink-0">
                 <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">1 mes gratis</span>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: app gratuita hasta nuevo aviso */}
+          {showFreeModal && (
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+                {/* Header verde */}
+                <div className="bg-gradient-to-r from-[#008000] to-[#42CE1D] px-6 py-5 text-center">
+                  <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-3xl">🎉</span>
+                  </div>
+                  <h2 className="text-white font-bold text-xl">¡MoTaxi es gratis!</h2>
+                  <p className="text-green-100 text-sm mt-1">Hasta nuevo aviso</p>
+                </div>
+                {/* Contenido */}
+                <div className="px-6 py-5 text-center">
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    Durante esta etapa de lanzamiento, <strong>todos los conductores pueden usar MoTaxi sin ningún costo</strong>.
+                    Recibe viajes, genera ingresos y ayúdanos a crecer.
+                  </p>
+                  <p className="text-gray-500 text-xs mt-3">
+                    Cuando se acerque el momento de activar la suscripción, te avisaremos con anticipación.
+                  </p>
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('motaxi_free_notice_seen', '1');
+                      setShowFreeModal(false);
+                    }}
+                    className="mt-5 w-full py-3 bg-[#008000] hover:bg-[#006600] text-white font-semibold rounded-xl transition-colors"
+                  >
+                    ¡Entendido, a trabajar!
+                  </button>
+                  <p className="text-xs text-gray-400 mt-2">No volveremos a mostrarte este mensaje</p>
+                </div>
               </div>
             </div>
           )}
@@ -970,6 +1013,11 @@ export default function DriverProfilePage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Lugares conocidos */}
+          <div className="mt-6">
+            <NamedPlacesManager userId={user!.id} />
           </div>
 
           {/* Additional Options */}

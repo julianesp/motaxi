@@ -6,6 +6,15 @@ import { MUNICIPALITIES } from '@/lib/constants/municipalities';
 
 const libraries: ('places' | 'geometry' | 'marker')[] = ['places', 'geometry', 'marker'];
 
+interface NamedPlaceOption {
+  id: string;
+  name: string;
+  description?: string | null;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
 interface PlacesAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
@@ -27,6 +36,8 @@ interface PlacesAutocompleteProps {
     place_id?: string | null;
   }>;
   onSelectFavorite?: (favorite: any) => void;
+  namedPlaces?: NamedPlaceOption[];
+  onNamedPlaceSearch?: (q: string) => void;
 }
 
 export default function PlacesAutocomplete({
@@ -38,6 +49,8 @@ export default function PlacesAutocomplete({
   className = '',
   favorites = [],
   onSelectFavorite,
+  namedPlaces = [],
+  onNamedPlaceSearch,
 }: PlacesAutocompleteProps) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -49,6 +62,17 @@ export default function PlacesAutocomplete({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [showNamedPlaces, setShowNamedPlaces] = useState(false);
+
+  // Ocultar el dropdown nativo de Google cuando mostramos lugares conocidos
+  useEffect(() => {
+    const style = document.getElementById('pac-hide-style') || document.createElement('style');
+    style.id = 'pac-hide-style';
+    style.textContent = showNamedPlaces && namedPlaces.length > 0
+      ? '.pac-container { display: none !important; }'
+      : '';
+    if (!document.getElementById('pac-hide-style')) document.head.appendChild(style);
+  }, [showNamedPlaces, namedPlaces.length]);
 
   useEffect(() => {
     if (isLoaded && inputRef.current && !autocompleteRef.current) {
@@ -99,7 +123,18 @@ export default function PlacesAutocomplete({
     setTimeout(() => {
       setShowSuggestions(false);
       setShowFavorites(false);
+      setShowNamedPlaces(false);
     }, 200);
+  };
+
+  const handleSelectNamedPlace = (place: NamedPlaceOption) => {
+    onSelectPlace({
+      address: place.address,
+      latitude: place.latitude,
+      longitude: place.longitude,
+    });
+    onChange(place.name);
+    setShowNamedPlaces(false);
   };
 
   const handleSelectMunicipality = (municipality: typeof MUNICIPALITIES[0]) => {
@@ -134,7 +169,17 @@ export default function PlacesAutocomplete({
         ref={inputRef}
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          const val = e.target.value;
+          onChange(val);
+          if (val.length >= 2) {
+            onNamedPlaceSearch?.(val);
+            setShowNamedPlaces(true);
+            setShowFavorites(false);
+          } else {
+            setShowNamedPlaces(false);
+          }
+        }}
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
@@ -196,6 +241,42 @@ export default function PlacesAutocomplete({
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-gray-900 text-sm md:text-base">{favorite.name}</div>
                   <div className="text-xs md:text-sm text-gray-500 truncate">{favorite.address}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lugares conocidos de la comunidad */}
+      {showNamedPlaces && namedPlaces.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-[#008000] max-h-80 overflow-y-auto z-[9999] backdrop-blur-sm">
+          <div className="p-2">
+            <div className="flex items-center px-3 py-2 border-b border-gray-100">
+              <svg className="w-4 h-4 text-[#008000] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-xs font-semibold text-gray-700">Lugares conocidos</span>
+            </div>
+            {namedPlaces.map((place) => (
+              <button
+                key={place.id}
+                onClick={() => handleSelectNamedPlace(place)}
+                className="w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 rounded-xl transition-all flex items-center space-x-3 group"
+              >
+                <div className={`w-10 h-10 ${icon === 'pickup' ? 'bg-gradient-to-br from-green-100 to-green-200' : 'bg-gradient-to-br from-red-100 to-red-200'} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                  <svg className={`w-5 h-5 ${icon === 'pickup' ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 text-sm">{place.name}</div>
+                  {place.description && (
+                    <div className="text-xs text-gray-500 truncate">{place.description}</div>
+                  )}
+                  <div className="text-xs text-gray-400 truncate">{place.address.split(',')[0]}</div>
                 </div>
               </button>
             ))}

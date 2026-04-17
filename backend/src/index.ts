@@ -28,6 +28,7 @@ export interface Env {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   TELEGRAM_BOT_TOKEN?: string;
+  ADMIN_TELEGRAM_CHAT_ID?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();

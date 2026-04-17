@@ -68,6 +68,97 @@ export class TelegramService {
   }
 
   /**
+   * Notifica al admin sobre un nuevo usuario registrado
+   */
+  static async notifyAdminNewUser(
+    botToken: string,
+    adminChatId: string | number,
+    user: {
+      fullName: string;
+      email: string;
+      role: string;
+      phone: string;
+    }
+  ): Promise<boolean> {
+    const roleLabel = user.role === 'driver' ? '🏍️ Conductor' : '👤 Pasajero';
+    const text = `🆕 <b>Nuevo usuario registrado</b>
+
+${roleLabel}
+👤 <b>Nombre:</b> ${user.fullName}
+📧 <b>Email:</b> ${user.email}
+📱 <b>Teléfono:</b> ${user.phone}`;
+
+    return this.sendMessage(botToken, adminChatId, text);
+  }
+
+  /**
+   * Notifica al admin cuando un viaje es marcado como completado
+   */
+  static async notifyAdminTripCompleted(
+    botToken: string,
+    adminChatId: string | number,
+    trip: {
+      tripId: string;
+      passengerName: string;
+      driverName: string;
+      pickupAddress: string;
+      dropoffAddress: string;
+      fare: number;
+    }
+  ): Promise<boolean> {
+    const text = `✅ <b>Viaje completado</b>
+
+🆔 <b>ID:</b> <code>${trip.tripId.substring(0, 8)}</code>
+👤 <b>Pasajero:</b> ${trip.passengerName}
+🏍️ <b>Conductor:</b> ${trip.driverName}
+📍 <b>Origen:</b> ${trip.pickupAddress}
+🏁 <b>Destino:</b> ${trip.dropoffAddress}
+💰 <b>Tarifa:</b> $${trip.fare.toLocaleString('es-CO')}`;
+
+    return this.sendMessage(botToken, adminChatId, text);
+  }
+
+  /**
+   * Notifica al admin cuando un conductor recibe una calificación
+   */
+  static async notifyAdminDriverRated(
+    botToken: string,
+    adminChatId: string | number,
+    data: {
+      driverName: string;
+      passengerName: string;
+      rating: number;
+      comment?: string;
+      tripId: string;
+    }
+  ): Promise<boolean> {
+    const stars = '⭐'.repeat(data.rating);
+    const text = `⭐ <b>Conductor calificado</b>
+
+🏍️ <b>Conductor:</b> ${data.driverName}
+👤 <b>Por:</b> ${data.passengerName}
+${stars} <b>Calificación:</b> ${data.rating}/5${data.comment ? `\n💬 <b>Comentario:</b> "${data.comment}"` : ''}
+🆔 <b>Viaje:</b> <code>${data.tripId.substring(0, 8)}</code>`;
+
+    return this.sendMessage(botToken, adminChatId, text);
+  }
+
+  /**
+   * Notifica al admin cuando se alcanza un hito de pasajeros
+   */
+  static async notifyAdminPassengerMilestone(
+    botToken: string,
+    adminChatId: string | number,
+    count: number
+  ): Promise<boolean> {
+    const text = `🎉 <b>¡Hito alcanzado!</b>
+
+Ya hay <b>${count} pasajeros</b> registrados en MoTaxi. 🚀`;
+
+    return this.sendMessage(botToken, adminChatId, text);
+  }
+
+  /**
    * Configura el webhook del bot para recibir mensajes de conductores
    */
   static async setWebhook(botToken: string, webhookUrl: string): Promise<boolean> {

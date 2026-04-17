@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface Stats {
   drivers: { total: number; pending: number; approved: number; rejected: number; online: number };
@@ -179,6 +180,64 @@ export default function AdminDashboard() {
           <StatCard title="Conductores online" value={drivers.online} subtitle="Disponibles ahora" color="text-[#42CE1D]"
             icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" /></svg>}
           />
+        </div>
+      </div>
+
+      {/* Código QR */}
+      <QRSection />
+    </div>
+  );
+}
+
+function QRSection() {
+  const APP_URL = 'https://motaxi.dev';
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  function handleDownload() {
+    const canvas = canvasRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'motaxi-qr.png';
+    a.click();
+  }
+
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Código QR de la app</h2>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col sm:flex-row items-center gap-6">
+        <div ref={canvasRef} className="bg-white p-4 rounded-xl">
+          <QRCodeCanvas
+            value={APP_URL}
+            size={180}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="H"
+            imageSettings={{
+              src: '/favicon.svg',
+              height: 36,
+              width: 36,
+              excavate: true,
+            }}
+          />
+        </div>
+        <div className="flex-1 text-center sm:text-left">
+          <p className="text-white font-semibold text-lg mb-1">Motaxi App</p>
+          <p className="text-gray-400 text-sm mb-1">Escanea para abrir la aplicación</p>
+          <p className="text-[#42CE1D] text-sm font-mono mb-4">{APP_URL}</p>
+          <p className="text-gray-500 text-xs mb-4">
+            Al escanear este QR con la cámara del teléfono, el sistema mostrará la opción <span className="text-gray-300">"Abrir en el navegador"</span> automáticamente.
+          </p>
+          <button
+            onClick={handleDownload}
+            className="inline-flex items-center gap-2 bg-[#42CE1D] hover:bg-[#38b018] text-black font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Descargar QR
+          </button>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthUtils } from '../utils/auth';
 import { EmailService } from '../utils/email';
+import { TelegramService } from '../services/telegram';
 import { Env } from '../index';
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
@@ -109,6 +110,30 @@ authRoutes.post('/register', async (c) => {
     )
       .bind(userId)
       .first();
+
+    // Notificar al admin por Telegram sobre el nuevo registro
+    if (c.env.TELEGRAM_BOT_TOKEN && c.env.ADMIN_TELEGRAM_CHAT_ID) {
+      TelegramService.notifyAdminNewUser(
+        c.env.TELEGRAM_BOT_TOKEN,
+        c.env.ADMIN_TELEGRAM_CHAT_ID,
+        { fullName: full_name, email, role, phone }
+      ).catch(() => {});
+
+      // Hito de pasajeros: notificar si se llega a 20, 30, 50 o 100
+      if (role === 'passenger') {
+        const countResult = await c.env.DB.prepare(
+          "SELECT COUNT(*) as total FROM users WHERE role = 'passenger'"
+        ).first() as any;
+        const total = countResult?.total ?? 0;
+        if ([20, 30, 50, 100].includes(total)) {
+          TelegramService.notifyAdminPassengerMilestone(
+            c.env.TELEGRAM_BOT_TOKEN,
+            c.env.ADMIN_TELEGRAM_CHAT_ID,
+            total
+          ).catch(() => {});
+        }
+      }
+    }
 
     return c.json({
       user,
@@ -226,6 +251,28 @@ authRoutes.post('/google', async (c) => {
       user = await c.env.DB.prepare(
         'SELECT id, email, phone, full_name, role, created_at FROM users WHERE id = ?'
       ).bind(userId).first();
+
+      // Notificar al admin por Telegram sobre el nuevo registro con Google
+      if (c.env.TELEGRAM_BOT_TOKEN && c.env.ADMIN_TELEGRAM_CHAT_ID) {
+        TelegramService.notifyAdminNewUser(
+          c.env.TELEGRAM_BOT_TOKEN,
+          c.env.ADMIN_TELEGRAM_CHAT_ID,
+          { fullName: full_name, email, role: 'passenger', phone: `G-${googleId.substring(0, 9)}` }
+        ).catch(() => {});
+
+        // Hito de pasajeros al registrarse con Google
+        const countResult = await c.env.DB.prepare(
+          "SELECT COUNT(*) as total FROM users WHERE role = 'passenger'"
+        ).first() as any;
+        const total = countResult?.total ?? 0;
+        if ([20, 30, 50, 100].includes(total)) {
+          TelegramService.notifyAdminPassengerMilestone(
+            c.env.TELEGRAM_BOT_TOKEN,
+            c.env.ADMIN_TELEGRAM_CHAT_ID,
+            total
+          ).catch(() => {});
+        }
+      }
     }
 
     const { password_hash, ...userWithoutPassword } = user;

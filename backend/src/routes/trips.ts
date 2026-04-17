@@ -785,6 +785,28 @@ tripRoutes.put('/:id/status', async (c) => {
       .bind(tripId)
       .first();
 
+    // Notificar al admin cuando el pasajero marca el viaje como completado
+    if (status === 'completed' && user.role === 'passenger' && c.env.TELEGRAM_BOT_TOKEN && c.env.ADMIN_TELEGRAM_CHAT_ID) {
+      const passengerUser = await c.env.DB.prepare('SELECT full_name FROM users WHERE id = ?')
+        .bind(trip.passenger_id).first() as any;
+      const driverUser = trip.driver_id
+        ? await c.env.DB.prepare('SELECT full_name FROM users WHERE id = ?').bind(trip.driver_id).first() as any
+        : null;
+
+      TelegramService.notifyAdminTripCompleted(
+        c.env.TELEGRAM_BOT_TOKEN,
+        c.env.ADMIN_TELEGRAM_CHAT_ID,
+        {
+          tripId: tripId,
+          passengerName: passengerUser?.full_name ?? 'Desconocido',
+          driverName: driverUser?.full_name ?? 'Sin conductor',
+          pickupAddress: (trip.pickup_address as string) ?? '',
+          dropoffAddress: (trip.dropoff_address as string) ?? '',
+          fare: (trip.final_fare as number) ?? (trip.estimated_fare as number) ?? 0,
+        }
+      ).catch(() => {});
+    }
+
     // Si se canceló un viaje activo (accepted/in_progress), notificar a la otra parte
     if (status === 'cancelled' && (trip.status === 'accepted' || trip.status === 'in_progress')) {
       const cancelledBy = user.role === 'driver' ? 'El conductor' : 'El pasajero';
@@ -1011,6 +1033,24 @@ tripRoutes.put('/:id/rate', async (c) => {
           sound: 'default',
           priority: 'high',
         });
+      }
+
+      // Notificar al admin sobre la calificación recibida por el conductor
+      if (c.env.TELEGRAM_BOT_TOKEN && c.env.ADMIN_TELEGRAM_CHAT_ID) {
+        const ratedDriver = await c.env.DB.prepare('SELECT full_name FROM users WHERE id = ?')
+          .bind(ratedUserId).first() as any;
+
+        TelegramService.notifyAdminDriverRated(
+          c.env.TELEGRAM_BOT_TOKEN,
+          c.env.ADMIN_TELEGRAM_CHAT_ID,
+          {
+            driverName: ratedDriver?.full_name ?? 'Conductor desconocido',
+            passengerName: user.full_name as string,
+            rating,
+            comment: comment || undefined,
+            tripId,
+          }
+        ).catch(() => {});
       }
     } else {
       // Actualizar rating del pasajero

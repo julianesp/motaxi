@@ -141,7 +141,6 @@ export default function Navbar() {
             {/* Logo */}
             <div className="flex-shrink-0">
               <button
-                onClick={() => router.push("/")}
                 className="flex items-center gap-2"
                 onMouseEnter={handleLogoMouseEnter}
                 onMouseLeave={handleLogoMouseLeave}
@@ -177,8 +176,8 @@ export default function Navbar() {
                         user.email === "admin@neurai.dev"
                           ? "/admin"
                           : user.role === "passenger"
-                          ? "/passenger"
-                          : "/driver",
+                            ? "/passenger"
+                            : "/driver",
                       )
                     }
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -187,7 +186,9 @@ export default function Navbar() {
                         : "bg-green-100 text-[#008000] hover:bg-green-200"
                     }`}
                   >
-                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi cuenta"}
+                    {user.email === "admin@neurai.dev"
+                      ? "Panel Admin"
+                      : "Mi cuenta"}
                   </button>
                   <button
                     onClick={handleLogout}
@@ -306,14 +307,16 @@ export default function Navbar() {
                         user.email === "admin@neurai.dev"
                           ? "/admin"
                           : user.role === "passenger"
-                          ? "/passenger"
-                          : "/driver",
+                            ? "/passenger"
+                            : "/driver",
                       );
                       setMobileMenuOpen(false);
                     }}
                     className="w-full text-center px-4 py-3 rounded-xl font-semibold transition-all bg-[#008000] text-white hover:bg-[#006600] shadow-md"
                   >
-                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Mi cuenta"}
+                    {user.email === "admin@neurai.dev"
+                      ? "Panel Admin"
+                      : "Mi cuenta"}
                   </button>
                   <button
                     onClick={() => {

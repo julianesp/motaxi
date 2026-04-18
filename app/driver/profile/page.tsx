@@ -6,9 +6,6 @@ import { useAuth } from '@/lib/auth-context';
 import { MUNICIPALITIES } from '@/lib/constants/municipalities';
 import TrialBanner from '@/components/TrialBanner';
 import Swal from 'sweetalert2';
-import dynamic from 'next/dynamic';
-
-const NamedPlacesManager = dynamic(() => import('@/components/NamedPlacesManager'), { ssr: false });
 
 interface DriverInfo {
   vehicle_model: string;
@@ -1029,11 +1026,6 @@ export default function DriverProfilePage() {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Lugares conocidos */}
-          <div className="mt-6">
-            <NamedPlacesManager userId={user!.id} />
           </div>
 
           {/* Additional Options */}

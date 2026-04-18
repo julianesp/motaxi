@@ -383,7 +383,8 @@ adminRoutes.get('/users', async (c) => {
         d.rating as driver_rating,
         d.total_trips as driver_total_trips,
         p.rating as passenger_rating,
-        p.total_trips as passenger_total_trips
+        p.total_trips as passenger_total_trips,
+        CASE WHEN u.telegram_chat_id IS NOT NULL THEN 1 ELSE 0 END as has_telegram
        FROM users u
        LEFT JOIN subscriptions s ON s.user_id = u.id
        LEFT JOIN drivers d ON d.id = u.id AND u.role = 'driver'
@@ -406,6 +407,32 @@ adminRoutes.get('/users', async (c) => {
   } catch (error: any) {
     console.error('Get users error:', error);
     return c.json({ error: error.message || 'Failed to get users' }, 500);
+  }
+});
+
+/**
+ * GET /admin/telegram-users
+ * Lista de usuarios con Telegram vinculado
+ */
+adminRoutes.get('/telegram-users', async (c) => {
+  try {
+    const users = await c.env.DB.prepare(`
+      SELECT
+        u.id,
+        u.full_name,
+        u.email,
+        u.phone,
+        u.role,
+        u.created_at
+      FROM users u
+      WHERE u.telegram_chat_id IS NOT NULL
+        AND u.email != ?
+      ORDER BY u.full_name ASC
+    `).bind(ADMIN_EMAIL).all();
+
+    return c.json({ users: users.results || [] });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error' }, 500);
   }
 });
 

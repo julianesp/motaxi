@@ -4,6 +4,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { QRCodeCanvas } from 'qrcode.react';
 
+interface TelegramUser {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  role: 'passenger' | 'driver';
+  created_at: number;
+}
+
 interface Stats {
   drivers: { total: number; pending: number; approved: number; rejected: number; online: number };
   passengers: { total: number };
@@ -39,11 +48,16 @@ function StatCard({ title, value, subtitle, color, icon }: {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [telegramUsers, setTelegramUsers] = useState<TelegramUser[]>([]);
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await apiClient.get('/admin/stats');
-      setStats(res.data);
+      const [statsRes, telegramRes] = await Promise.all([
+        apiClient.get('/admin/stats'),
+        apiClient.get('/admin/telegram-users'),
+      ]);
+      setStats(statsRes.data);
+      setTelegramUsers(telegramRes.data.users || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -180,6 +194,47 @@ export default function AdminDashboard() {
           <StatCard title="Conductores online" value={drivers.online} subtitle="Disponibles ahora" color="text-[#42CE1D]"
             icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" /></svg>}
           />
+        </div>
+      </div>
+
+      {/* Usuarios con Telegram vinculado */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          Notificaciones Telegram
+        </h2>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#42CE1D]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.67l-2.95-.924c-.642-.204-.657-.641.136-.953l11.57-4.461c.537-.194 1.006.131.948.889z"/>
+              </svg>
+              <span className="text-sm text-white font-medium">
+                {telegramUsers.length} {telegramUsers.length === 1 ? 'usuario vinculado' : 'usuarios vinculados'}
+              </span>
+            </div>
+          </div>
+          {telegramUsers.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">Ningún usuario ha vinculado Telegram aún</p>
+          ) : (
+            <div className="divide-y divide-gray-800">
+              {telegramUsers.map(u => (
+                <div key={u.id} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-white">{u.full_name}</p>
+                    <p className="text-xs text-gray-400">{u.email}</p>
+                    {u.phone && <p className="text-xs text-gray-500">{u.phone}</p>}
+                  </div>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                    u.role === 'driver'
+                      ? 'text-[#42CE1D] bg-[#42CE1D]/10'
+                      : 'text-blue-400 bg-blue-400/10'
+                  }`}>
+                    {u.role === 'driver' ? 'Conductor' : 'Pasajero'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

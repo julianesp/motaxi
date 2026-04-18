@@ -281,27 +281,6 @@ export const usersAPI = {
   },
 };
 
-// API de conductores favoritos
-export const favoriteDriversAPI = {
-  // Listar conductores favoritos con estado actual
-  getAll: async () => {
-    const response = await apiClient.get('/favorites/drivers');
-    return response.data;
-  },
-
-  // Agregar conductor a favoritos
-  add: async (driverId: string, nickname?: string) => {
-    const response = await apiClient.post('/favorites/drivers', { driver_id: driverId, nickname });
-    return response.data;
-  },
-
-  // Eliminar conductor de favoritos
-  remove: async (driverId: string) => {
-    const response = await apiClient.delete(`/favorites/drivers/${driverId}`);
-    return response.data;
-  },
-};
-
 // API de notificaciones
 export const notificationsAPI = {
   // Obtener todas las notificaciones del usuario

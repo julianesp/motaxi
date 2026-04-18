@@ -10,9 +10,7 @@ import { emergencyRoutes } from './routes/emergency';
 import { paymentRoutes } from './routes/payments';
 import { chatRoutes } from './routes/chat';
 import { analyticsRoutes } from './routes/analytics';
-import favoriteRoutes from './routes/favorites';
 import { telegramRoutes } from './routes/telegram';
-import { namedPlacesRoutes } from './routes/namedPlaces';
 
 export interface Env {
   DB: D1Database;
@@ -73,9 +71,7 @@ app.route('/emergency', emergencyRoutes);
 app.route('/payments', paymentRoutes);
 app.route('/chat', chatRoutes);
 app.route('/analytics', analyticsRoutes);
-app.route('/favorites', favoriteRoutes);
 app.route('/telegram', telegramRoutes);
-app.route('/named-places', namedPlacesRoutes);
 
 // Error handler
 app.onError((err, c) => {

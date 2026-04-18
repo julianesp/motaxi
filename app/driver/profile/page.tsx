@@ -167,18 +167,34 @@ export default function DriverProfilePage() {
         setTelegramLinked(true);
         Swal.fire({ icon: 'info', title: 'Ya vinculado', text: 'Tu cuenta de Telegram ya está conectada.', confirmButtonColor: '#42CE1D' });
       } else {
-        window.open(res.data.deepLink, '_blank');
-        setTelegramLinked(false);
-        Swal.fire({
-          icon: 'success',
-          title: '¡Abre Telegram!',
-          html: 'Se abrió el bot de MoTaxi. Toca <b>INICIAR</b> para vincular tu cuenta y recibir notificaciones de viajes.',
+        const result = await Swal.fire({
+          icon: 'info',
+          title: 'Activar notificaciones',
+          html: `
+            <p style="margin-bottom:12px">Sigue estos pasos:</p>
+            <ol style="text-align:left; line-height:2">
+              <li><b>1.</b> Toca el botón <b>"Abrir bot"</b> abajo</li>
+              <li><b>2.</b> En Telegram, toca el botón <b>INICIAR</b></li>
+              <li><b>3.</b> ¡Listo! Recibirás alertas de viajes</li>
+            </ol>
+          `,
           confirmButtonColor: '#42CE1D',
-          confirmButtonText: 'Listo',
-        }).then(() => {
-          // Re-verificar si ya vinculó
-          checkTelegramStatus();
+          confirmButtonText: '📲 Abrir bot',
+          showCancelButton: true,
+          cancelButtonText: 'Cancelar',
         });
+        if (result.isConfirmed) {
+          window.open(res.data.deepLink, '_blank');
+          setTelegramLinked(false);
+          await Swal.fire({
+            icon: 'success',
+            title: '¡Ya casi!',
+            html: 'Ahora en Telegram toca <b>INICIAR</b> o <b>START</b> para terminar la activación.',
+            confirmButtonColor: '#42CE1D',
+            confirmButtonText: 'Listo',
+          });
+          checkTelegramStatus();
+        }
       }
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el enlace de Telegram.', confirmButtonColor: '#42CE1D' });

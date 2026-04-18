@@ -24,18 +24,24 @@ const LandingMap = dynamic(() => import("@/components/LandingMap"), {
 export default function HomePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const [activeDriversCount, setActiveDriversCount] = useState<number | null>(null);
+  const [activeDriversCount, setActiveDriversCount] = useState<number | null>(
+    null,
+  );
   const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+        const API_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
         const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
-        const res = await fetch(`${API_URL}/drivers/nearby?lat=1.1656&lng=-77.0`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await fetch(
+          `${API_URL}/drivers/nearby?lat=1.1656&lng=-77.0`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          },
+        );
         if (res.ok) {
           const data = await res.json();
           setActiveDriversCount((data.drivers || []).length);
@@ -86,7 +92,7 @@ export default function HomePage() {
             <div className="text-white space-y-8">
               <div className="inline-block">
                 <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
-                  Valle de Sibundoy
+                  Disponible donde estés
                 </span>
               </div>
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
@@ -94,8 +100,9 @@ export default function HomePage() {
                 <br />a un toque
               </h1>
               <p className="text-xl lg:text-2xl text-white max-w-xl">
-                Conectando los 4 municipios del Valle de Sibundoy: Santiago,
-                Colón, Sibundoy y San Francisco
+                Pide tu moto desde donde estés. Conductores cercanos te
+                muestran su distancia y tarifa para que elijas el que más
+                te convenga.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 {user ? (
@@ -106,13 +113,15 @@ export default function HomePage() {
                         user.email === "admin@neurai.dev"
                           ? "/admin"
                           : user.role === "passenger"
-                          ? "/passenger"
-                          : "/driver",
+                            ? "/passenger"
+                            : "/driver",
                       )
                     }
                     className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                   >
-                    {user.email === "admin@neurai.dev" ? "Panel Admin" : "Ir a mi cuenta"}
+                    {user.email === "admin@neurai.dev"
+                      ? "Panel Admin"
+                      : "Ir a mi cuenta"}
                   </button>
                 ) : (
                   // Usuario no autenticado - mostrar botones de registro e inicio de sesión
@@ -121,7 +130,7 @@ export default function HomePage() {
                       onClick={() => router.push("/auth/register")}
                       className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                     >
-                      Comenzar ahora
+                      Registrarse
                     </button>
                     <button
                       onClick={() => router.push("/auth/login")}
@@ -194,10 +203,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Nuestros Municipios
+              Zonas de cobertura
             </h2>
             <p className="text-xl text-black max-w-2xl mx-auto">
-              MoTaxi conecta los cuatro municipios del Valle de Sibundoy
+              Iniciamos en el Valle de Sibundoy, pero MoTaxi funciona desde
+              cualquier lugar donde haya conductores registrados cerca de ti
             </p>
           </div>
 
@@ -246,7 +256,7 @@ export default function HomePage() {
               ¿Por qué elegir MoTaxi?
             </h2>
             <p className="text-xl text-black max-w-2xl mx-auto">
-              La solución de transporte moderna para el Valle de Sibundoy
+              La solución de transporte moderna, disponible donde estés
             </p>
           </div>
 
@@ -378,7 +388,7 @@ export default function HomePage() {
               ¿Listo para comenzar?
             </h2>
             <p className="text-xl text-green-100 mb-8">
-              Únete a la revolución del transporte en el Valle de Sibundoy
+              Únete a la revolución del transporte, desde cualquier lugar
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button

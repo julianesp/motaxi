@@ -140,23 +140,27 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <button
-                className="flex items-center gap-2"
-                onMouseEnter={handleLogoMouseEnter}
-                onMouseLeave={handleLogoMouseLeave}
-              >
-                <Image
-                  ref={logoRef}
-                  src="https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png"
-                  alt="MoTaxi logo"
-                  width={46}
-                  height={46}
-                  className="rounded-full border-[1px] border-[#008000] shadow-lg bg-white"
-                />
-                <span className="text-white  px-3 py-2 rounded-md text-lg font-bold transition-all duration-200 [text-shadow:_1px_1px_2px_rgb(0_0_0_/_80%),_-1px_-1px_2px_rgb(0_0_0_/_80%),_1px_-1px_2px_rgb(0_0_0_/_80%),_-1px_1px_2px_rgb(0_0_0_/_80%)] hover:scale-105 ">
+              <div className="flex items-center gap-2">
+                <button
+                  onMouseEnter={handleLogoMouseEnter}
+                  onMouseLeave={handleLogoMouseLeave}
+                >
+                  <Image
+                    ref={logoRef}
+                    src="https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png"
+                    alt="MoTaxi logo"
+                    width={46}
+                    height={46}
+                    className="rounded-full border-[1px] border-[#008000] shadow-lg bg-white"
+                  />
+                </button>
+                <button
+                  onClick={() => router.push("/")}
+                  className="text-white px-3 py-2 rounded-md text-lg font-bold transition-all duration-200 [text-shadow:_1px_1px_2px_rgb(0_0_0_/_80%),_-1px_-1px_2px_rgb(0_0_0_/_80%),_1px_-1px_2px_rgb(0_0_0_/_80%),_-1px_1px_2px_rgb(0_0_0_/_80%)] hover:scale-105"
+                >
                   MoTaxi
-                </span>
-              </button>
+                </button>
+              </div>
             </div>
 
             {/* Desktop Menu */}
@@ -340,7 +344,7 @@ export default function Navbar() {
                         router.push("/");
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full text-center px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 font-semibold transition-all"
+                      className="w-full text-center px-4 py-3 rounded-xl font-semibold shadow-md transition-all bg-[#008000] text-white hover:bg-[#006600]"
                     >
                       Inicio
                     </button>

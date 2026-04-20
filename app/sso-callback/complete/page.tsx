@@ -50,10 +50,17 @@ export default function SSOComplete() {
           if (data.token) {
             document.cookie = `authToken=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}`;
           }
+          // Si es usuario nuevo, pedir teléfono antes de continuar
+          if (data.isNewUser) {
+            router.push("/auth/complete-profile");
+          } else {
+            router.push("/");
+          }
+        } else {
+          router.push("/");
         }
       } catch (e) {
         console.error("SSO complete error:", e);
-      } finally {
         router.push("/");
       }
     };

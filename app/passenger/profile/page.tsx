@@ -26,9 +26,11 @@ export default function PassengerProfilePage() {
 
   useEffect(() => {
     if (user) {
+      // Los usuarios de Google tienen phone placeholder tipo "G-xxxxxxxxx"
+      const phoneValue = user.phone?.startsWith("G-") ? "" : user.phone;
       setFormData({
         full_name: user.full_name,
-        phone: user.phone,
+        phone: phoneValue,
         email: user.email,
         gender: (user as any).gender || "",
       });
@@ -134,9 +136,10 @@ export default function PassengerProfilePage() {
       alert("✅ Perfil actualizado correctamente");
       // Recargar para reflejar cambios
       window.location.reload();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
-      alert("❌ Error al actualizar el perfil. Intenta nuevamente.");
+      const msg = error?.response?.data?.error || "Error al actualizar el perfil. Intenta nuevamente.";
+      alert("❌ " + msg);
     }
   };
 

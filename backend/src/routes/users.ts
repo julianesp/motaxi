@@ -75,6 +75,9 @@ userRoutes.put('/profile', async (c) => {
 
     return c.json({ user: updatedUser });
   } catch (error: any) {
+    if (error.message?.includes('UNIQUE constraint failed: users.phone')) {
+      return c.json({ error: 'Este número de teléfono ya está registrado por otro usuario.' }, 409);
+    }
     return c.json({ error: error.message || 'Failed to update profile' }, 500);
   }
 });

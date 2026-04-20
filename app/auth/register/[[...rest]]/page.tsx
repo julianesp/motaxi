@@ -38,7 +38,6 @@ function RegisterForm() {
   const roleParam = searchParams.get("role") as UserRole | null;
 
   const [formData, setFormData] = useState({
-    full_name: "",
     email: "",
     phone: "",
     password: "",
@@ -85,7 +84,7 @@ function RegisterForm() {
 
     try {
       await register({
-        full_name: formData.full_name,
+        full_name: formData.email.split("@")[0],
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
@@ -176,22 +175,6 @@ function RegisterForm() {
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-300 mb-1">
-                Nombre Completo
-              </label>
-              <input
-                id="full_name"
-                name="full_name"
-                type="text"
-                value={formData.full_name}
-                onChange={handleChange}
-                required
-                className="input text-black"
-                placeholder="Juan Pérez"
-              />
-            </div>
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
                 Correo Electrónico

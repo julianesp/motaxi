@@ -4,17 +4,7 @@
 
 :root {
   --primary: #008000;
-  --primary-dark: #006600;
-  --secondary: #10b981;
-  --error: #ef4444;
-  --warning: #f59e0b;
-  --background: #000000;
-  --surface: #1a1a1a;
-  --text: #ffffff;
-  --text-secondary: #9ca3af;
-  --border: #2d2d2d;
-  --gradient-start: #008000;
-  --gradient-end: #000000;
+  --white: #ffffff;
 }
 
 * {

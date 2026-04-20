@@ -184,7 +184,7 @@ userRoutes.delete('/account', async (c) => {
     await c.env.DB.prepare('DELETE FROM named_places WHERE user_id = ?').bind(id).run();
     await c.env.DB.prepare('DELETE FROM trip_shares WHERE shared_by = ?').bind(id).run();
     await c.env.DB.prepare('DELETE FROM messages WHERE sender_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM typing_indicators WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM typing_indicators WHERE sender_id = ?').bind(id).run();
 
     if (user.role === 'driver') {
       await c.env.DB.prepare('DELETE FROM driver_price_offers WHERE driver_id = ?').bind(id).run();
@@ -193,10 +193,11 @@ userRoutes.delete('/account', async (c) => {
       await c.env.DB.prepare('DELETE FROM earnings WHERE driver_id = ?').bind(id).run();
       await c.env.DB.prepare('DELETE FROM wallet_transactions WHERE driver_id = ?').bind(id).run();
       await c.env.DB.prepare('DELETE FROM subscriptions WHERE user_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM trips WHERE driver_id = ? AND passenger_id IS NULL').bind(id).run();
       await c.env.DB.prepare('UPDATE trips SET driver_id = NULL WHERE driver_id = ?').bind(id).run();
       await c.env.DB.prepare('DELETE FROM drivers WHERE id = ?').bind(id).run();
     } else if (user.role === 'passenger') {
-      await c.env.DB.prepare('UPDATE trips SET passenger_id = NULL WHERE passenger_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM trips WHERE passenger_id = ?').bind(id).run();
       await c.env.DB.prepare('DELETE FROM passengers WHERE id = ?').bind(id).run();
     }
 

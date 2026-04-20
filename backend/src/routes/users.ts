@@ -172,39 +172,49 @@ userRoutes.delete('/account', async (c) => {
     const user = c.get('user');
     const id = user.id;
 
-    // Eliminar en orden para evitar conflictos de integridad
-    await c.env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM web_push_subscriptions WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM password_resets WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM emergency_contacts WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM sos_alerts WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM payment_methods WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM payment_transactions WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM favorite_drivers WHERE passenger_id = ? OR driver_id = ?').bind(id, id).run();
-    await c.env.DB.prepare('DELETE FROM favorite_locations WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM saved_named_places WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM named_places WHERE user_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM trip_shares WHERE shared_by = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM messages WHERE sender_id = ?').bind(id).run();
-    await c.env.DB.prepare('DELETE FROM typing_indicators WHERE sender_id = ?').bind(id).run();
+    const db = c.env.DB;
 
+    // 1. Sesiones e información de sesión
+    await db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM notifications WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM web_push_subscriptions WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM password_resets WHERE user_id = ?').bind(id).run();
+
+    // 2. Datos personales no relacionados con viajes
+    await db.prepare('DELETE FROM emergency_contacts WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM sos_alerts WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM payment_methods WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM payment_transactions WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM favorite_drivers WHERE passenger_id = ? OR driver_id = ?').bind(id, id).run();
+    await db.prepare('DELETE FROM favorite_locations WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM saved_named_places WHERE user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM named_places WHERE user_id = ?').bind(id).run();
+
+    // 3. Mensajes y conversaciones (antes de borrar trips)
+    await db.prepare('DELETE FROM typing_indicators WHERE sender_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM messages WHERE sender_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM conversations WHERE passenger_id = ? OR driver_id = ?').bind(id, id).run();
+
+    // 4. Ofertas de precio y datos de viajes
+    await db.prepare('DELETE FROM driver_price_offers WHERE driver_id = ? OR passenger_id = ?').bind(id, id).run();
+    await db.prepare('DELETE FROM trip_shares WHERE shared_by = ?').bind(id).run();
+
+    // 5. Viajes y tablas específicas por rol
     if (user.role === 'driver') {
-      await c.env.DB.prepare('DELETE FROM driver_price_offers WHERE driver_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM driver_wallets WHERE driver_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM driver_payouts WHERE driver_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM earnings WHERE driver_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM wallet_transactions WHERE driver_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM subscriptions WHERE user_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM trips WHERE driver_id = ? AND passenger_id IS NULL').bind(id).run();
-      await c.env.DB.prepare('UPDATE trips SET driver_id = NULL WHERE driver_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM drivers WHERE id = ?').bind(id).run();
+      await db.prepare('DELETE FROM driver_wallets WHERE driver_id = ?').bind(id).run();
+      await db.prepare('DELETE FROM driver_payouts WHERE driver_id = ?').bind(id).run();
+      await db.prepare('DELETE FROM earnings WHERE driver_id = ?').bind(id).run();
+      await db.prepare('DELETE FROM wallet_transactions WHERE driver_id = ?').bind(id).run();
+      await db.prepare('DELETE FROM subscriptions WHERE user_id = ?').bind(id).run();
+      await db.prepare('UPDATE trips SET driver_id = NULL WHERE driver_id = ?').bind(id).run();
+      await db.prepare('DELETE FROM drivers WHERE id = ?').bind(id).run();
     } else if (user.role === 'passenger') {
-      await c.env.DB.prepare('DELETE FROM trips WHERE passenger_id = ?').bind(id).run();
-      await c.env.DB.prepare('DELETE FROM passengers WHERE id = ?').bind(id).run();
+      await db.prepare('DELETE FROM trips WHERE passenger_id = ?').bind(id).run();
+      await db.prepare('DELETE FROM passengers WHERE id = ?').bind(id).run();
     }
 
-    await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
+    // 6. Usuario
+    await db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
 
     return c.json({ message: 'Account deleted successfully' });
   } catch (error: any) {

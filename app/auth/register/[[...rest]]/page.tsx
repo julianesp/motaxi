@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { UserRole } from "@/lib/types";
-import { useSignUp } from "@clerk/nextjs";
+import { useSignUp, useClerk } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar/page";
 
 function RegisterForm() {
@@ -13,14 +13,26 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const { register } = useAuth();
   const { signUp, isLoaded } = useSignUp();
+  const { signOut } = useClerk();
 
-  const handleGoogleSignUp = () => {
+  const handleGoogleSignUp = async () => {
     if (!isLoaded) return;
-    signUp.authenticateWithRedirect({
-      strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/",
-    });
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/",
+      });
+    } catch (err: any) {
+      if (err?.message?.includes("already signed in") || err?.errors?.[0]?.code === "session_exists") {
+        await signOut();
+        await signUp.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete: "/",
+        });
+      }
+    }
   };
 
   const roleParam = searchParams.get("role") as UserRole | null;

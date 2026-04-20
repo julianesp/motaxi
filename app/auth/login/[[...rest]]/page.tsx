@@ -4,13 +4,14 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { useSignIn } from "@clerk/nextjs";
+import { useSignIn, useClerk } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar/page";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const { signIn, isLoaded } = useSignIn();
+  const { signOut } = useClerk();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,13 +19,25 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     if (!isLoaded) return;
-    signIn.authenticateWithRedirect({
-      strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/",
-    });
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/",
+      });
+    } catch (err: any) {
+      // Si Clerk dice que ya hay sesión activa, cerrarla y reintentar
+      if (err?.message?.includes("already signed in") || err?.errors?.[0]?.code === "session_exists") {
+        await signOut();
+        await signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete: "/",
+        });
+      }
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {

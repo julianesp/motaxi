@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from './types';
 import { authAPI, removeAuthToken } from './api-client';
+import { useClerk } from '@clerk/nextjs';
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { signOut: clerkSignOut } = useClerk();
 
   // Verificar si hay usuario autenticado al cargar
   const checkAuth = useCallback(async () => {
@@ -113,6 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       removeAuthToken();
+      // Cerrar también la sesión de Clerk para evitar conflictos con Google OAuth
+      try { await clerkSignOut(); } catch { /* ignorar si no hay sesión Clerk */ }
     }
   };
 

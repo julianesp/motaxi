@@ -5,35 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { UserRole } from "@/lib/types";
-import { useSignUp, useClerk } from "@clerk/nextjs";
+// import { useSignUp, useClerk } from "@clerk/nextjs"; // Google OAuth desactivado
 import Navbar from "@/components/Navbar/page";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { register } = useAuth();
-  const { signUp, isLoaded } = useSignUp();
-  const { signOut } = useClerk();
 
-  const handleGoogleSignUp = async () => {
-    if (!isLoaded) return;
-    try {
-      await signUp.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/sso-callback/complete",
-      });
-    } catch (err: any) {
-      if (err?.message?.includes("already signed in") || err?.errors?.[0]?.code === "session_exists") {
-        await signOut();
-        await signUp.authenticateWithRedirect({
-          strategy: "oauth_google",
-          redirectUrl: "/sso-callback",
-          redirectUrlComplete: "/sso-callback/complete",
-        });
-      }
-    }
-  };
+  // const handleGoogleSignUp = async () => { ... }; // Google OAuth desactivado
 
   const roleParam = searchParams.get("role") as UserRole | null;
 
@@ -145,7 +125,7 @@ function RegisterForm() {
             </div>
           )}
 
-          {/* Botón Google */}
+          {/* Botón Google — desactivado
           <div className="flex justify-center">
             <button
               type="button"
@@ -163,7 +143,6 @@ function RegisterForm() {
             </button>
           </div>
 
-          {/* Divisor */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-600" />
@@ -172,6 +151,7 @@ function RegisterForm() {
               <span className="px-2 bg-gray-900 text-gray-400">O regístrate con formulario</span>
             </div>
           </div>
+          */}
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

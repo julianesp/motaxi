@@ -4,14 +4,12 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { useSignIn, useClerk } from "@clerk/nextjs";
+// import { useSignIn, useClerk } from "@clerk/nextjs"; // Google OAuth desactivado
 import Navbar from "@/components/Navbar/page";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const { signIn, isLoaded } = useSignIn();
-  const { signOut } = useClerk();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,26 +17,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGoogleLogin = async () => {
-    if (!isLoaded) return;
-    try {
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/sso-callback/complete",
-      });
-    } catch (err: any) {
-      // Si Clerk dice que ya hay sesión activa, cerrarla y reintentar
-      if (err?.message?.includes("already signed in") || err?.errors?.[0]?.code === "session_exists") {
-        await signOut();
-        await signIn.authenticateWithRedirect({
-          strategy: "oauth_google",
-          redirectUrl: "/sso-callback",
-          redirectUrlComplete: "/sso-callback/complete",
-        });
-      }
-    }
-  };
+  // const handleGoogleLogin = async () => { ... }; // Google OAuth desactivado
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -101,7 +80,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Botón Google */}
+          {/* Botón Google — desactivado
           <div className="flex justify-center">
             <button
               type="button"
@@ -119,7 +98,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Divisor */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
@@ -128,6 +106,7 @@ export default function LoginPage() {
               <span className="px-2 bg-white text-gray-500">O continúa con tu correo</span>
             </div>
           </div>
+          */}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

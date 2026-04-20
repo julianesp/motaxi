@@ -25,7 +25,7 @@ export default function LoginPage() {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/sso-callback/complete",
       });
     } catch (err: any) {
       // Si Clerk dice que ya hay sesión activa, cerrarla y reintentar
@@ -34,7 +34,7 @@ export default function LoginPage() {
         await signIn.authenticateWithRedirect({
           strategy: "oauth_google",
           redirectUrl: "/sso-callback",
-          redirectUrlComplete: "/",
+          redirectUrlComplete: "/sso-callback/complete",
         });
       }
     }

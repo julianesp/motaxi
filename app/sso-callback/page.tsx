@@ -5,8 +5,10 @@ import { AuthenticateWithRedirectCallback } from "@clerk/nextjs";
 export default function SSOCallback() {
   return (
     <AuthenticateWithRedirectCallback
-      fallbackRedirectUrl="/sso-callback/complete"
-      forceRedirectUrl="/sso-callback/complete"
+      signInFallbackRedirectUrl="/sso-callback/complete"
+      signUpFallbackRedirectUrl="/sso-callback/complete"
+      signInForceRedirectUrl="/sso-callback/complete"
+      signUpForceRedirectUrl="/sso-callback/complete"
     />
   );
 }

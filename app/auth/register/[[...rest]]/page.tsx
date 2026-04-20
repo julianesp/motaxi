@@ -21,7 +21,7 @@ function RegisterForm() {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/sso-callback/complete",
       });
     } catch (err: any) {
       if (err?.message?.includes("already signed in") || err?.errors?.[0]?.code === "session_exists") {
@@ -29,7 +29,7 @@ function RegisterForm() {
         await signUp.authenticateWithRedirect({
           strategy: "oauth_google",
           redirectUrl: "/sso-callback",
-          redirectUrlComplete: "/",
+          redirectUrlComplete: "/sso-callback/complete",
         });
       }
     }

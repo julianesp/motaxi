@@ -266,6 +266,11 @@ export const driversAPI = {
     const response = await apiClient.get('/drivers/earnings');
     return response.data;
   },
+
+  skipProfile: async () => {
+    const response = await apiClient.post('/drivers/skip-profile', {});
+    return response.data;
+  },
 };
 
 // API de usuarios

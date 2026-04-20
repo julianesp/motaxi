@@ -42,7 +42,8 @@ driverRoutes.get('/profile', async (c) => {
         d.intercity_fare,
         d.rural_fare,
         d.per_km_fare,
-        d.profile_completed
+        d.profile_completed,
+        d.profile_skipped_at
       FROM drivers d
       WHERE d.id = ?`
     )
@@ -399,5 +400,26 @@ driverRoutes.get('/of-the-month', async (c) => {
     return c.json({ winner: { ...top, month, year, reward_type: 'free_month' } });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to get driver of the month' }, 500);
+  }
+});
+
+/**
+ * POST /drivers/skip-profile
+ * El conductor decide completar el perfil después.
+ * Guarda la fecha actual para calcular recordatorios.
+ */
+driverRoutes.post('/skip-profile', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can access this endpoint' }, 403);
+    }
+    const now = Math.floor(Date.now() / 1000);
+    await c.env.DB.prepare(
+      'UPDATE drivers SET profile_skipped_at = ? WHERE id = ? AND profile_skipped_at IS NULL'
+    ).bind(now, user.id).run();
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to skip profile' }, 500);
   }
 });

@@ -173,20 +173,46 @@ export default function DriverHomePage() {
         if (response.driver) {
           setIsAvailable(response.driver.is_available === 1);
 
+          // Pre-cargar datos existentes
+          setProfileData({
+            vehicle_model: response.driver.vehicle_model || '',
+            vehicle_color: response.driver.vehicle_color || '',
+            vehicle_plate: response.driver.vehicle_plate || '',
+            license_number: response.driver.license_number || '',
+            municipality: response.driver.municipality || '',
+          });
+
           // Verificar si el perfil está completo
           if (!response.driver.profile_completed) {
-            // Mostrar onboarding para completar perfil
-            setOnboardingStep(1);
-            setShowProfileModal(true);
+            const skippedAt = response.driver.profile_skipped_at;
+            const now = Math.floor(Date.now() / 1000);
+            const sevenDays = 7 * 24 * 60 * 60;
 
-            // Pre-cargar datos existentes si los hay
-            setProfileData({
-              vehicle_model: response.driver.vehicle_model || '',
-              vehicle_color: response.driver.vehicle_color || '',
-              vehicle_plate: response.driver.vehicle_plate || '',
-              license_number: response.driver.license_number || '',
-              municipality: response.driver.municipality || '',
-            });
+            if (!skippedAt) {
+              // Primera vez — mostrar onboarding
+              setOnboardingStep(1);
+              setShowProfileModal(true);
+            } else if (now - skippedAt >= sevenDays) {
+              // Pasaron 7+ días — mostrar recordatorio diario
+              const lastReminder = parseInt(localStorage.getItem('profileReminderShown') || '0');
+              const oneDayAgo = now - 24 * 60 * 60;
+              if (lastReminder < oneDayAgo) {
+                localStorage.setItem('profileReminderShown', String(now));
+                const result = await Swal.fire({
+                  icon: 'warning',
+                  title: '¡Completa tu perfil!',
+                  html: 'Han pasado más de 7 días. Los pasajeros no pueden ver tu vehículo.<br><br><b>Completa tus datos ahora para recibir más viajes.</b>',
+                  confirmButtonColor: '#42CE1D',
+                  confirmButtonText: 'Completar ahora',
+                  showCancelButton: true,
+                  cancelButtonText: 'Más tarde',
+                });
+                if (result.isConfirmed) {
+                  setOnboardingStep(2);
+                  setShowProfileModal(true);
+                }
+              }
+            }
           }
         }
       } catch (error) {
@@ -1230,10 +1256,16 @@ export default function DriverHomePage() {
                     </div>
                     <div className="flex gap-3 pt-2">
                       <button
-                        onClick={() => setShowProfileModal(false)}
+                        onClick={async () => {
+                          try {
+                            const { driversAPI } = await import('@/lib/api-client');
+                            await driversAPI.skipProfile();
+                          } catch { /* silencioso */ }
+                          setShowProfileModal(false);
+                        }}
                         className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
                       >
-                        Después
+                        Agregar después
                       </button>
                       <button
                         onClick={() => setOnboardingStep(2)}
@@ -1295,15 +1327,18 @@ export default function DriverHomePage() {
                     </div>
                     <div className="flex gap-3 pt-2">
                       <button
-                        onClick={() => setOnboardingStep(1)}
+                        onClick={async () => {
+                          try { const { driversAPI } = await import('@/lib/api-client'); await driversAPI.skipProfile(); } catch { /* silencioso */ }
+                          setShowProfileModal(false);
+                        }}
                         className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
                       >
-                        ← Atrás
+                        Agregar después
                       </button>
                       <button
                         onClick={() => {
                           if (!profileData.vehicle_model || !profileData.vehicle_color || !profileData.vehicle_plate) {
-                            Swal.fire({ icon: 'warning', title: 'Completa los campos', text: 'Todos los campos de este paso son obligatorios.', confirmButtonColor: '#008000' });
+                            Swal.fire({ icon: 'warning', title: 'Completa los campos', text: 'Ingresa los datos de tu vehículo para continuar.', confirmButtonColor: '#008000' });
                             return;
                           }
                           setOnboardingStep(3);
@@ -1344,10 +1379,13 @@ export default function DriverHomePage() {
                     </div>
                     <div className="flex gap-3 pt-2">
                       <button
-                        onClick={() => setOnboardingStep(2)}
+                        onClick={async () => {
+                          try { const { driversAPI } = await import('@/lib/api-client'); await driversAPI.skipProfile(); } catch { /* silencioso */ }
+                          setShowProfileModal(false);
+                        }}
                         className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
                       >
-                        ← Atrás
+                        Agregar después
                       </button>
                       <button
                         onClick={() => {

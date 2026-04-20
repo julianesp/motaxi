@@ -167,22 +167,44 @@ userRoutes.put('/switch-role', async (c) => {
 userRoutes.delete('/account', async (c) => {
   try {
     const user = c.get('user');
+    const id = user.id;
 
-    // Eliminar sesiones
-    await c.env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id).run();
+    // Eliminar en orden para evitar conflictos de integridad
+    await c.env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM web_push_subscriptions WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM password_resets WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM emergency_contacts WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM sos_alerts WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM payment_methods WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM payment_transactions WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM favorite_drivers WHERE passenger_id = ? OR driver_id = ?').bind(id, id).run();
+    await c.env.DB.prepare('DELETE FROM favorite_locations WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM saved_named_places WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM named_places WHERE user_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM trip_shares WHERE shared_by = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM messages WHERE sender_id = ?').bind(id).run();
+    await c.env.DB.prepare('DELETE FROM typing_indicators WHERE user_id = ?').bind(id).run();
 
-    // Eliminar datos de rol
     if (user.role === 'driver') {
-      await c.env.DB.prepare('DELETE FROM drivers WHERE id = ?').bind(user.id).run();
+      await c.env.DB.prepare('DELETE FROM driver_price_offers WHERE driver_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM driver_wallets WHERE driver_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM driver_payouts WHERE driver_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM earnings WHERE driver_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM wallet_transactions WHERE driver_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM subscriptions WHERE user_id = ?').bind(id).run();
+      await c.env.DB.prepare('UPDATE trips SET driver_id = NULL WHERE driver_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM drivers WHERE id = ?').bind(id).run();
     } else if (user.role === 'passenger') {
-      await c.env.DB.prepare('DELETE FROM passengers WHERE id = ?').bind(user.id).run();
+      await c.env.DB.prepare('UPDATE trips SET passenger_id = NULL WHERE passenger_id = ?').bind(id).run();
+      await c.env.DB.prepare('DELETE FROM passengers WHERE id = ?').bind(id).run();
     }
 
-    // Eliminar usuario
-    await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id).run();
+    await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
 
     return c.json({ message: 'Account deleted successfully' });
   } catch (error: any) {
+    console.error('Delete account error:', error);
     return c.json({ error: error.message || 'Failed to delete account' }, 500);
   }
 });

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, Circle } from '@react-google-maps/api';
 import { MUNICIPALITIES, VALLE_SIBUNDOY_CENTER } from '@/lib/constants/municipalities';
 
-const libraries: ('places' | 'geometry' | 'marker')[] = ['places', 'geometry', 'marker'];
+const libraries: ('marker')[] = ['marker'];
 
 const mapContainerStyle = {
   width: '100%',

@@ -151,6 +151,7 @@ export default function Navbar() {
                     alt="MoTaxi logo"
                     width={46}
                     height={46}
+                    priority
                     className="rounded-full border-[1px] border-[#008000] shadow-lg bg-white"
                   />
                 </button>

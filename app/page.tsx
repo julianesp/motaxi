@@ -8,14 +8,14 @@ import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 import Navbar from "@/components/Navbar/page";
 import styles from "./styles.module.scss";
 
-// Cargar el mapa dinámicamente para evitar problemas de SSR
+// Cargar el mapa dinámicamente (solo client-side, sin bloquear el render inicial)
 const LandingMap = dynamic(() => import("@/components/LandingMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center   rounded-2xl top-2">
+    <div className="w-full h-full flex items-center justify-center rounded-2xl top-2 bg-gradient-to-br from-green-900/20 to-black/20">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
-        <p className="mt-4 text-[#008000]">Cargando mapa...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#42CE1D] mx-auto"></div>
+        <p className="mt-4 text-[#42CE1D]">Cargando mapa...</p>
       </div>
     </div>
   ),

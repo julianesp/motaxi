@@ -10,7 +10,7 @@ import OpenInBrowser from "@/components/OpenInBrowser";
 import InstallPWAModal from "@/components/InstallPWAModal";
 import { Analytics } from "@vercel/analytics/next";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: "swap", preload: true });
 
 export const metadata: Metadata = {
   manifest: "/manifest.json",

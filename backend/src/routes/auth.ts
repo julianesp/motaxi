@@ -288,6 +288,74 @@ authRoutes.post('/google', async (c) => {
 });
 
 /**
+ * POST /auth/google-clerk
+ * Iniciar sesión o registrarse con datos de Clerk (Google OAuth via Clerk)
+ */
+authRoutes.post('/google-clerk', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, name, googleId } = body;
+
+    if (!email || !googleId) {
+      return c.json({ error: 'Missing required fields' }, 400);
+    }
+
+    // Buscar si ya existe el usuario
+    let user: any = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE email = ?'
+    ).bind(email).first();
+
+    const isNewUser = !user;
+
+    if (!user) {
+      const userId = uuidv4();
+      const full_name = name || email.split('@')[0];
+      const phone = `G-${googleId.substring(0, 9)}`;
+
+      await c.env.DB.prepare(
+        'INSERT INTO users (id, email, password_hash, phone, full_name, role) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(userId, email, '', phone, full_name, 'passenger').run();
+
+      await c.env.DB.prepare('INSERT INTO passengers (id) VALUES (?)')
+        .bind(userId).run();
+
+      user = await c.env.DB.prepare(
+        'SELECT id, email, phone, full_name, role, created_at FROM users WHERE id = ?'
+      ).bind(userId).first();
+
+      // Notificar al admin sobre el nuevo registro
+      if (c.env.TELEGRAM_BOT_TOKEN && c.env.ADMIN_TELEGRAM_CHAT_ID) {
+        TelegramService.notifyAdminNewUser(
+          c.env.TELEGRAM_BOT_TOKEN,
+          c.env.ADMIN_TELEGRAM_CHAT_ID,
+          { fullName: full_name, email, role: 'passenger', phone }
+        ).catch(() => {});
+
+        const countResult = await c.env.DB.prepare(
+          "SELECT COUNT(*) as total FROM users WHERE role = 'passenger'"
+        ).first() as any;
+        const total = countResult?.total ?? 0;
+        if ([20, 30, 50, 100].includes(total)) {
+          TelegramService.notifyAdminPassengerMilestone(
+            c.env.TELEGRAM_BOT_TOKEN,
+            c.env.ADMIN_TELEGRAM_CHAT_ID,
+            total
+          ).catch(() => {});
+        }
+      }
+    }
+
+    const { password_hash, ...userWithoutPassword } = user;
+    const { token, expiresAt } = await AuthUtils.createSession(c.env.DB, user.id as string);
+
+    return c.json({ user: userWithoutPassword, token, expiresAt, isNewUser });
+  } catch (error: any) {
+    console.error('Google Clerk auth error:', error);
+    return c.json({ error: error.message || 'Authentication failed' }, 500);
+  }
+});
+
+/**
  * POST /auth/forgot-password
  * Solicitar recuperación de contraseña
  */

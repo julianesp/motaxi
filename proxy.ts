@@ -1,10 +1,9 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+// Middleware de Clerk desactivado — autenticación manejada por el propio backend
+// import { clerkMiddleware } from "@clerk/nextjs/server";
+// export const proxy = clerkMiddleware();
 
-export const proxy = clerkMiddleware();
+export function proxy() {}
 
 export const config = {
-  matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
-  ],
+  matcher: [],
 };

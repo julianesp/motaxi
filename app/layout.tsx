@@ -66,7 +66,7 @@ export default function RootLayout({
           <Footer />
           <Script
             src="https://checkout.epayco.co/checkout.js"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
         </body>
       </html>

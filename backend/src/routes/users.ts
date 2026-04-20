@@ -188,16 +188,16 @@ userRoutes.delete('/account', async (c) => {
     await db.prepare('DELETE FROM favorite_drivers WHERE passenger_id = ? OR driver_id = ?').bind(id, id).run();
     await db.prepare('DELETE FROM favorite_locations WHERE user_id = ?').bind(id).run();
     await db.prepare('DELETE FROM saved_named_places WHERE user_id = ?').bind(id).run();
-    await db.prepare('DELETE FROM named_places WHERE user_id = ?').bind(id).run();
 
     // 3. Mensajes y conversaciones (antes de borrar trips)
-    await db.prepare('DELETE FROM typing_indicators WHERE sender_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM typing_indicators WHERE user_id = ?').bind(id).run();
     await db.prepare('DELETE FROM messages WHERE sender_id = ?').bind(id).run();
     await db.prepare('DELETE FROM conversations WHERE passenger_id = ? OR driver_id = ?').bind(id, id).run();
 
     // 4. Ofertas de precio y datos de viajes
-    await db.prepare('DELETE FROM driver_price_offers WHERE driver_id = ? OR passenger_id = ?').bind(id, id).run();
-    await db.prepare('DELETE FROM trip_shares WHERE shared_by = ?').bind(id).run();
+    await db.prepare('DELETE FROM driver_price_offers WHERE driver_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM trip_shares WHERE shared_by_user_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM named_places WHERE created_by = ?').bind(id).run();
 
     // 5. Viajes y tablas específicas por rol
     if (user.role === 'driver') {

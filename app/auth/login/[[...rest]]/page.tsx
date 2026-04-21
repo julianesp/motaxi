@@ -25,8 +25,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      router.push("/");
+      const { user: loggedUser } = await login(email, password);
+      if (loggedUser.email === "admin@neurai.dev") {
+        router.push("/admin");
+      } else if (loggedUser.role === "passenger") {
+        router.push("/passenger");
+      } else if (loggedUser.role === "driver") {
+        router.push("/driver");
+      } else {
+        router.push("/");
+      }
     } catch (err: any) {
       console.error("Login error:", err);
 
@@ -145,6 +153,8 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onPointerDown={(e) => e.preventDefault()}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                     aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >

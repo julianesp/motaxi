@@ -22,7 +22,7 @@ export default function Navbar() {
     }
   };
 
-  const isHomePage = pathname === "/";
+  const isHomePage = pathname === "/" || pathname.startsWith("/auth/login");
   const logoRef = useRef<HTMLImageElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {

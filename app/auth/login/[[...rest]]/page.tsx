@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [notRegistered, setNotRegistered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [loginMode, setLoginMode] = useState<"phone" | "email">("phone");
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("motaxi_remembered_email");
@@ -158,18 +159,36 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Celular o correo electrónico
                 </label>
+                {/* Toggle Celular / Correo */}
+                <div className="flex rounded-lg border border-gray-300 overflow-hidden mb-2">
+                  <button
+                    type="button"
+                    onClick={() => { setLoginMode("phone"); setEmail(""); }}
+                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${loginMode === "phone" ? "bg-[#008000] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                  >
+                    📱 Celular
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginMode("email"); setEmail(""); }}
+                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${loginMode === "email" ? "bg-[#008000] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                  >
+                    ✉️ Correo
+                  </button>
+                </div>
                 <input
                   id="email"
-                  type="text"
+                  type={loginMode === "phone" ? "tel" : "email"}
+                  inputMode={loginMode === "phone" ? "numeric" : "email"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full px-4 py-3 bg-white text-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="3001234567 o tu@email.com"
-                  autoComplete="username"
+                  placeholder={loginMode === "phone" ? "3001234567" : "tu@email.com"}
+                  autoComplete={loginMode === "phone" ? "tel" : "email"}
                 />
               </div>
 

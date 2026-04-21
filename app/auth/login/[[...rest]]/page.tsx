@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -17,6 +17,15 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [notRegistered, setNotRegistered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("motaxi_remembered_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   // const handleGoogleLogin = async () => { ... }; // Google OAuth desactivado
 
@@ -27,6 +36,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      if (rememberMe) {
+        localStorage.setItem("motaxi_remembered_email", email);
+      } else {
+        localStorage.removeItem("motaxi_remembered_email");
+      }
       const { user: loggedUser } = await login(email, password);
       if (loggedUser.email === "admin@neurai.dev") {
         router.push("/admin");
@@ -202,6 +216,8 @@ export default function LoginPage() {
                 <input
                   id="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-700 rounded bg-gray-800"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-black">

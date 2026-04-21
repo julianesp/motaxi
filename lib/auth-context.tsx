@@ -11,12 +11,12 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ user: User }>;
   loginWithGoogle: (credential: string) => Promise<void>;
   register: (data: {
-    email: string;
+    email?: string;
     password: string;
     phone: string;
     full_name: string;
     role: 'passenger' | 'driver';
-  }) => Promise<void>;
+  }) => Promise<{ user: User }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -62,9 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, [checkAuth]);
 
-  const login = async (email: string, password: string): Promise<{ user: User }> => {
+  const login = async (identifier: string, password: string): Promise<{ user: User }> => {
     try {
-      const response = await authAPI.login({ email, password });
+      const isPhone = /^\d{7,15}$/.test(identifier.replace(/\s/g, ''));
+      const credentials = isPhone
+        ? { phone: identifier, password }
+        : { email: identifier, password };
+      const response = await authAPI.login(credentials);
       setUser(response.user);
       return { user: response.user };
     } catch (error) {
@@ -84,15 +88,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (data: {
-    email: string;
+    email?: string;
     password: string;
     phone: string;
     full_name: string;
     role: 'passenger' | 'driver';
-  }) => {
+  }): Promise<{ user: User }> => {
     try {
       const response = await authAPI.register(data);
       setUser(response.user);
+      return { user: response.user };
     } catch (error) {
       console.error('Register error:', error);
       throw error;

@@ -98,12 +98,13 @@ export interface AuthResponse {
 }
 
 export interface LoginCredentials {
-  email: string;
+  email?: string;
+  phone?: string;
   password: string;
 }
 
 export interface RegisterData {
-  email: string;
+  email?: string;
   password: string;
   phone: string;
   full_name: string;

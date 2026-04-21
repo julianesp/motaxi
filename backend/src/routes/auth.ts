@@ -16,8 +16,8 @@ authRoutes.post('/register', async (c) => {
     const body = await c.req.json();
     const { email, password, phone, full_name, role } = body;
 
-    // Validación básica
-    if (!email || !password || !phone || !full_name || !role) {
+    // Validación básica — email es opcional, phone es obligatorio
+    if (!password || !phone || !full_name || !role) {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 
@@ -29,37 +29,44 @@ authRoutes.post('/register', async (c) => {
       return c.json({ error: 'Password must be at least 6 characters' }, 400);
     }
 
-    // Verificar si el usuario ya existe
-    const existingUser = await c.env.DB.prepare(
-      'SELECT id FROM users WHERE email = ? OR phone = ?'
-    )
-      .bind(email, phone)
-      .first();
+    // Verificar si el usuario ya existe por teléfono (y por email si se proveyó)
+    const phoneExists = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE phone = ?'
+    ).bind(phone).first();
 
-    if (existingUser) {
-      return c.json({ error: 'Email or phone already registered' }, 409);
+    if (phoneExists) {
+      return c.json({ error: 'Phone already registered' }, 409);
     }
 
-    // Verificar si el email o teléfono está bloqueado (conductor con trial vencido sin pago)
+    if (email) {
+      const emailExists = await c.env.DB.prepare(
+        'SELECT id FROM users WHERE email = ?'
+      ).bind(email).first();
+      if (emailExists) {
+        return c.json({ error: 'Email already registered' }, 409);
+      }
+    }
+
+    // Verificar si el teléfono o email está bloqueado (conductor con trial vencido sin pago)
     if (role === 'driver') {
-      const blockedByEmail = await c.env.DB.prepare(
-        'SELECT id FROM blocked_emails WHERE email = ?'
-      ).bind(email.toLowerCase()).first();
-      if (blockedByEmail) {
+      const blockedByPhone = await c.env.DB.prepare(
+        'SELECT id FROM blocked_emails WHERE phone = ?'
+      ).bind(phone).first();
+      if (blockedByPhone) {
         return c.json({
-          error: 'Este email no puede registrarse como conductor. Tu período de prueba venció y no se realizó el pago. Contáctanos en admin@neurai.dev para regularizar tu situación.',
-          code: 'EMAIL_BLOCKED'
+          error: 'Este número de teléfono no puede registrarse como conductor. Tu período de prueba venció y no se realizó el pago. Contáctanos en admin@neurai.dev para regularizar tu situación.',
+          code: 'PHONE_BLOCKED'
         }, 403);
       }
 
-      if (phone) {
-        const blockedByPhone = await c.env.DB.prepare(
-          'SELECT id FROM blocked_emails WHERE phone = ?'
-        ).bind(phone).first();
-        if (blockedByPhone) {
+      if (email) {
+        const blockedByEmail = await c.env.DB.prepare(
+          'SELECT id FROM blocked_emails WHERE email = ?'
+        ).bind(email.toLowerCase()).first();
+        if (blockedByEmail) {
           return c.json({
-            error: 'Este número de teléfono no puede registrarse como conductor. Tu período de prueba venció y no se realizó el pago. Contáctanos en admin@neurai.dev para regularizar tu situación.',
-            code: 'PHONE_BLOCKED'
+            error: 'Este email no puede registrarse como conductor. Tu período de prueba venció y no se realizó el pago. Contáctanos en admin@neurai.dev para regularizar tu situación.',
+            code: 'EMAIL_BLOCKED'
           }, 403);
         }
       }
@@ -69,11 +76,14 @@ authRoutes.post('/register', async (c) => {
     const passwordHash = await AuthUtils.hashPassword(password);
     const userId = uuidv4();
 
+    // Si no se provee email, usar un placeholder único basado en el teléfono
+    const finalEmail = email || `phone-${phone}@motaxi.local`;
+
     // Crear usuario
     await c.env.DB.prepare(
       'INSERT INTO users (id, email, password_hash, phone, full_name, role) VALUES (?, ?, ?, ?, ?, ?)'
     )
-      .bind(userId, email, passwordHash, phone, full_name, role)
+      .bind(userId, finalEmail, passwordHash, phone, full_name, role)
       .run();
 
     // Crear perfil según rol
@@ -116,7 +126,7 @@ authRoutes.post('/register', async (c) => {
       TelegramService.notifyAdminNewUser(
         c.env.TELEGRAM_BOT_TOKEN,
         c.env.ADMIN_TELEGRAM_CHAT_ID,
-        { fullName: full_name, email, role, phone }
+        { fullName: full_name, email: email || `(sin email) ${phone}`, role, phone }
       ).catch(() => {});
 
       // Hito de pasajeros: notificar si se llega a 20, 30, 50 o 100
@@ -153,21 +163,22 @@ authRoutes.post('/register', async (c) => {
 authRoutes.post('/login', async (c) => {
   try {
     const body = await c.req.json();
-    const { email, password } = body;
+    const { email, phone, password } = body;
+    const identifier = email || phone;
 
-    if (!email || !password) {
-      return c.json({ error: 'Email and password required' }, 400);
+    if (!identifier || !password) {
+      return c.json({ error: 'Email or phone and password required' }, 400);
     }
 
-    // Buscar usuario
+    // Buscar usuario por email o teléfono
     const user = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE email = ?'
+      'SELECT * FROM users WHERE email = ? OR phone = ?'
     )
-      .bind(email)
+      .bind(identifier, identifier)
       .first();
 
     if (!user) {
-      return c.json({ error: 'Invalid credentials' }, 401);
+      return c.json({ error: 'User not found' }, 404);
     }
 
     // Verificar contraseña

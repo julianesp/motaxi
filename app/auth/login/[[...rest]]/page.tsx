@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notRegistered, setNotRegistered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // const handleGoogleLogin = async () => { ... }; // Google OAuth desactivado
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotRegistered(false);
     setLoading(true);
 
     try {
@@ -39,9 +41,9 @@ export default function LoginPage() {
       console.error("Login error:", err);
 
       if (err.response?.status === 401) {
-        setError("Correo electrónico o contraseña incorrectos. Por favor, verifica tus credenciales.");
+        setError("Celular/correo o contraseña incorrectos. Por favor, verifica tus credenciales.");
       } else if (err.response?.status === 404) {
-        setError("Usuario no encontrado. ¿Necesitas registrarte?");
+        setNotRegistered(true);
       } else if (err.response?.status === 400) {
         setError("Datos inválidos. Por favor, verifica la información ingresada.");
       } else if (err.response?.status === 500) {
@@ -71,6 +73,28 @@ export default function LoginPage() {
             <h2 className="text-2xl font-semibold text-black">Iniciar Sesión</h2>
             <p className="mt-2 text-black">Elige cómo quieres ingresar</p>
           </div>
+
+          {/* Usuario no registrado */}
+          {notRegistered && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 px-4 py-4 rounded-lg shadow-md">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-semibold">No tienes una cuenta registrada</p>
+                  <p className="text-sm mt-1">Este correo no está registrado en MoTaxi. ¿Quieres crear tu cuenta?</p>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/auth/role-selection")}
+                    className="mt-3 px-4 py-2 bg-[#008000] text-white text-sm font-semibold rounded-lg hover:bg-[#006600] transition-colors"
+                  >
+                    Registrarse ahora
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -121,17 +145,17 @@ export default function LoginPage() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
-                  Correo Electrónico
+                  Celular o correo electrónico
                 </label>
                 <input
                   id="email"
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full px-4 py-3 bg-white text-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="tu@email.com"
-                  autoComplete="email"
+                  placeholder="3001234567 o tu@email.com"
+                  autoComplete="username"
                 />
               </div>
 

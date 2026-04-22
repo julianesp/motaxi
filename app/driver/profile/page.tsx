@@ -1196,7 +1196,7 @@ export default function DriverProfilePage() {
             {/* Eliminar cuenta */}
             <button
               onClick={async () => {
-                const first = await Swal.fire({
+                const result = await Swal.fire({
                   title: '¿Eliminar tu cuenta?',
                   html: `<p style="color:#4b5563;font-size:14px;">Esta acción es <strong>irreversible</strong>. Se eliminarán todos tus datos, historial y suscripción.</p>`,
                   icon: 'warning',
@@ -1206,29 +1206,15 @@ export default function DriverProfilePage() {
                   cancelButtonText: 'Cancelar',
                   cancelButtonColor: '#6b7280',
                 });
-                if (!first.isConfirmed) return;
-                const second = await Swal.fire({
-                  title: 'Confirma escribiendo tu email',
-                  input: 'email',
-                  inputPlaceholder: user?.email,
-                  inputAttributes: { autocomplete: 'off' },
-                  showCancelButton: true,
-                  confirmButtonText: 'Eliminar definitivamente',
-                  confirmButtonColor: '#dc2626',
-                  cancelButtonColor: '#6b7280',
-                  preConfirm: (val) => {
-                    if (val !== user?.email) { Swal.showValidationMessage('El email no coincide'); return false; }
-                    return val;
-                  },
-                });
-                if (!second.isConfirmed) return;
+                if (!result.isConfirmed) return;
                 try {
                   const { apiClient } = await import('@/lib/api-client');
                   await apiClient.delete('/users/account');
                   await logout();
                   router.push('/');
-                } catch {
-                  Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar la cuenta. Contacta soporte.', confirmButtonColor: '#008000' });
+                } catch (err: any) {
+                  const msg = err?.response?.data?.error || 'No se pudo eliminar la cuenta. Contacta soporte.';
+                  Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#008000' });
                 }
               }}
               className="mt-3 w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-red-50 transition-colors border border-red-100"

@@ -27,6 +27,9 @@ export interface Env {
   VAPID_PRIVATE_KEY?: string;
   TELEGRAM_BOT_TOKEN?: string;
   ADMIN_TELEGRAM_CHAT_ID?: string;
+  TWILIO_ACCOUNT_SID?: string;
+  TWILIO_AUTH_TOKEN?: string;
+  TWILIO_MESSAGING_SERVICE_SID?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();

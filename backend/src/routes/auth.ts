@@ -8,6 +8,128 @@ import { Env } from '../index';
 export const authRoutes = new Hono<{ Bindings: Env }>();
 
 /**
+ * POST /auth/send-otp
+ * Enviar código de verificación SMS al número de celular (via Twilio REST API)
+ */
+authRoutes.post('/send-otp', async (c) => {
+  try {
+    const { phone } = await c.req.json();
+
+    if (!phone || !/^\d{10,15}$/.test(phone.replace(/\s/g, ''))) {
+      return c.json({ error: 'Número de celular inválido' }, 400);
+    }
+
+    // Verificar si el teléfono ya está registrado
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE phone = ?'
+    ).bind(phone).first();
+    if (existing) {
+      return c.json({ error: 'Este número ya está registrado' }, 409);
+    }
+
+    // Rate limiting simple: máximo 3 OTPs por número en los últimos 10 minutos
+    const tenMinutesAgo = Math.floor(Date.now() / 1000) - 600;
+    const recentCount = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM phone_verifications WHERE phone = ? AND created_at > ?'
+    ).bind(phone, tenMinutesAgo).first() as any;
+    if ((recentCount?.count ?? 0) >= 3) {
+      return c.json({ error: 'Demasiados intentos. Espera 10 minutos antes de solicitar otro código.' }, 429);
+    }
+
+    // Generar código de 6 dígitos
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = Math.floor(Date.now() / 1000) + 300; // 5 minutos
+    const id = uuidv4();
+
+    // Guardar código en DB
+    await c.env.DB.prepare(
+      'INSERT INTO phone_verifications (id, phone, code, expires_at) VALUES (?, ?, ?, ?)'
+    ).bind(id, phone, code, expiresAt).run();
+
+    // Enviar SMS via Twilio REST API (compatible con Cloudflare Workers)
+    if (c.env.TWILIO_ACCOUNT_SID && c.env.TWILIO_AUTH_TOKEN && c.env.TWILIO_MESSAGING_SERVICE_SID) {
+      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${c.env.TWILIO_ACCOUNT_SID}/Messages.json`;
+      const credentials = btoa(`${c.env.TWILIO_ACCOUNT_SID}:${c.env.TWILIO_AUTH_TOKEN}`);
+
+      // Formatear número colombiano: agregar +57 si no tiene código de país
+      const formattedPhone = phone.startsWith('+') ? phone : `+57${phone}`;
+
+      const body = new URLSearchParams({
+        To: formattedPhone,
+        MessagingServiceSid: c.env.TWILIO_MESSAGING_SERVICE_SID,
+        Body: `Tu código de verificación MoTaxi es: ${code}. Válido por 5 minutos. No lo compartas con nadie.`,
+      });
+
+      const twilioResponse = await fetch(twilioUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${credentials}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: body.toString(),
+      });
+
+      if (!twilioResponse.ok) {
+        const err = await twilioResponse.json() as any;
+        console.error('Twilio error:', err);
+        return c.json({ error: 'No se pudo enviar el SMS. Verifica el número e intenta de nuevo.' }, 500);
+      }
+    } else {
+      // Sin credenciales Twilio (desarrollo): loguear el código
+      console.log(`[DEV] OTP para ${phone}: ${code}`);
+    }
+
+    return c.json({ message: 'Código enviado correctamente', phone });
+  } catch (error: any) {
+    console.error('Send OTP error:', error);
+    return c.json({ error: 'Error al enviar el código' }, 500);
+  }
+});
+
+/**
+ * POST /auth/verify-otp
+ * Verificar el código OTP ingresado por el usuario
+ */
+authRoutes.post('/verify-otp', async (c) => {
+  try {
+    const { phone, code } = await c.req.json();
+
+    if (!phone || !code) {
+      return c.json({ error: 'Número y código son requeridos' }, 400);
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+
+    // Buscar código válido, no usado y no expirado
+    const record = await c.env.DB.prepare(
+      'SELECT id, code, expires_at, used FROM phone_verifications WHERE phone = ? AND used = 0 ORDER BY created_at DESC LIMIT 1'
+    ).bind(phone).first() as any;
+
+    if (!record) {
+      return c.json({ error: 'No se encontró un código activo para este número' }, 400);
+    }
+
+    if (record.expires_at < now) {
+      return c.json({ error: 'El código ha expirado. Solicita uno nuevo.' }, 400);
+    }
+
+    if (record.code !== String(code)) {
+      return c.json({ error: 'Código incorrecto' }, 400);
+    }
+
+    // Marcar como usado
+    await c.env.DB.prepare(
+      'UPDATE phone_verifications SET used = 1 WHERE id = ?'
+    ).bind(record.id).run();
+
+    return c.json({ verified: true, phone });
+  } catch (error: any) {
+    console.error('Verify OTP error:', error);
+    return c.json({ error: 'Error al verificar el código' }, 500);
+  }
+});
+
+/**
  * POST /auth/register
  * Registrar nuevo usuario
  */

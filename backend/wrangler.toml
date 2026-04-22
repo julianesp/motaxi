@@ -28,6 +28,10 @@ VAPID_PRIVATE_KEY = "8rM6Ee9ZWZpgui6mZNERt82SPoxcATV0EI3z6-kyI5k"
 # TELEGRAM_BOT_TOKEN = ""  # no poner aquí en producción
 # Chat ID del admin para recibir notificaciones: wrangler secret put ADMIN_TELEGRAM_CHAT_ID
 # ADMIN_TELEGRAM_CHAT_ID = ""  # no poner aquí en producción
+# Twilio — para verificación OTP de número de celular
+# Configurar como secrets: wrangler secret put TWILIO_ACCOUNT_SID
+#                          wrangler secret put TWILIO_AUTH_TOKEN
+#                          wrangler secret put TWILIO_PHONE_NUMBER
 
 # Configuración de D1 Database
 # Usa la misma base de datos para desarrollo y producción

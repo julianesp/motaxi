@@ -1202,9 +1202,9 @@ export default function PassengerHomePage() {
                                   {isSelected && <span className="text-xs text-[#42CE1D] font-bold flex-shrink-0">✓</span>}
                                 </div>
                                 <div className="text-xs text-gray-400 flex items-center gap-1.5">
-                                  <span>⭐ {driver.rating.toFixed(1)}</span>
+                                  <span>⭐ {driver.rating != null ? driver.rating.toFixed(1) : 'Nuevo'}</span>
                                   <span>·</span>
-                                  <span>{driver.total_trips} viajes</span>
+                                  <span>{driver.total_trips ?? 0} viajes</span>
                                   {driver.distance_km && (
                                     <>
                                       <span>·</span>

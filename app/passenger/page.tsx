@@ -5,6 +5,38 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import dynamic from "next/dynamic";
 import Swal from "sweetalert2";
+import { playNotificationSound } from "@/lib/useSound";
+
+const RECENT_PLACES_KEY = "motaxi_recent_places";
+const MAX_RECENT_PLACES = 5;
+
+interface RecentPlace {
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+function loadRecentPlaces(): RecentPlace[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_PLACES_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentPlace(place: RecentPlace) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = loadRecentPlaces().filter(
+      (p) => p.address !== place.address
+    );
+    const updated = [place, ...existing].slice(0, MAX_RECENT_PLACES);
+    localStorage.setItem(RECENT_PLACES_KEY, JSON.stringify(updated));
+  } catch {
+    // silencioso
+  }
+}
 
 // Tipos para conductores
 interface NearbyDriver {
@@ -184,6 +216,41 @@ export default function PassengerHomePage() {
   const [passengerCustomPrice, setPassengerCustomPrice] = useState<
     number | null
   >(null);
+  const [recentPlaces, setRecentPlaces] = useState<RecentPlace[]>([]);
+  const [showRecentPlaces, setShowRecentPlaces] = useState(false);
+
+  // Cargar historial al montar
+  useEffect(() => {
+    setRecentPlaces(loadRecentPlaces());
+  }, []);
+
+  // Mostrar historial cuando el destino está vacío
+  useEffect(() => {
+    if (!destination.address) {
+      setShowRecentPlaces(recentPlaces.length > 0);
+    } else {
+      setShowRecentPlaces(false);
+    }
+  }, [destination.address, recentPlaces.length]);
+
+  // Precio recomendado calculado automáticamente
+  const recommendedPrice = useMemo(() => {
+    if (!estimatedDistance) return null;
+    if (selectedDriver) {
+      return Math.round(
+        (selectedDriver.base_fare ?? 5000) +
+          estimatedDistance * (selectedDriver.per_km_fare ?? 2000)
+      );
+    }
+    if (nearbyDrivers.length > 0) {
+      const nearest = sortedNearbyDrivers[0];
+      return Math.round(
+        (nearest.base_fare ?? 5000) +
+          estimatedDistance * (nearest.per_km_fare ?? 2000)
+      );
+    }
+    return Math.round(5000 + estimatedDistance * 2000);
+  }, [estimatedDistance, selectedDriver, nearbyDrivers, sortedNearbyDrivers]);
 
   useEffect(() => {
     // Solo verificar autenticación una vez que termine de cargar
@@ -392,62 +459,10 @@ export default function PassengerHomePage() {
     destination.longitude,
   ]);
 
-  const handleModifyPrice = async () => {
-    // Calcular precio estimado actual para mostrarlo como referencia
-    let currentEstimate = 5000;
-    if (estimatedDistance && nearbyDrivers.length > 0) {
-      const nearestDriver = nearbyDrivers[0];
-      currentEstimate = Math.round(
-        (nearestDriver.base_fare ?? 5000) +
-          estimatedDistance * (nearestDriver.per_km_fare ?? 2000),
-      );
-    } else if (estimatedDistance) {
-      currentEstimate = Math.round(5000 + estimatedDistance * 2000);
-    }
-
-    const displayPrice = passengerCustomPrice ?? currentEstimate;
-
-    const { value: newPrice } = await Swal.fire({
-      title: "Proponer precio",
-      html: `
-        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">
-          Precio estimado: <strong style="color:#008000;">$${currentEstimate.toLocaleString()}</strong>
-        </p>
-        <p style="color:#6b7280;font-size:13px;margin-bottom:16px;">
-          Puedes proponer un precio diferente. Los conductores verán tu oferta y decidirán si aceptarla.
-        </p>
-        <input id="swal-price-input" type="number" min="1000" step="100"
-          value="${displayPrice}"
-          style="width:100%;padding:10px 12px;border:2px solid #d1fae5;border-radius:12px;font-size:18px;font-weight:bold;color:#008000;text-align:center;outline:none;"
-          placeholder="Ingresa el precio"
-        />
-      `,
-      confirmButtonText: "Confirmar precio",
-      confirmButtonColor: "#008000",
-      showCancelButton: true,
-      cancelButtonText: passengerCustomPrice
-        ? "Usar precio estimado"
-        : "Cancelar",
-      cancelButtonColor: "#6b7280",
-      preConfirm: () => {
-        const input = document.getElementById(
-          "swal-price-input",
-        ) as HTMLInputElement;
-        const val = parseInt(input.value);
-        if (!val || val < 1000) {
-          Swal.showValidationMessage("El precio mínimo es $1,000");
-          return false;
-        }
-        return val;
-      },
-    });
-
-    if (newPrice) {
-      setPassengerCustomPrice(newPrice);
-    } else if (passengerCustomPrice && !newPrice) {
-      // Si canceló con "Usar precio estimado"
-      setPassengerCustomPrice(null);
-    }
+  const adjustCustomPrice = (delta: number) => {
+    const base = passengerCustomPrice ?? recommendedPrice ?? 5000;
+    const next = Math.max(1000, base + delta);
+    setPassengerCustomPrice(next);
   };
 
   const handleRequestTrip = async () => {
@@ -539,6 +554,15 @@ export default function PassengerHomePage() {
         timer: 3000,
         timerProgressBar: true,
       });
+
+      // Guardar destino en historial reciente
+      if (destination.latitude && destination.longitude && destination.address) {
+        saveRecentPlace({
+          address: destination.address,
+          latitude: destination.latitude,
+          longitude: destination.longitude,
+        });
+      }
 
       // Redirigir a la página de tracking del viaje
       router.push(`/passenger/trip/${response.trip.id}`);
@@ -1038,17 +1062,19 @@ export default function PassengerHomePage() {
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full ring-2 ring-red-200 z-10"></div>
                     <LocationPicker
                       value={destination.address}
-                      onChange={(value) =>
-                        setDestination({ ...destination, address: value })
-                      }
-                      onSelectPlace={(place) =>
+                      onChange={(value) => {
+                        setDestination({ ...destination, address: value });
+                        setShowRecentPlaces(value === "");
+                      }}
+                      onSelectPlace={(place) => {
                         setDestination({
                           address: place.address,
                           latitude: place.latitude,
                           longitude: place.longitude,
                           place_id: place.place_id,
-                        })
-                      }
+                        });
+                        setShowRecentPlaces(false);
+                      }}
                       placeholder="¿A dónde vas?"
                       className="text-black"
                       icon="destination"
@@ -1056,9 +1082,10 @@ export default function PassengerHomePage() {
                     />
                     {destination.address && (
                       <button
-                        onClick={() =>
-                          setDestination({ address: "", latitude: 0, longitude: 0 })
-                        }
+                        onClick={() => {
+                          setDestination({ address: "", latitude: 0, longitude: 0 });
+                          setShowRecentPlaces(true);
+                        }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-700 transition-colors z-10"
                         title="Limpiar destino"
                       >
@@ -1068,10 +1095,42 @@ export default function PassengerHomePage() {
                       </button>
                     )}
                   </div>
+
+                  {/* Historial de lugares recientes - estilo InDrive */}
+                  {showRecentPlaces && recentPlaces.length > 0 && (
+                    <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                      <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Recientes</span>
+                      </div>
+                      {recentPlaces.map((place, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setDestination({
+                              address: place.address,
+                              latitude: place.latitude,
+                              longitude: place.longitude,
+                            });
+                            setShowRecentPlaces(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 text-left"
+                        >
+                          <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <span className="text-sm text-gray-700 truncate">{place.address}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   <button
                     onClick={() => {
                       setMapClickMode("destination");
                       setIsPanelMinimized(true);
+                      setShowRecentPlaces(false);
                     }}
                     className={`w-full py-2 px-4 rounded-xl text-xs font-medium transition-all duration-200 ${
                       mapClickMode === "destination"
@@ -1104,35 +1163,12 @@ export default function PassengerHomePage() {
                   </div>
                 )}
 
-                {/* Tarifas de conductores disponibles */}
-                {pickup.latitude &&
-                  destination.latitude &&
-                  nearbyDrivers.length > 0 &&
-                  estimatedDistance && (
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 shadow-sm space-y-2">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <svg
-                          className="w-5 h-5 text-[#008000]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-gray-700 font-semibold text-sm">
-                          Tarifas de conductores disponibles
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-2">
-                        Toca un conductor para elegirlo ·{" "}
-                        {estimatedDistance.toFixed(1)} km estimados
-                      </p>
-                      <div className="space-y-1">
+                {/* Panel de tarifa estilo InDrive - solo cuando hay origen y destino */}
+                {pickup.latitude && destination.latitude && estimatedDistance && recommendedPrice && (
+                  <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    {/* Lista de conductores */}
+                    {nearbyDrivers.length > 0 && (
+                      <div className="divide-y divide-gray-50">
                         {sortedNearbyDrivers.slice(0, 4).map((driver) => {
                           const driverFare = Math.round(
                             (driver.base_fare ?? 5000) +
@@ -1142,52 +1178,38 @@ export default function PassengerHomePage() {
                           return (
                             <button
                               key={driver.id}
-                              onClick={() =>
-                                setSelectedDriver(isSelected ? null : driver)
-                              }
-                              className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 border transition-all duration-150 text-left ${
-                                isSelected
-                                  ? "bg-green-50 border-[#42CE1D] ring-1 ring-[#42CE1D]"
-                                  : "bg-white border-green-100 hover:border-green-300 hover:bg-green-50"
+                              onClick={() => setSelectedDriver(isSelected ? null : driver)}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-150 text-left ${
+                                isSelected ? "bg-green-50" : "hover:bg-gray-50"
                               }`}
                             >
-                              {/* Foto del conductor */}
-                              <div className="flex-shrink-0">
-                                {driver.profile_image ? (
-                                  <img
-                                    src={driver.profile_image}
-                                    alt={driver.full_name}
-                                    className="w-10 h-10 rounded-full object-cover border-2 border-green-200"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-full bg-green-100 border-2 border-green-200 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                  </div>
-                                )}
-                              </div>
+                              {driver.profile_image ? (
+                                <img
+                                  src={driver.profile_image}
+                                  alt={driver.full_name}
+                                  className="w-9 h-9 rounded-full object-cover border-2 border-gray-100 flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-400">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
-                                <span className="text-sm font-medium text-gray-800">
-                                  {driver.full_name}
-                                </span>
-                                {isSelected && (
-                                  <span className="ml-2 text-xs text-[#008000] font-semibold">
-                                    ✓ Seleccionado
-                                  </span>
-                                )}
-                                <div className="text-xs text-gray-400">
-                                  {driver.distance_km?.toFixed(1)} km de ti
-                                  {driver.municipality && (
-                                    <span className="ml-1.5 bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
-                                      📍{" "}
-                                      {driver.municipality
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                        driver.municipality
-                                          .slice(1)
-                                          .replace("_", " ")}
-                                    </span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-sm font-semibold text-gray-800 truncate">{driver.full_name}</span>
+                                  {isSelected && <span className="text-xs text-[#42CE1D] font-bold flex-shrink-0">✓</span>}
+                                </div>
+                                <div className="text-xs text-gray-400 flex items-center gap-1.5">
+                                  <span>⭐ {driver.rating.toFixed(1)}</span>
+                                  <span>·</span>
+                                  <span>{driver.total_trips} viajes</span>
+                                  {driver.distance_km && (
+                                    <>
+                                      <span>·</span>
+                                      <span>{driver.distance_km.toFixed(1)} km</span>
+                                    </>
                                   )}
                                 </div>
                               </div>
@@ -1197,92 +1219,57 @@ export default function PassengerHomePage() {
                             </button>
                           );
                         })}
+                        {nearbyDrivers.length > 4 && (
+                          <p className="text-xs text-center text-gray-400 py-1.5">
+                            +{nearbyDrivers.length - 4} más disponibles
+                          </p>
+                        )}
                       </div>
-                      {nearbyDrivers.length > 4 && (
-                        <p className="text-xs text-center text-gray-400">
-                          +{nearbyDrivers.length - 4} conductores más
-                          disponibles
-                        </p>
-                      )}
-                      {/* Botón modificar precio */}
-                      <button
-                        onClick={handleModifyPrice}
-                        className="w-full mt-1 py-2 px-3 text-sm font-medium text-[#008000] bg-white hover:bg-green-50 border border-green-300 rounded-xl transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                        <span>
-                          {passengerCustomPrice
-                            ? `Tu precio: $${passengerCustomPrice.toLocaleString()} · Modificar`
-                            : "Proponer mi precio"}
-                        </span>
-                      </button>
-                    </div>
-                  )}
+                    )}
 
-                {/* Sin conductores disponibles */}
-                {pickup.latitude &&
-                  destination.latitude &&
-                  nearbyDrivers.length === 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
-                      <p className="text-sm text-amber-800 text-center">
-                        No hay conductores disponibles en tu zona en este
-                        momento.
+                    {/* Sin conductores */}
+                    {nearbyDrivers.length === 0 && (
+                      <div className="px-3 py-3 text-center text-sm text-amber-700 bg-amber-50">
+                        No hay conductores disponibles en tu zona ahora
+                      </div>
+                    )}
+
+                    {/* Panel de precio estilo InDrive */}
+                    <div className="border-t border-gray-100 px-3 py-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Tarifa recomendada</span>
+                        <span className="font-semibold text-gray-700">${recommendedPrice.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => adjustCustomPrice(-500)}
+                          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-xl font-bold transition-colors flex-shrink-0"
+                        >
+                          −
+                        </button>
+                        <div className="flex-1 text-center">
+                          <div className="text-2xl font-bold text-[#008000]">
+                            ${(passengerCustomPrice ?? recommendedPrice).toLocaleString()}
+                          </div>
+                          {passengerCustomPrice && passengerCustomPrice !== recommendedPrice && (
+                            <button
+                              onClick={() => setPassengerCustomPrice(null)}
+                              className="text-xs text-gray-400 underline hover:text-gray-600"
+                            >
+                              Usar recomendado
+                            </button>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => adjustCustomPrice(500)}
+                          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-xl font-bold transition-colors flex-shrink-0"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-xs text-center text-gray-400">
+                        Los conductores verán tu oferta y decidirán aceptarla
                       </p>
-                      {/* Proponer precio sin conductores visibles */}
-                      <button
-                        onClick={handleModifyPrice}
-                        className="w-full py-2 px-3 text-sm font-medium text-[#008000] bg-white hover:bg-green-50 border border-green-300 rounded-xl transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                        <span>
-                          {passengerCustomPrice
-                            ? `Tu precio: $${passengerCustomPrice.toLocaleString()} · Modificar`
-                            : "Proponer mi precio"}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-
-                {/* Indicador de precio propuesto por el pasajero */}
-                {passengerCustomPrice && (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2">
-                    <span className="text-sm text-gray-600">
-                      Tu precio propuesto:
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-base font-bold text-[#008000]">
-                        ${passengerCustomPrice.toLocaleString()}
-                      </span>
-                      <button
-                        onClick={handleModifyPrice}
-                        className="text-xs text-gray-400 hover:text-[#008000] underline"
-                      >
-                        Cambiar
-                      </button>
                     </div>
                   </div>
                 )}

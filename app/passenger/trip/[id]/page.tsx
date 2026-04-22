@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import dynamic from 'next/dynamic';
 import Swal from 'sweetalert2';
+import { playNotificationSound } from '@/lib/useSound';
 
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
   ssr: false,
@@ -61,6 +62,8 @@ export default function TripTrackingPage() {
   const initialMapCenter = useRef<{ lat: number; lng: number } | null>(null);
   const consecutiveErrorsRef = useRef(0);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const prevOffersCountRef = useRef(0);
+  const prevStatusRef = useRef<string | null>(null);
 
   // Establecer el centro inicial del mapa solo una vez (ANTES de cualquier return)
   if (!initialMapCenter.current && trip) {
@@ -114,21 +117,6 @@ export default function TripTrackingPage() {
           consecutiveErrorsRef.current = 0;
           setTrip(data.trip);
 
-          // Si el viaje está en estado 'requested', cargar ofertas de conductores
-          if (data.trip.status === 'requested') {
-            try {
-              const offersData = await tripsAPI.getTripOffers(params.id as string);
-              if (offersData.offers) {
-                setDriverOffers(offersData.offers);
-              }
-            } catch (error) {
-              console.error('Error fetching offers:', error);
-            }
-          } else {
-            // Si ya no está en 'requested', limpiar las ofertas
-            setDriverOffers([]);
-          }
-
           // Si el viaje fue cancelado, detener polling y redirigir después de 3 segundos
           if (data.trip.status === 'cancelled') {
             if (pollingRef.current) clearInterval(pollingRef.current);
@@ -137,6 +125,31 @@ export default function TripTrackingPage() {
             }, 3000);
             return;
           }
+
+          // Sonido cuando llega una nueva oferta de conductor
+          if (data.trip.status === 'requested') {
+            try {
+              const offersData = await tripsAPI.getTripOffers(params.id as string);
+              if (offersData.offers) {
+                const newCount = offersData.offers.length;
+                if (newCount > prevOffersCountRef.current) {
+                  playNotificationSound('offer');
+                }
+                prevOffersCountRef.current = newCount;
+                setDriverOffers(offersData.offers);
+              }
+            } catch (error) {
+              console.error('Error fetching offers:', error);
+            }
+          } else {
+            setDriverOffers([]);
+          }
+
+          // Sonido cuando el viaje pasa a 'accepted'
+          if (data.trip.status === 'accepted' && prevStatusRef.current === 'requested') {
+            playNotificationSound('accepted');
+          }
+          prevStatusRef.current = data.trip.status;
 
           // Si el viaje está completado, detener polling definitivamente
           if (data.trip.status === 'completed') {
@@ -427,101 +440,123 @@ export default function TripTrackingPage() {
               )}
             </div>
 
+            {/* Buscando conductor - animación de espera */}
+            {trip.status === 'requested' && driverOffers.length === 0 && (
+              <div className="flex flex-col items-center py-4 space-y-2">
+                <div className="flex space-x-1.5">
+                  {[0,1,2].map(i => (
+                    <div
+                      key={i}
+                      className="w-2.5 h-2.5 bg-[#42CE1D] rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500">Notificando a conductores cercanos...</p>
+              </div>
+            )}
+
             {/* Ofertas de conductores - solo cuando está buscando conductor */}
             {trip.status === 'requested' && driverOffers.length > 0 && (
-              <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
-                <h3 className="text-sm font-bold text-[#003300] mb-3 flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                  </svg>
-                  Ofertas de Conductores ({driverOffers.length})
-                </h3>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="rounded-xl border border-gray-200 overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-[#42CE1D] rounded-full animate-pulse inline-block"></span>
+                    Conductores disponibles
+                  </h3>
+                  <span className="text-xs font-semibold text-[#008000] bg-green-100 px-2 py-0.5 rounded-full">
+                    {driverOffers.length} oferta{driverOffers.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
                   {driverOffers.map((offer: any) => (
-                    <div
-                      key={offer.id}
-                      className="bg-white border border-green-200 rounded-lg p-3 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900 flex items-center">
-                            {offer.driver_name}
+                    <div key={offer.id} className="bg-white p-3">
+                      <div className="flex items-center gap-3 mb-2.5">
+                        {/* Avatar */}
+                        <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 text-[#008000] font-bold text-lg border-2 border-green-200">
+                          {offer.driver_name?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-900 text-sm truncate">{offer.driver_name}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
                             {offer.driver_rating && (
-                              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
-                                ⭐ {offer.driver_rating.toFixed(1)}
+                              <span className="flex items-center gap-0.5">
+                                <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                {offer.driver_rating.toFixed(1)}
                               </span>
                             )}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {offer.vehicle_model} {offer.vehicle_color} • {offer.vehicle_plate}
-                          </p>
+                            {offer.total_trips && (
+                              <span>{offer.total_trips} viajes</span>
+                            )}
+                            {offer.vehicle_model && (
+                              <span className="truncate">{offer.vehicle_color} {offer.vehicle_model}</span>
+                            )}
+                          </div>
+                          {offer.vehicle_plate && (
+                            <span className="text-xs font-mono text-gray-400">{offer.vehicle_plate}</span>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-green-600">
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-xl font-bold text-[#008000]">
                             ${offer.offered_price.toLocaleString()}
                           </p>
                         </div>
                       </div>
-                      <button
-                        onClick={async () => {
-                          const result = await Swal.fire({
-                            title: '¿Aceptar esta oferta?',
-                            html: `
-                              <div class="text-left">
-                                <p class="mb-2"><strong>Conductor:</strong> ${offer.driver_name}</p>
-                                <p class="mb-2"><strong>Vehículo:</strong> ${offer.vehicle_model} ${offer.vehicle_color}</p>
-                                <p class="mb-2"><strong>Placa:</strong> ${offer.vehicle_plate}</p>
-                                <p class="mb-2"><strong>Precio:</strong> <span class="text-green-600 text-xl font-bold">$${offer.offered_price.toLocaleString()}</span></p>
-                              </div>
-                            `,
-                            icon: 'question',
-                            showCancelButton: true,
-                            confirmButtonColor: '#008000',
-                            cancelButtonColor: '#6b7280',
-                            confirmButtonText: 'Sí, aceptar',
-                            cancelButtonText: 'Cancelar',
-                          });
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            const result = await Swal.fire({
+                              title: '¿Aceptar esta oferta?',
+                              html: `
+                                <div class="text-left">
+                                  <p class="mb-2"><strong>Conductor:</strong> ${offer.driver_name}</p>
+                                  <p class="mb-2"><strong>Vehículo:</strong> ${offer.vehicle_model} ${offer.vehicle_color}</p>
+                                  <p class="mb-2"><strong>Placa:</strong> ${offer.vehicle_plate}</p>
+                                  <p class="mb-2"><strong>Precio:</strong> <span class="text-green-600 text-xl font-bold">$${offer.offered_price.toLocaleString()}</span></p>
+                                </div>
+                              `,
+                              icon: 'question',
+                              showCancelButton: true,
+                              confirmButtonColor: '#008000',
+                              cancelButtonColor: '#6b7280',
+                              confirmButtonText: 'Sí, aceptar',
+                              cancelButtonText: 'Cancelar',
+                            });
 
-                          if (result.isConfirmed) {
-                            try {
-                              const { tripsAPI } = await import('@/lib/api-client');
-
-                              // Aceptar la oferta del conductor
-                              await tripsAPI.acceptOffer(trip.id, offer.driver_id);
-
-                              await Swal.fire({
-                                icon: 'success',
-                                title: '¡Oferta aceptada!',
-                                text: `${offer.driver_name} ha sido notificado. Se dirige al punto de recogida.`,
-                                confirmButtonColor: '#008000',
-                                timer: 3000,
-                                timerProgressBar: true,
-                              });
-
-                              // Recargar datos del viaje para ver el conductor asignado
-                              window.location.reload();
-                            } catch (error: any) {
-                              console.error('Error accepting offer:', error);
-                              const errorMessage = error?.response?.data?.error || error?.message || 'No se pudo aceptar la oferta. Intenta nuevamente.';
-                              Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: errorMessage,
-                                confirmButtonColor: '#008000',
-                              });
+                            if (result.isConfirmed) {
+                              try {
+                                const { tripsAPI } = await import('@/lib/api-client');
+                                await tripsAPI.acceptOffer(trip.id, offer.driver_id);
+                                await Swal.fire({
+                                  icon: 'success',
+                                  title: '¡Oferta aceptada!',
+                                  text: `${offer.driver_name} ha sido notificado. Se dirige al punto de recogida.`,
+                                  confirmButtonColor: '#008000',
+                                  timer: 3000,
+                                  timerProgressBar: true,
+                                });
+                                window.location.reload();
+                              } catch (error: any) {
+                                console.error('Error accepting offer:', error);
+                                Swal.fire({
+                                  icon: 'error',
+                                  title: 'Error',
+                                  text: error?.response?.data?.error || 'No se pudo aceptar la oferta. Intenta nuevamente.',
+                                  confirmButtonColor: '#008000',
+                                });
+                              }
                             }
-                          }
-                        }}
-                        className="w-full mt-2 py-2 px-4 bg-gradient-to-r from-[#008000] to-[#006600] text-white rounded-lg text-sm font-medium hover:from-[#006600] hover:to-[#004d00] transition-all"
-                      >
-                        Aceptar oferta
-                      </button>
+                          }}
+                          className="flex-1 py-2 px-3 bg-[#42CE1D] hover:bg-[#35b015] text-white rounded-lg text-sm font-bold transition-colors"
+                        >
+                          Aceptar
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-[#006600] mt-3">
-                  💡 Los conductores pueden enviar ofertas personalizadas. Puedes esperar más ofertas o aceptar una ahora.
-                </p>
               </div>
             )}
 

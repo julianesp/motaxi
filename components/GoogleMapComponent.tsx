@@ -339,15 +339,41 @@ function GoogleMapComponent({
     }
   }, [map, driverLocation]);
 
-  // Marcadores conductores cercanos
+  // Marcadores conductores cercanos — ícono de moto con pulso animado estilo InDrive
   useEffect(() => {
     if (!map) return;
     nearbyMarkersRef.current.forEach((m) => (m.map = null));
     nearbyMarkersRef.current = [];
     nearbyDrivers.forEach((driver) => {
       const el = document.createElement('div');
-      el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="white" stroke="#f97316" stroke-width="1.5"/><g transform="translate(4,6)"><circle cx="3" cy="9" r="2" fill="#374151"/><circle cx="13" cy="9" r="2" fill="#374151"/><path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="2" r="1.2" fill="#f97316"/></g></svg>`;
-      const marker = new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: driver.lat, lng: driver.lng }, content: el, title: `${driver.name} — ${driver.vehicle} ⭐ ${driver.rating}` });
+      el.style.cssText = 'position:relative;width:48px;height:48px;';
+      el.innerHTML = `
+        <style>
+          @keyframes moto-pulse {
+            0%,100%{transform:scale(1);opacity:0.6}
+            50%{transform:scale(1.6);opacity:0}
+          }
+        </style>
+        <div style="position:absolute;inset:-8px;border-radius:50%;background:rgba(249,115,22,0.15);animation:moto-pulse 2s ease-in-out infinite;"></div>
+        <div style="position:absolute;inset:-3px;border-radius:50%;background:rgba(249,115,22,0.1);animation:moto-pulse 2s ease-in-out infinite 0.4s;"></div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" style="position:relative;z-index:1;">
+          <circle cx="24" cy="24" r="22" fill="white" stroke="#f97316" stroke-width="2.5" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>
+          <g transform="translate(9,13)">
+            <circle cx="4.5" cy="15" r="3.5" fill="#1f2937" stroke="#f97316" stroke-width="1"/>
+            <circle cx="25.5" cy="15" r="3.5" fill="#1f2937" stroke="#f97316" stroke-width="1"/>
+            <path d="M8 15 L11 6 H16 L20 15" stroke="#f97316" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13 6 H15C16 6 17 6.6 17.6 7.4L21 12" stroke="#f97316" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M8 15 H22" stroke="#6b7280" stroke-width="1.5" fill="none"/>
+            <circle cx="15" cy="3" r="2.2" fill="#f97316"/>
+            <circle cx="15" cy="3" r="1" fill="white"/>
+          </g>
+        </svg>`;
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map,
+        position: { lat: driver.lat, lng: driver.lng },
+        content: el,
+        title: `${driver.name} — ${driver.vehicle} ⭐ ${driver.rating}`,
+      });
       marker.addListener('click', () => onDriverClick && onDriverClick(driver.id));
       nearbyMarkersRef.current.push(marker);
     });

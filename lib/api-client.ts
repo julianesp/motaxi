@@ -278,6 +278,7 @@ export const usersAPI = {
   updateProfile: async (data: {
     full_name?: string;
     phone?: string;
+    email?: string;
     gender?: "male" | "female" | "other" | null;
     profile_image?: string;
   }) => {

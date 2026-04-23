@@ -25,7 +25,8 @@ export default function ForgotPasswordPage() {
         emailOrPhone,
       });
 
-      setEmailSent(response.data.emailSent === true);
+      const sent = response.data.emailSent === true || response.data.smsSent === true;
+      setEmailSent(sent);
       if (response.data.resetCode) {
         setResetCode(response.data.resetCode);
       }
@@ -88,8 +89,8 @@ export default function ForgotPasswordPage() {
             <div className={`border-l-4 px-4 py-4 rounded-lg shadow-md ${emailSent ? 'bg-green-50 border-green-500 text-green-800' : 'bg-amber-50 border-amber-500 text-amber-800'}`}>
               {emailSent ? (
                 <div>
-                  <p className="font-semibold mb-1">✅ Correo enviado</p>
-                  <p className="text-sm">Revisa tu bandeja de entrada (y spam). El código expira en 15 minutos.</p>
+                  <p className="font-semibold mb-1">✅ Código enviado</p>
+                  <p className="text-sm">Revisa tu correo o SMS. El código expira en 15 minutos.</p>
                 </div>
               ) : (
                 <div>

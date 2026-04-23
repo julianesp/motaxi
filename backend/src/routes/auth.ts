@@ -47,16 +47,14 @@ authRoutes.post('/send-otp', async (c) => {
     ).bind(id, phone, code, expiresAt).run();
 
     // Enviar SMS via Twilio REST API (compatible con Cloudflare Workers)
-    if (c.env.TWILIO_ACCOUNT_SID && c.env.TWILIO_AUTH_TOKEN && c.env.TWILIO_MESSAGING_SERVICE_SID) {
+    if (c.env.TWILIO_ACCOUNT_SID && c.env.TWILIO_AUTH_TOKEN && c.env.TWILIO_PHONE_NUMBER) {
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${c.env.TWILIO_ACCOUNT_SID}/Messages.json`;
       const credentials = btoa(`${c.env.TWILIO_ACCOUNT_SID}:${c.env.TWILIO_AUTH_TOKEN}`);
-
-      // Formatear número colombiano: agregar +57 si no tiene código de país
       const formattedPhone = phone.startsWith('+') ? phone : `+57${phone}`;
 
-      const body = new URLSearchParams({
+      const smsBody = new URLSearchParams({
         To: formattedPhone,
-        MessagingServiceSid: c.env.TWILIO_MESSAGING_SERVICE_SID,
+        From: c.env.TWILIO_PHONE_NUMBER,
         Body: `Tu código de verificación MoTaxi es: ${code}. Válido por 5 minutos. No lo compartas con nadie.`,
       });
 
@@ -66,7 +64,7 @@ authRoutes.post('/send-otp', async (c) => {
           'Authorization': `Basic ${credentials}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: body.toString(),
+        body: smsBody.toString(),
       });
 
       if (!twilioResponse.ok) {
@@ -75,7 +73,6 @@ authRoutes.post('/send-otp', async (c) => {
         return c.json({ error: 'No se pudo enviar el SMS. Verifica el número e intenta de nuevo.' }, 500);
       }
     } else {
-      // Sin credenciales Twilio (desarrollo): loguear el código
       console.log(`[DEV] OTP para ${phone}: ${code}`);
     }
 
@@ -552,14 +549,46 @@ authRoutes.post('/forgot-password', async (c) => {
       }
     }
 
-    console.log(`Reset code for ${user.email || user.phone}: ${resetCode} | emailSent=${emailSent} | hasRealEmail=${hasRealEmail} | error=${emailError}`);
+    // Si no se envió email, intentar SMS via Twilio (usuarios registrados con teléfono)
+    let smsSent = false;
+    if (!emailSent && user.phone && c.env.TWILIO_ACCOUNT_SID && c.env.TWILIO_AUTH_TOKEN && c.env.TWILIO_PHONE_NUMBER) {
+      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${c.env.TWILIO_ACCOUNT_SID}/Messages.json`;
+      const credentials = btoa(`${c.env.TWILIO_ACCOUNT_SID}:${c.env.TWILIO_AUTH_TOKEN}`);
+      const phone = user.phone as string;
+      const formattedPhone = phone.startsWith('+') ? phone : `+57${phone}`;
+
+      const smsBody = new URLSearchParams({
+        To: formattedPhone,
+        From: c.env.TWILIO_PHONE_NUMBER,
+        Body: `Tu código de recuperación MoTaxi es: ${resetCode}. Válido por 15 minutos. No lo compartas con nadie.`,
+      });
+
+      const twilioResponse = await fetch(twilioUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${credentials}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: smsBody.toString(),
+      });
+
+      smsSent = twilioResponse.ok;
+      if (!smsSent) {
+        const err = await twilioResponse.json() as any;
+        console.error('Twilio SMS error:', err);
+      }
+    }
+
+    const codeSentViaChannel = emailSent || smsSent;
+    console.log(`Reset code for ${user.email || user.phone}: ${resetCode} | emailSent=${emailSent} | smsSent=${smsSent} | error=${emailError}`);
 
     const response: any = {
       message: 'Si el correo o teléfono existe, recibirás instrucciones para recuperar tu cuenta.',
       emailSent,
+      smsSent,
     };
 
-    if (!emailSent) {
+    if (!codeSentViaChannel) {
       response.resetCode = resetCode;
     }
 

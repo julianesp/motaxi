@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { tripsAPI } from '@/lib/api-client';
-import { GoogleMap, useJsApiLoader, DirectionsRenderer, Marker } from '@react-google-maps/api';
-
-const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
+import { GoogleMap, DirectionsRenderer, Marker } from '@react-google-maps/api';
+import { useGoogleMaps } from '@/lib/google-maps-provider';
 
 interface Trip {
   id: string;
@@ -29,11 +28,7 @@ interface Trip {
 function TripMapModal({ trip, onClose }: { trip: Trip; onClose: () => void }) {
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   useEffect(() => {
     if (!isLoaded || !trip.pickup_latitude || !trip.dropoff_latitude) return;

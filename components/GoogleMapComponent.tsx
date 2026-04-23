@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState, useCallback, memo } from "react";
 import {
   GoogleMap,
-  useJsApiLoader,
   DirectionsRenderer,
 } from "@react-google-maps/api";
-
-const libraries: ("places" | "geometry" | "marker")[] = ["places", "geometry", "marker"];
+import { useGoogleMaps } from "@/lib/google-maps-provider";
 
 interface NearbyDriverMarker {
   id: string;
@@ -76,11 +74,7 @@ function GoogleMapComponent({
   requestingPassengers = [],
   onPassengerClick,
 }: GoogleMapComponentProps) {
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries,
-  });
+  const { isLoaded, loadError } = useGoogleMaps();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userLocation, setUserLocation] = useState<{

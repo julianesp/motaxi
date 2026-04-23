@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useJsApiLoader } from '@react-google-maps/api';
 import { MUNICIPALITIES } from '@/lib/constants/municipalities';
-
-const libraries: ('places' | 'geometry' | 'marker')[] = ['places', 'geometry', 'marker'];
+import { useGoogleMaps } from '@/lib/google-maps-provider';
 
 interface PlacesAutocompleteProps {
   value: string;
@@ -39,11 +37,7 @@ export default function PlacesAutocomplete({
   favorites = [],
   onSelectFavorite,
 }: PlacesAutocompleteProps) {
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);

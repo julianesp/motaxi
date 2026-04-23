@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { GoogleMap, useJsApiLoader, Circle } from '@react-google-maps/api';
+import { GoogleMap, Circle } from '@react-google-maps/api';
 import { MUNICIPALITIES, VALLE_SIBUNDOY_CENTER } from '@/lib/constants/municipalities';
-
-const libraries: ('marker')[] = ['marker'];
+import { useGoogleMaps } from '@/lib/google-maps-provider';
 
 const mapContainerStyle = {
   width: '100%',
@@ -22,11 +21,7 @@ const defaultOptions = {
 };
 
 export default function LandingMap() {
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries,
-  });
+  const { isLoaded, loadError } = useGoogleMaps();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedMunicipality, setSelectedMunicipality] = useState<string | null>(null);

@@ -9,6 +9,7 @@ import Script from "next/script";
 import OpenInBrowser from "@/components/OpenInBrowser";
 import InstallPWAModal from "@/components/InstallPWAModal";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleMapsProvider } from "@/lib/google-maps-provider";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", preload: true });
 
@@ -62,7 +63,9 @@ export default function RootLayout({
           <Analytics />
           <OpenInBrowser />
           {/* <InstallPWAModal /> */}
-          <AuthProvider>{children}</AuthProvider>
+          <GoogleMapsProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </GoogleMapsProvider>
           <Footer />
           <Script
             src="https://checkout.epayco.co/checkout.js"

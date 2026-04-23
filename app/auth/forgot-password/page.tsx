@@ -11,13 +11,13 @@ export default function ForgotPasswordPage() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetCode, setResetCode] = useState("");
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
-    setDebugInfo(null);
     setLoading(true);
 
     try {
@@ -25,16 +25,11 @@ export default function ForgotPasswordPage() {
         emailOrPhone,
       });
 
-      // Mostrar información de debug (el código de recuperación)
-      if (response.data.debug) {
-        setDebugInfo(response.data.debug);
-        setResetCode(response.data.debug.resetCode);
+      setEmailSent(response.data.emailSent === true);
+      if (response.data.resetCode) {
+        setResetCode(response.data.resetCode);
       }
-
-      // Redirigir a la página de reset con el email/phone
-      router.push(
-        `/auth/reset-password?identifier=${encodeURIComponent(emailOrPhone)}`,
-      );
+      setCodeSent(true);
     } catch (err: any) {
       console.error("Forgot password error:", err);
 
@@ -88,34 +83,27 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          {/* Debug Info (Solo para desarrollo) */}
-          {debugInfo && (
-            <div className="bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-lg shadow-md">
-              <div className="flex items-start">
-                <svg
-                  className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+          {/* Estado: código enviado */}
+          {codeSent && (
+            <div className={`border-l-4 px-4 py-4 rounded-lg shadow-md ${emailSent ? 'bg-green-50 border-green-500 text-green-800' : 'bg-amber-50 border-amber-500 text-amber-800'}`}>
+              {emailSent ? (
                 <div>
-                  <p className="font-medium mb-2">
-                    Código de recuperación generado:
-                  </p>
-                  <p className="text-2xl font-bold">{debugInfo.resetCode}</p>
-                  <p className="text-sm mt-2">
-                    Para: {debugInfo.email || debugInfo.phone}
-                  </p>
-                  <p className="text-xs mt-2 text-green-600">
-                    (Este código expira en 15 minutos)
-                  </p>
+                  <p className="font-semibold mb-1">✅ Correo enviado</p>
+                  <p className="text-sm">Revisa tu bandeja de entrada (y spam). El código expira en 15 minutos.</p>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <p className="font-semibold mb-2">📋 Tu código de recuperación:</p>
+                  <p className="text-4xl font-bold tracking-widest text-center my-3">{resetCode}</p>
+                  <p className="text-xs text-center">Cópialo antes de continuar · expira en 15 minutos</p>
+                </div>
+              )}
+              <button
+                onClick={() => router.push(`/auth/reset-password?identifier=${encodeURIComponent(emailOrPhone)}`)}
+                className="mt-4 w-full py-2.5 px-4 bg-[#008000] text-white rounded-xl font-medium hover:bg-[#006600] transition-colors"
+              >
+                Continuar →
+              </button>
             </div>
           )}
 
@@ -140,7 +128,7 @@ export default function ForgotPasswordPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          {!codeSent && <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div>
               <label
                 htmlFor="emailOrPhone"
@@ -170,7 +158,7 @@ export default function ForgotPasswordPage() {
             >
               {loading ? "Procesando..." : "Enviar código de recuperación"}
             </button>
-          </form>
+          </form>}
 
           {/* Ya tienes el código? */}
           <div className="text-center">

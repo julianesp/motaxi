@@ -235,6 +235,7 @@ export const driversAPI = {
     vehicle_model?: string;
     vehicle_color?: string;
     vehicle_plate?: string;
+    vehicle_types?: 'moto' | 'carro' | 'ambos';
     license_number?: string;
     base_fare?: number;
     intercity_fare?: number;

@@ -533,36 +533,34 @@ authRoutes.post('/forgot-password', async (c) => {
     );
 
     // Intentar enviar email si existe configuración de Resend
+    // No enviar a emails placeholder @motaxi.local (usuarios registrados con teléfono)
+    const hasRealEmail = user.email && !(user.email as string).endsWith('@motaxi.local');
     let emailSent = false;
-    if (user.email && c.env.RESEND_API_KEY) {
+    let emailError: string | undefined;
+
+    if (hasRealEmail && c.env.RESEND_API_KEY) {
       const result = await emailService.sendPasswordResetCode(
         user.email as string,
         resetCode,
         user.full_name as string
       );
       emailSent = result.success;
+      emailError = result.error;
 
       if (!emailSent) {
         console.error('Failed to send email:', result.error);
       }
     }
 
-    // Log para debugging (solo en desarrollo)
-    console.log(`Reset code for ${user.email}: ${resetCode}`);
+    console.log(`Reset code for ${user.email || user.phone}: ${resetCode} | emailSent=${emailSent} | hasRealEmail=${hasRealEmail} | error=${emailError}`);
 
-    // Respuesta base
     const response: any = {
-      message: 'Si el correo o teléfono existe, recibirás instrucciones para recuperar tu cuenta.'
+      message: 'Si el correo o teléfono existe, recibirás instrucciones para recuperar tu cuenta.',
+      emailSent,
     };
 
-    // Solo incluir debug info si NO se envió el email (modo desarrollo)
     if (!emailSent) {
-      response.debug = {
-        resetCode,
-        email: user.email,
-        phone: user.phone,
-        note: 'Configure RESEND_API_KEY en .dev.vars para enviar emails reales'
-      };
+      response.resetCode = resetCode;
     }
 
     return c.json(response);

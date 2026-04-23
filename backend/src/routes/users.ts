@@ -29,7 +29,7 @@ userRoutes.put('/profile', async (c) => {
   try {
     const user = c.get('user');
     const body = await c.req.json();
-    const { full_name, phone, profile_image, gender } = body;
+    const { full_name, phone, email, profile_image, gender } = body;
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -41,6 +41,10 @@ userRoutes.put('/profile', async (c) => {
     if (phone) {
       updates.push('phone = ?');
       values.push(phone);
+    }
+    if (email) {
+      updates.push('email = ?');
+      values.push(email);
     }
     if (profile_image) {
       updates.push('profile_image = ?');
@@ -77,6 +81,9 @@ userRoutes.put('/profile', async (c) => {
   } catch (error: any) {
     if (error.message?.includes('UNIQUE constraint failed: users.phone')) {
       return c.json({ error: 'Este número de teléfono ya está registrado por otro usuario.' }, 409);
+    }
+    if (error.message?.includes('UNIQUE constraint failed: users.email')) {
+      return c.json({ error: 'Este correo electrónico ya está registrado por otro usuario.' }, 409);
     }
     return c.json({ error: error.message || 'Failed to update profile' }, 500);
   }

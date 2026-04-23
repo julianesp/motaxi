@@ -113,6 +113,10 @@ export default function PassengerProfilePage() {
       if (formData.phone && formData.phone !== user?.phone) {
         updates.phone = formData.phone;
       }
+      // Solo enviar email si cambió y no está vacío
+      if (formData.email && formData.email !== user?.email) {
+        updates.email = formData.email;
+      }
       await usersAPI.updateProfile(updates);
       setIsEditing(false);
       alert("✅ Perfil actualizado correctamente");

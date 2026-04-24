@@ -45,6 +45,7 @@ interface NearbyDriver {
   vehicle_model: string;
   vehicle_color: string;
   vehicle_plate?: string;
+  vehicle_types?: string;
   phone?: string;
   rating: number;
   total_trips: number;
@@ -182,7 +183,7 @@ export default function PassengerHomePage() {
   const [isCheckingActiveTrip, setIsCheckingActiveTrip] = useState(false);
 
   // Tipo de vehículo preferido por el pasajero
-  const [vehicleType, setVehicleType] = useState<"moto" | "carro" | null>(null);
+  const [vehicleType, setVehicleType] = useState<"moto" | "taxi" | "carro" | "piaggio" | null>(null);
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
@@ -912,52 +913,29 @@ export default function PassengerHomePage() {
                     ¿En qué quieres viajar?
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setVehicleType("moto")}
-                      className={`flex flex-col items-center justify-center py-2 px-2 rounded-2xl border-2 transition-all duration-200 ${
-                        vehicleType === "moto"
-                          ? "border-[#008000] bg-green-50 shadow-md"
-                          : "border-gray-200 hover:border-green-300 bg-white"
-                      }`}
-                    >
-                      <span className="text-xl mb-0.5">🏍️</span>
-                      <span
-                        className={`text-sm font-bold ${vehicleType === "moto" ? "text-[#008000]" : "text-gray-700"}`}
+                    {[
+                      { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Rápido · económico" },
+                      { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
+                      { value: "carro" as const, icon: "🚐", label: "Carro / Van", sub: "Cómodo · espacioso" },
+                      { value: "piaggio" as const, icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setVehicleType(vehicleType === opt.value ? null : opt.value)}
+                        className={`flex flex-col items-center justify-center py-2 px-2 rounded-2xl border-2 transition-all duration-200 ${
+                          vehicleType === opt.value
+                            ? "border-[#008000] bg-green-50 shadow-md"
+                            : "border-gray-200 hover:border-green-300 bg-white"
+                        }`}
                       >
-                        Mototaxi
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        Rápido · económico
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => setVehicleType("carro")}
-                      className={`flex flex-col items-center justify-center py-2 px-2 rounded-2xl border-2 transition-all duration-200 ${
-                        vehicleType === "carro"
-                          ? "border-blue-600 bg-blue-50 shadow-md"
-                          : "border-gray-200 hover:border-blue-300 bg-white"
-                      }`}
-                    >
-                      <span className="text-xl mb-0.5">🚗</span>
-                      <span
-                        className={`text-sm font-bold ${vehicleType === "carro" ? "text-blue-700" : "text-gray-700"}`}
-                      >
-                        Carro
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        Cómodo · nocturno
-                      </span>
-                    </button>
+                        <span className="text-xl mb-0.5">{opt.icon}</span>
+                        <span className={`text-sm font-bold ${vehicleType === opt.value ? "text-[#008000]" : "text-gray-700"}`}>
+                          {opt.label}
+                        </span>
+                        <span className="text-xs text-gray-400">{opt.sub}</span>
+                      </button>
+                    ))}
                   </div>
-                  {vehicleType === "carro" && (
-                    <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-2.5 text-xs text-blue-700">
-                      <span className="shrink-0 mt-0.5">🌙</span>
-                      <span>
-                        Los viajes en carro son ideales para la noche. Los
-                        conductores disponibles en carro aparecerán en el mapa.
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Pickup Input */}
@@ -1198,6 +1176,11 @@ export default function PassengerHomePage() {
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
+                                  {driver.vehicle_types && (
+                                    <span className="text-base flex-shrink-0" title={driver.vehicle_types}>
+                                      {({ moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻' } as Record<string, string>)[driver.vehicle_types] ?? '🚗'}
+                                    </span>
+                                  )}
                                   <span className="text-sm font-semibold text-gray-800 truncate">{driver.full_name}</span>
                                   {isSelected && <span className="text-xs text-[#42CE1D] font-bold flex-shrink-0">✓</span>}
                                 </div>
@@ -1308,10 +1291,14 @@ export default function PassengerHomePage() {
                     </span>
                   ) : tripMode === "delivery" ? (
                     "📦 Solicitar envío"
-                  ) : vehicleType === "carro" ? (
-                    "🚗 Solicitar carro"
                   ) : vehicleType === "moto" ? (
                     "🏍️ Solicitar mototaxi"
+                  ) : vehicleType === "taxi" ? (
+                    "🚕 Solicitar taxi"
+                  ) : vehicleType === "carro" ? (
+                    "🚐 Solicitar carro / van"
+                  ) : vehicleType === "piaggio" ? (
+                    "🛻 Solicitar piaggio"
                   ) : (
                     "Solicitar viaje"
                   )}
@@ -1350,6 +1337,11 @@ export default function PassengerHomePage() {
                       )}
                   </div>
                   <p className="text-sm text-gray-500">
+                    {driverDetailDriver.vehicle_types && (
+                      <span className="mr-1">
+                        {({ moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻' } as Record<string, string>)[driverDetailDriver.vehicle_types] ?? ''}
+                      </span>
+                    )}
                     {driverDetailDriver.vehicle_color}{" "}
                     {driverDetailDriver.vehicle_model}
                   </p>

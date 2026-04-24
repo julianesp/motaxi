@@ -173,8 +173,8 @@ driverRoutes.put('/profile', async (c) => {
       values.push(per_km_fare);
     }
     if (vehicle_types !== undefined) {
-      if (!['moto', 'carro', 'ambos'].includes(vehicle_types)) {
-        return c.json({ error: 'vehicle_types must be: moto, carro, or ambos' }, 400);
+      if (!['moto', 'taxi', 'carro', 'piaggio'].includes(vehicle_types)) {
+        return c.json({ error: 'vehicle_types must be: moto, taxi, carro, or piaggio' }, 400);
       }
       updates.push('vehicle_types = ?');
       values.push(vehicle_types);
@@ -185,7 +185,7 @@ driverRoutes.put('/profile', async (c) => {
     }
 
     // Verificar si se completaron todos los campos obligatorios para marcar perfil como completo
-    if (vehicle_model && vehicle_color && vehicle_plate && license_number) {
+    if (vehicle_model && vehicle_color && vehicle_plate) {
       updates.push('profile_completed = ?');
       values.push(1);
     }
@@ -308,17 +308,15 @@ driverRoutes.get('/nearby', async (c) => {
     let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'`;
 
     // Filtrar por tipo de vehículo si se especifica
-    if (vehicleType === 'moto') {
-      whereClause += ` AND (d.vehicle_types = 'moto' OR d.vehicle_types = 'ambos')`;
-    } else if (vehicleType === 'carro') {
-      whereClause += ` AND (d.vehicle_types = 'carro' OR d.vehicle_types = 'ambos')`;
+    if (vehicleType && ['moto', 'taxi', 'carro', 'piaggio'].includes(vehicleType)) {
+      whereClause += ` AND d.vehicle_types = '${vehicleType}'`;
     }
 
     const drivers = await c.env.DB.prepare(
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
               d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
               d.municipality,
-              COALESCE(d.vehicle_types, 'moto') AS vehicle_types,
+              d.vehicle_types,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,
               u.full_name, u.phone, u.profile_image

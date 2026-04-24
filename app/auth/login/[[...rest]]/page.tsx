@@ -30,19 +30,24 @@ export default function LoginPage() {
 
   // const handleGoogleLogin = async () => { ... }; // Google OAuth desactivado
 
+  const normalizePhone = (value: string) =>
+    value.replace(/\s/g, "").replace(/^\+57/, "");
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setNotRegistered(false);
     setLoading(true);
 
+    const identifier = loginMode === "phone" ? normalizePhone(email) : email;
+
     try {
       if (rememberMe) {
-        localStorage.setItem("motaxi_remembered_email", email);
+        localStorage.setItem("motaxi_remembered_email", identifier);
       } else {
         localStorage.removeItem("motaxi_remembered_email");
       }
-      const { user: loggedUser } = await login(email, password);
+      const { user: loggedUser } = await login(identifier, password);
       if (loggedUser.email === "admin@neurai.dev") {
         router.push("/admin");
       } else if (loggedUser.role === "passenger") {
@@ -182,7 +187,7 @@ export default function LoginPage() {
                 <input
                   id="email"
                   type={loginMode === "phone" ? "tel" : "email"}
-                  inputMode={loginMode === "phone" ? "numeric" : "email"}
+                  inputMode={loginMode === "phone" ? "tel" : "email"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

@@ -54,12 +54,20 @@ export default function DriverHomePage() {
   // Estados para el onboarding de conductor (en pasos)
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(1); // 1: bienvenida, 2: vehículo, 3: municipio
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<{
+    vehicle_model: string;
+    vehicle_color: string;
+    vehicle_plate: string;
+    license_number: string;
+    municipality: string;
+    vehicle_types: 'moto' | 'taxi' | 'carro' | 'piaggio' | '';
+  }>({
     vehicle_model: '',
     vehicle_color: '',
     vehicle_plate: '',
     license_number: '',
     municipality: '',
+    vehicle_types: '',
   });
   const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
 
@@ -180,6 +188,7 @@ export default function DriverHomePage() {
             vehicle_plate: response.driver.vehicle_plate || '',
             license_number: response.driver.license_number || '',
             municipality: response.driver.municipality || '',
+            vehicle_types: response.driver.vehicle_types || '',
           });
 
           // Verificar si el perfil está completo
@@ -355,12 +364,12 @@ export default function DriverHomePage() {
 
   const handleCompleteProfile = async () => {
     // Validar campos obligatorios
-    if (!profileData.vehicle_model || !profileData.vehicle_color ||
+    if (!profileData.vehicle_types || !profileData.vehicle_model || !profileData.vehicle_color ||
         !profileData.vehicle_plate) {
       Swal.fire({
         icon: 'warning',
         title: 'Campos incompletos',
-        text: 'Por favor completa todos los campos obligatorios.',
+        text: 'Por favor selecciona el tipo de vehículo y completa todos los campos.',
         confirmButtonColor: '#008000',
       });
       return;
@@ -370,7 +379,8 @@ export default function DriverHomePage() {
 
     try {
       const { driversAPI } = await import('@/lib/api-client');
-      await driversAPI.updateProfile(profileData);
+      const { vehicle_types, ...rest } = profileData;
+      await driversAPI.updateProfile(vehicle_types ? { ...rest, vehicle_types } : rest);
 
       await Swal.fire({
         icon: 'success',
@@ -1291,11 +1301,41 @@ export default function DriverHomePage() {
                 {onboardingStep === 2 && (
                   <div className="space-y-5">
                     <div>
-                      <div className="text-3xl mb-2">🏍️</div>
-                      <h2 className="text-xl font-bold text-gray-900">Datos de tu moto</h2>
+                      <div className="text-3xl mb-2">🚗</div>
+                      <h2 className="text-xl font-bold text-gray-900">Datos de tu vehículo</h2>
                       <p className="text-gray-500 text-sm">Esta información aparece a los pasajeros para identificarte.</p>
                     </div>
                     <div className="space-y-4">
+                      {/* Tipo de vehículo */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Tipo de vehículo <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {([
+                            { value: 'moto' as const, icon: '🏍️', label: 'Mototaxi' },
+                            { value: 'taxi' as const, icon: '🚕', label: 'Taxi' },
+                            { value: 'carro' as const, icon: '🚐', label: 'Carro / Van' },
+                            { value: 'piaggio' as const, icon: '🛻', label: 'Piaggio' },
+                          ]).map((type) => (
+                            <button
+                              key={type.value}
+                              type="button"
+                              onClick={() => setProfileData({ ...profileData, vehicle_types: type.value })}
+                              className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                                profileData.vehicle_types === type.value
+                                  ? 'border-[#42CE1D] bg-green-50'
+                                  : 'border-gray-200 hover:border-gray-300 bg-white'
+                              }`}
+                            >
+                              <span className="text-2xl">{type.icon}</span>
+                              <span className={`text-sm font-semibold ${profileData.vehicle_types === type.value ? 'text-[#1a7a00]' : 'text-gray-700'}`}>
+                                {type.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                           Modelo <span className="text-red-500">*</span>
@@ -1306,7 +1346,6 @@ export default function DriverHomePage() {
                           onChange={(e) => setProfileData({ ...profileData, vehicle_model: e.target.value })}
                           placeholder="Ej: Boxer 100, Discover 125..."
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
-                          autoFocus
                         />
                       </div>
                       <div>
@@ -1347,8 +1386,8 @@ export default function DriverHomePage() {
                       </button>
                       <button
                         onClick={() => {
-                          if (!profileData.vehicle_model || !profileData.vehicle_color || !profileData.vehicle_plate) {
-                            Swal.fire({ icon: 'warning', title: 'Completa los campos', text: 'Ingresa los datos de tu vehículo para continuar.', confirmButtonColor: '#008000' });
+                          if (!profileData.vehicle_types || !profileData.vehicle_model || !profileData.vehicle_color || !profileData.vehicle_plate) {
+                            Swal.fire({ icon: 'warning', title: 'Completa los campos', text: 'Selecciona el tipo de vehículo e ingresa todos los datos para continuar.', confirmButtonColor: '#008000' });
                             return;
                           }
                           setOnboardingStep(3);
@@ -1386,6 +1425,11 @@ export default function DriverHomePage() {
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                       <h3 className="text-sm font-bold text-[#003300] mb-2">Resumen de tu perfil</h3>
                       <div className="space-y-1 text-sm text-gray-700">
+                        {profileData.vehicle_types && (
+                          <div className="flex justify-between"><span className="text-gray-500">Tipo:</span><span className="font-medium capitalize">{
+                            { moto: '🏍️ Mototaxi', taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio' }[profileData.vehicle_types] || profileData.vehicle_types
+                          }</span></div>
+                        )}
                         <div className="flex justify-between"><span className="text-gray-500">Modelo:</span><span className="font-medium">{profileData.vehicle_model}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Color:</span><span className="font-medium">{profileData.vehicle_color}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Placa:</span><span className="font-medium uppercase">{profileData.vehicle_plate}</span></div>

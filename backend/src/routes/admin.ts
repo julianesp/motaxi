@@ -782,7 +782,7 @@ adminRoutes.post('/notify-drivers', async (c) => {
     for (const driver of drivers) {
       await c.env.DB.prepare(
         `INSERT INTO notifications (id, user_id, title, message, type, data, created_at)
-         VALUES (?, ?, ?, ?, 'admin_broadcast', '{}', ?)`
+         VALUES (?, ?, ?, ?, 'general', '{}', ?)`
       ).bind(uuidv4(), driver.id, title, message, now).run();
     }
 

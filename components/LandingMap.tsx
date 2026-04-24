@@ -5,6 +5,15 @@ import { GoogleMap, Circle } from '@react-google-maps/api';
 import { MUNICIPALITIES, VALLE_SIBUNDOY_CENTER } from '@/lib/constants/municipalities';
 import { useGoogleMaps } from '@/lib/google-maps-provider';
 
+interface ActiveDriver {
+  id: string;
+  current_latitude: number;
+  current_longitude: number;
+  vehicle_types?: string;
+  full_name?: string;
+  rating?: number;
+}
+
 
 const mapContainerStyle = {
   width: '100%',
@@ -26,7 +35,10 @@ export default function LandingMap() {
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedMunicipality, setSelectedMunicipality] = useState<string | null>(null);
+  const [activeDrivers, setActiveDrivers] = useState<ActiveDriver[]>([]);
+  const [totalActiveDrivers, setTotalActiveDrivers] = useState(0);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const driverMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -35,8 +47,67 @@ export default function LandingMap() {
   const onUnmount = useCallback(() => {
     markersRef.current.forEach((m) => (m.map = null));
     markersRef.current = [];
+    driverMarkersRef.current.forEach((m) => (m.map = null));
+    driverMarkersRef.current = [];
     setMap(null);
   }, []);
+
+  // Fetch conductores activos cada 30s
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    const fetchDrivers = () => {
+      fetch(`${API_URL}/drivers/nearby?lat=${VALLE_SIBUNDOY_CENTER.lat}&lng=${VALLE_SIBUNDOY_CENTER.lng}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (!data) return;
+          const all = data.drivers || [];
+          setTotalActiveDrivers(all.length);
+          setActiveDrivers(all.filter((d: any) => d.current_latitude && d.current_longitude));
+        })
+        .catch(() => {});
+    };
+    fetchDrivers();
+    const interval = setInterval(fetchDrivers, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Crear marcadores de conductores activos
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    // Limpiar marcadores anteriores
+    driverMarkersRef.current.forEach((m) => (m.map = null));
+    driverMarkersRef.current = [];
+
+    const vehicleIcons: Record<string, string> = {
+      moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻', ambos: '🏍️',
+    };
+
+    activeDrivers.forEach((driver) => {
+      const icon = vehicleIcons[driver.vehicle_types || 'moto'] ?? '🏍️';
+      const dot = document.createElement('div');
+      dot.style.cssText = `
+        width: 28px; height: 28px;
+        background: #22c55e;
+        border: 2.5px solid #fff;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        cursor: default;
+      `;
+      dot.textContent = icon;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map,
+        position: { lat: driver.current_latitude, lng: driver.current_longitude },
+        content: dot,
+        title: driver.full_name || 'Conductor activo',
+      });
+
+      driverMarkersRef.current.push(marker);
+    });
+  }, [map, isLoaded, activeDrivers]);
 
   // Crear AdvancedMarkerElement para cada municipio cuando el mapa esté listo
   useEffect(() => {
@@ -103,6 +174,16 @@ export default function LandingMap() {
 
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+      {/* Badge conductores activos */}
+      {totalActiveDrivers > 0 && (
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow text-sm font-semibold text-gray-800">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+          </span>
+          {totalActiveDrivers} {totalActiveDrivers === 1 ? 'conductor activo' : 'conductores activos'}
+        </div>
+      )}
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={VALLE_SIBUNDOY_CENTER}

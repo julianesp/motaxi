@@ -136,97 +136,56 @@ export default function HomePage() {
       >
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Contenido */}
-            <div className="text-white space-y-8">
-              <div className="inline-block">
-                <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
-                  Disponible donde estés
-                </span>
-              </div>
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-                Tu transporte,
-                <br />a un toque
-              </h1>
-              <p className="text-xl lg:text-2xl text-white max-w-xl">
-                Pide tu moto desde donde estés. Conductores cercanos te
-                muestran su distancia y tarifa para que elijas el que más
-                te convenga.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                {user ? (
-                  // Usuario autenticado - mostrar botón para ir a su dashboard
+          {/* Contenido hero */}
+          <div className="text-white space-y-8 text-center max-w-3xl mx-auto">
+            <div className="inline-block">
+              <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
+                Disponible donde estés
+              </span>
+            </div>
+            <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
+              Tu transporte,
+              <br />a un toque
+            </h1>
+            <p className="text-xl lg:text-2xl text-white max-w-xl mx-auto">
+              Pide tu moto desde donde estés. Conductores cercanos te
+              muestran su distancia y tarifa para que elijas el que más
+              te convenga.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {user ? (
+                <button
+                  onClick={() =>
+                    router.push(
+                      user.email === "admin@neurai.dev"
+                        ? "/admin"
+                        : user.role === "passenger"
+                          ? "/passenger"
+                          : "/driver",
+                    )
+                  }
+                  className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
+                >
+                  {user.email === "admin@neurai.dev"
+                    ? "Panel Admin"
+                    : "Ir a mi cuenta"}
+                </button>
+              ) : (
+                <>
                   <button
-                    onClick={() =>
-                      router.push(
-                        user.email === "admin@neurai.dev"
-                          ? "/admin"
-                          : user.role === "passenger"
-                            ? "/passenger"
-                            : "/driver",
-                      )
-                    }
+                    onClick={() => router.push("/auth/register")}
                     className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                   >
-                    {user.email === "admin@neurai.dev"
-                      ? "Panel Admin"
-                      : "Ir a mi cuenta"}
+                    Registrarse
                   </button>
-                ) : (
-                  // Usuario no autenticado - mostrar botones de registro e inicio de sesión
-                  <>
-                    <button
-                      onClick={() => router.push("/auth/register")}
-                      className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
-                    >
-                      Registrarse
-                    </button>
-                    <button
-                      onClick={() => router.push("/auth/login")}
-                      className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-green-500 hover:border-green-500 transition-all duration-200"
-                    >
-                      Iniciar sesión
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Estadísticas */}
-              {/* <div className="grid grid-cols-3 gap-6 pt-8">
-                <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-white">
-                    4
-                  </div>
-                  <div className="text-sm text-green-100">Municipios</div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    {activeDriversCount !== null && activeDriversCount > 0 && (
-                      <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400"></span>
-                      </span>
-                    )}
-                    <div className="text-3xl lg:text-4xl font-bold text-white">
-                      {activeDriversCount !== null ? activeDriversCount : "—"}
-                    </div>
-                  </div>
-                  <div className="text-sm text-green-100">
-                    {activeDriversCount === 1 ? "Conductor activo" : "Conductores activos"}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-3xl lg:text-4xl font-bold text-white">
-                    24/7
-                  </div>
-                  <div className="text-sm text-green-100">Disponible</div>
-                </div>
-              </div> */}
-            </div>
-
-            {/* Mapa */}
-            <div className={`h-[300px] lg:h-[500px] ${styles.container}`}>
-              <LandingMap />
+                  <button
+                    onClick={() => router.push("/auth/login")}
+                    className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-green-500 hover:border-green-500 transition-all duration-200"
+                  >
+                    Iniciar sesión
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -622,6 +581,23 @@ export default function HomePage() {
                 transacciones económicas realizadas entre conductor y pasajero.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mapa Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Conductores en tiempo real
+            </h2>
+            <p className="text-xl text-black max-w-2xl mx-auto">
+              Ve dónde están los conductores disponibles cerca de ti ahora mismo
+            </p>
+          </div>
+          <div className={`h-[400px] lg:h-[550px] ${styles.container}`}>
+            <LandingMap />
           </div>
         </div>
       </section>

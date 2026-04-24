@@ -53,7 +53,7 @@ export default function DriverHomePage() {
 
   // Estados para el onboarding de conductor (en pasos)
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState(1); // 1: bienvenida, 2: vehículo, 3: licencia, 4: municipio
+  const [onboardingStep, setOnboardingStep] = useState(1); // 1: bienvenida, 2: vehículo, 3: municipio
   const [profileData, setProfileData] = useState({
     vehicle_model: '',
     vehicle_color: '',
@@ -356,7 +356,7 @@ export default function DriverHomePage() {
   const handleCompleteProfile = async () => {
     // Validar campos obligatorios
     if (!profileData.vehicle_model || !profileData.vehicle_color ||
-        !profileData.vehicle_plate || !profileData.license_number) {
+        !profileData.vehicle_plate) {
       Swal.fire({
         icon: 'warning',
         title: 'Campos incompletos',
@@ -1211,13 +1211,13 @@ export default function DriverHomePage() {
               {/* Barra de progreso */}
               <div className="px-6 pt-5 pb-2">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-[#008000]">Paso {onboardingStep} de 4</span>
-                  <span className="text-xs text-gray-400">{Math.round((onboardingStep / 4) * 100)}%</span>
+                  <span className="text-xs font-semibold text-[#008000]">Paso {onboardingStep} de 3</span>
+                  <span className="text-xs text-gray-400">{Math.round((onboardingStep / 3) * 100)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-[#42CE1D] h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${(onboardingStep / 4) * 100}%` }}
+                    style={{ width: `${(onboardingStep / 3) * 100}%` }}
                   />
                 </div>
               </div>
@@ -1233,13 +1233,12 @@ export default function DriverHomePage() {
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Bienvenido, {user?.full_name?.split(' ')[0]}!</h2>
                       <p className="text-gray-500 text-sm leading-relaxed">
-                        Configura tu perfil en 3 pasos rápidos. Solo te tomará 2 minutos y podrás empezar a recibir viajes.
+                        Configura tu perfil en 2 pasos rápidos. Solo te tomará 1 minuto y podrás empezar a recibir viajes.
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 text-left space-y-3">
                       {[
                         { icon: '🏍️', text: 'Datos de tu moto' },
-                        { icon: '📋', text: 'Número de licencia' },
                         { icon: '📍', text: 'Tu municipio' },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center gap-3">
@@ -1351,60 +1350,8 @@ export default function DriverHomePage() {
                   </div>
                 )}
 
-                {/* PASO 3: Licencia */}
+                {/* PASO 3: Municipio y finalizar */}
                 {onboardingStep === 3 && (
-                  <div className="space-y-5">
-                    <div>
-                      <div className="text-3xl mb-2">📋</div>
-                      <h2 className="text-xl font-bold text-gray-900">Número de licencia</h2>
-                      <p className="text-gray-500 text-sm">Requerida para verificar que estás habilitado para conducir.</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Número de licencia <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={profileData.license_number}
-                        onChange={(e) => setProfileData({ ...profileData, license_number: e.target.value })}
-                        placeholder="Ej: 12345678"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-                      <p className="text-xs text-yellow-700">
-                        ⚠️ Un administrador verificará tu licencia antes de activar tu cuenta. Recibirás una notificación cuando sea aprobada.
-                      </p>
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={async () => {
-                          try { const { driversAPI } = await import('@/lib/api-client'); await driversAPI.skipProfile(); } catch { /* silencioso */ }
-                          setShowProfileModal(false);
-                        }}
-                        className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
-                      >
-                        Agregar después
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (!profileData.license_number) {
-                            Swal.fire({ icon: 'warning', title: 'Campo requerido', text: 'Ingresa tu número de licencia.', confirmButtonColor: '#008000' });
-                            return;
-                          }
-                          setOnboardingStep(4);
-                        }}
-                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm"
-                      >
-                        Siguiente →
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* PASO 4: Municipio y finalizar */}
-                {onboardingStep === 4 && (
                   <div className="space-y-5">
                     <div>
                       <div className="text-3xl mb-2">📍</div>
@@ -1431,12 +1378,11 @@ export default function DriverHomePage() {
                         <div className="flex justify-between"><span className="text-gray-500">Modelo:</span><span className="font-medium">{profileData.vehicle_model}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Color:</span><span className="font-medium">{profileData.vehicle_color}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Placa:</span><span className="font-medium uppercase">{profileData.vehicle_plate}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500">Licencia:</span><span className="font-medium">{profileData.license_number}</span></div>
                       </div>
                     </div>
                     <div className="flex gap-3 pt-2">
                       <button
-                        onClick={() => setOnboardingStep(3)}
+                        onClick={() => setOnboardingStep(2)}
                         className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors text-sm"
                       >
                         ← Atrás

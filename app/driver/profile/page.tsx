@@ -61,7 +61,7 @@ export default function DriverProfilePage() {
     intercity_fare: '' as number | string,
     rural_fare: '' as number | string,
     per_km_fare: '' as number | string,
-    vehicle_types: 'moto' as 'moto' | 'carro' | 'ambos',
+    vehicle_types: 'moto' as 'moto' | 'taxi' | 'carro' | 'piaggio',
   });
 
   useEffect(() => {
@@ -136,7 +136,7 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || '',
           rural_fare: driver.rural_fare || '',
           per_km_fare: driver.per_km_fare || '',
-          vehicle_types: (driver.vehicle_types as 'moto' | 'carro' | 'ambos') || 'moto',
+          vehicle_types: (driver.vehicle_types as 'moto' | 'taxi' | 'carro' | 'piaggio') || 'moto',
         });
       }
     } catch (error) {
@@ -622,11 +622,12 @@ export default function DriverProfilePage() {
                         Tipo de vehículo
                       </label>
                       {isEditing ? (
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                           {([
-                            { value: 'moto', label: '🏍️ Moto', desc: 'Solo mototaxi' },
-                            { value: 'carro', label: '🚗 Carro', desc: 'Solo carro' },
-                            { value: 'ambos', label: '🏍️🚗 Ambos', desc: 'Moto y carro' },
+                            { value: 'moto', label: '🏍️', desc: 'Mototaxi' },
+                            { value: 'taxi', label: '🚕', desc: 'Taxi' },
+                            { value: 'carro', label: '🚐', desc: 'Carro / Van' },
+                            { value: 'piaggio', label: '🛻', desc: 'Piaggio' },
                           ] as const).map((opt) => (
                             <button
                               key={opt.value}
@@ -638,7 +639,7 @@ export default function DriverProfilePage() {
                                   : 'border-gray-200 hover:border-green-300'
                               }`}
                             >
-                              <span className="text-lg">{opt.label.split(' ')[0]}{opt.label.split(' ')[1] || ''}</span>
+                              <span className="text-2xl">{opt.label}</span>
                               <span className={`text-xs font-semibold mt-1 ${driverFormData.vehicle_types === opt.value ? 'text-[#008000]' : 'text-gray-600'}`}>{opt.desc}</span>
                             </button>
                           ))}
@@ -646,7 +647,7 @@ export default function DriverProfilePage() {
                       ) : (
                         <div className="flex items-center">
                           <span className="text-gray-900">
-                            {driverInfo.vehicle_types === 'carro' ? '🚗 Carro' : driverInfo.vehicle_types === 'ambos' ? '🏍️🚗 Moto y Carro' : '🏍️ Mototaxi'}
+                            {({ moto: '🏍️ Mototaxi', taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio' } as Record<string, string>)[driverInfo.vehicle_types ?? ''] ?? '🏍️ Mototaxi'}
                           </span>
                         </div>
                       )}

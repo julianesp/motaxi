@@ -62,7 +62,7 @@ export default function RootLayout({
         <body className={inter.className}>
           <Analytics />
           <OpenInBrowser />
-          {/* <InstallPWAModal /> */}
+          <InstallPWAModal />
           <GoogleMapsProvider>
             <AuthProvider>{children}</AuthProvider>
           </GoogleMapsProvider>

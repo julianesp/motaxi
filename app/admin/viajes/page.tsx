@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/api-client';
 
+interface RouteHotspot {
+  pickup_address: string;
+  dropoff_address: string;
+  trip_count: number;
+}
+
 interface Trip {
   id: string;
   passenger_name: string;
@@ -35,6 +41,7 @@ export default function ViajesPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const limit = 30;
+  const [topRoutes, setTopRoutes] = useState<RouteHotspot[]>([]);
 
   const fetchTrips = useCallback(async () => {
     setLoading(true);
@@ -53,6 +60,12 @@ export default function ViajesPage() {
 
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
   useEffect(() => { setPage(0); }, [statusFilter]);
+
+  useEffect(() => {
+    apiClient.get('/analytics/top-routes?limit=10&days=30')
+      .then(res => setTopRoutes(res.data.routes || []))
+      .catch(() => {});
+  }, []);
 
   const filtered = trips.filter(t => {
     if (!search) return true;
@@ -75,6 +88,33 @@ export default function ViajesPage() {
         <h1 className="text-2xl font-bold text-white">Viajes</h1>
         <p className="text-gray-400 text-sm">{total} viajes en total</p>
       </div>
+
+      {/* Rutas más frecuentes */}
+      {topRoutes.length > 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            Rutas más frecuentes — últimos 30 días
+          </h2>
+          <div className="space-y-3">
+            {topRoutes.map((route, i) => (
+              <div key={i} className="flex items-center gap-4 bg-gray-800/50 rounded-lg px-4 py-3">
+                <span className="text-lg font-bold text-[#42CE1D] w-6 text-center flex-shrink-0">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-gray-300 text-xs truncate">
+                    <span className="text-gray-500 mr-1">📍</span>{route.pickup_address}
+                  </p>
+                  <p className="text-gray-400 text-xs truncate mt-0.5">
+                    <span className="text-gray-500 mr-1">🏁</span>{route.dropoff_address}
+                  </p>
+                </div>
+                <span className="flex-shrink-0 text-xs font-semibold text-[#42CE1D] bg-[#42CE1D]/10 px-3 py-1 rounded-full">
+                  {route.trip_count} {route.trip_count === 1 ? 'viaje' : 'viajes'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <input

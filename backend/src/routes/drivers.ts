@@ -51,7 +51,33 @@ driverRoutes.get('/profile', async (c) => {
       .first();
 
     if (!driver) {
-      return c.json({ error: 'Driver profile not found' }, 404);
+      // Crear el registro faltante con valores por defecto
+      await c.env.DB.prepare(
+        `INSERT INTO drivers (id, verification_status, is_available, profile_completed)
+         VALUES (?, 'pending', 0, 0)`
+      ).bind(user.id).run();
+
+      const newDriver = await c.env.DB.prepare(
+        `SELECT d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.license_number,
+                d.is_available, d.verification_status, d.rating, d.total_trips,
+                d.current_latitude, d.current_longitude, d.last_location_update,
+                d.municipality, d.accepts_intercity_trips, d.accepts_rural_trips,
+                d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
+                d.profile_completed, d.profile_skipped_at
+         FROM drivers d WHERE d.id = ?`
+      ).bind(user.id).first();
+
+      return c.json({
+        driver: newDriver,
+        user: {
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          full_name: user.full_name,
+          profile_image: user.profile_image,
+          created_at: user.created_at
+        }
+      });
     }
 
     return c.json({
@@ -237,7 +263,16 @@ driverRoutes.put('/availability', async (c) => {
         .first();
 
       if (!driver) {
-        return c.json({ error: 'Driver profile not found' }, 404);
+        // El registro en drivers no existe — crearlo con valores por defecto
+        await c.env.DB.prepare(
+          `INSERT INTO drivers (id, verification_status, is_available, profile_completed)
+           VALUES (?, 'pending', 0, 0)`
+        ).bind(user.id).run();
+
+        return c.json({
+          error: 'Debes completar tu perfil antes de activarte',
+          profileIncomplete: true
+        }, 400);
       }
 
       if (!driver.profile_completed) {

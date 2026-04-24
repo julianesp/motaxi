@@ -5,6 +5,13 @@ import { GoogleMap, Circle } from '@react-google-maps/api';
 import { MUNICIPALITIES, VALLE_SIBUNDOY_CENTER } from '@/lib/constants/municipalities';
 import { useGoogleMaps } from '@/lib/google-maps-provider';
 
+interface Hotspot {
+  latitude: number;
+  longitude: number;
+  address: string;
+  trip_count: number;
+}
+
 const mapContainerStyle = {
   width: '100%',
   height: '100%',
@@ -25,7 +32,27 @@ export default function LandingMap() {
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedMunicipality, setSelectedMunicipality] = useState<string | null>(null);
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const hotspotMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    fetch(`${API_URL}/analytics/heatmap?days=30`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (!data) return;
+        const pickups: Hotspot[] = (data.pickup_hotspots || []).map((h: any) => ({
+          latitude: h.pickup_latitude,
+          longitude: h.pickup_longitude,
+          address: h.pickup_address,
+          trip_count: h.trip_count,
+        }));
+        setHotspots(pickups);
+      })
+      .catch(() => {});
+  }, []);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -34,8 +61,58 @@ export default function LandingMap() {
   const onUnmount = useCallback(() => {
     markersRef.current.forEach((m) => (m.map = null));
     markersRef.current = [];
+    hotspotMarkersRef.current.forEach((m) => (m.map = null));
+    hotspotMarkersRef.current = [];
     setMap(null);
   }, []);
+
+  // Crear marcadores de hotspots cuando el mapa y los datos estén listos
+  useEffect(() => {
+    if (!map || !isLoaded || hotspots.length === 0) return;
+
+    // Limpiar marcadores anteriores de hotspots
+    hotspotMarkersRef.current.forEach((m) => (m.map = null));
+    hotspotMarkersRef.current = [];
+
+    const maxCount = Math.max(...hotspots.map((h) => h.trip_count), 1);
+
+    hotspots.slice(0, 10).forEach((hotspot) => {
+      const intensity = Math.max(0.3, hotspot.trip_count / maxCount);
+      const size = Math.round(20 + intensity * 20); // 20–40px
+      const alpha = Math.round(intensity * 220);
+      const alphaHex = alpha.toString(16).padStart(2, '0');
+
+      const pin = document.createElement('div');
+      pin.style.cursor = 'pointer';
+      pin.innerHTML = `
+        <div style="position:relative;width:${size}px;height:${size}px;">
+          <div style="
+            position:absolute;inset:0;border-radius:50%;
+            background:#FF5722${alphaHex};
+            border:2px solid #FF5722;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 ${Math.round(intensity * 12)}px #FF572288;
+          ">
+            <span style="color:white;font-size:${Math.round(8 + intensity * 6)}px;font-weight:bold;line-height:1;">
+              ${hotspot.trip_count}
+            </span>
+          </div>
+        </div>`;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map,
+        position: { lat: hotspot.latitude, lng: hotspot.longitude },
+        content: pin,
+        title: hotspot.address,
+      });
+
+      marker.addListener('click', () => {
+        setSelectedMunicipality(null);
+        setSelectedHotspot(hotspot);
+      });
+      hotspotMarkersRef.current.push(marker);
+    });
+  }, [map, isLoaded, hotspots]);
 
   // Crear AdvancedMarkerElement para cada municipio cuando el mapa esté listo
   useEffect(() => {
@@ -125,6 +202,42 @@ export default function LandingMap() {
 
         {/* Marcadores creados imperativamente via useEffect con AdvancedMarkerElement */}
       </GoogleMap>
+
+      {/* Leyenda de hotspots */}
+      {hotspots.length > 0 && (
+        <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#FF5722] shadow-lg shadow-orange-500/50" />
+          <span className="text-white text-xs font-medium">Lugares frecuentes</span>
+        </div>
+      )}
+
+      {/* Info card para hotspot seleccionado */}
+      {selectedHotspot && !selectedMunicipality && (
+        <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-2xl p-4 animate-slide-up">
+          <div className="flex items-start justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-bold text-gray-900 leading-tight">{selectedHotspot.address}</h3>
+            </div>
+            <button
+              onClick={() => setSelectedHotspot(null)}
+              className="text-gray-400 hover:text-gray-600 transition-colors ml-2 flex-shrink-0"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p className="text-orange-600 font-semibold text-sm ml-10">
+            {selectedHotspot.trip_count} {selectedHotspot.trip_count === 1 ? 'viaje' : 'viajes'} solicitados aquí
+          </p>
+        </div>
+      )}
 
       {/* Info card para municipio seleccionado */}
       {selectedMunicipality && (

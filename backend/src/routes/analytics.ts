@@ -4,8 +4,13 @@ import { Env } from '../index';
 
 export const analyticsRoutes = new Hono<{ Bindings: Env }>();
 
-// Rutas de analytics requieren autenticación
-analyticsRoutes.use('*', authMiddleware);
+// Rutas públicas (sin autenticación)
+// /heatmap es público para mostrarse en la página principal
+
+// El resto de rutas requieren autenticación
+analyticsRoutes.use('/dashboard', authMiddleware);
+analyticsRoutes.use('/driver-earnings', authMiddleware);
+analyticsRoutes.use('/trip-trends', authMiddleware);
 
 /**
  * GET /analytics/dashboard
@@ -264,6 +269,39 @@ analyticsRoutes.get('/trip-trends', async (c) => {
   } catch (error: any) {
     console.error('Get trip trends error:', error);
     return c.json({ error: error.message || 'Failed to get trip trends' }, 500);
+  }
+});
+
+/**
+ * GET /analytics/top-routes
+ * Rutas completas (origen → destino) más frecuentes — solo admin
+ */
+analyticsRoutes.get('/top-routes', authMiddleware, async (c) => {
+  try {
+    const limit = parseInt(c.req.query('limit') || '10');
+    const days = parseInt(c.req.query('days') || '30');
+    const startTimestamp = Math.floor(Date.now() / 1000) - days * 24 * 60 * 60;
+
+    const routes = await c.env.DB.prepare(
+      `SELECT
+        pickup_address,
+        dropoff_address,
+        COUNT(*) as trip_count
+       FROM trips
+       WHERE created_at >= ?
+         AND pickup_address IS NOT NULL
+         AND dropoff_address IS NOT NULL
+         AND status = 'completed'
+       GROUP BY pickup_address, dropoff_address
+       ORDER BY trip_count DESC
+       LIMIT ?`
+    )
+      .bind(startTimestamp, limit)
+      .all();
+
+    return c.json({ routes: routes.results || [] });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get top routes' }, 500);
   }
 });
 

@@ -41,6 +41,9 @@ export default function HomePage() {
   );
   const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
   const [videos, setVideos] = useState<InstructionVideo[]>([]);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [topPickups, setTopPickups] = useState<{ address: string; trip_count: number }[]>([]);
+  const [topDropoffs, setTopDropoffs] = useState<{ address: string; trip_count: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -71,7 +74,33 @@ export default function HomePage() {
   useEffect(() => {
     fetch('/api/videos')
       .then(res => res.json())
-      .then(data => setVideos(data.sort((a: InstructionVideo, b: InstructionVideo) => a.uploadedAt - b.uploadedAt)))
+      .then((data: InstructionVideo[]) => {
+        setVideos(data.sort((a, b) => a.uploadedAt - b.uploadedAt));
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    fetch(`${API_URL}/analytics/heatmap?days=30`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return;
+        const pickups = (data.pickup_hotspots || []).slice(0, 5).map((h: any) => ({
+          address: h.pickup_address,
+          trip_count: h.trip_count,
+        }));
+        const dropoffs = (data.dropoff_hotspots || []).slice(0, 5).map((h: any) => ({
+          address: h.dropoff_address,
+          trip_count: h.trip_count,
+        }));
+        const totalTrips =
+          pickups.reduce((sum: number, h: any) => sum + h.trip_count, 0);
+        if (totalTrips >= 10) {
+          setTopPickups(pickups);
+          setTopDropoffs(dropoffs);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -162,32 +191,6 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Videos de instrucciones */}
-              {videos.length > 0 && (
-                <div className={`grid gap-6 pt-4 ${videos.length === 1 ? '' : 'sm:grid-cols-2'}`}>
-                  {videos.map((video) => {
-                    const ytId = getYoutubeId(video.youtubeUrl);
-                    return (
-                      <div key={video.id} className="rounded-2xl overflow-hidden shadow-xl">
-                        {ytId && (
-                          <div className="aspect-video bg-black">
-                            <iframe
-                              src={`https://www.youtube.com/embed/${ytId}`}
-                              className="w-full h-full"
-                              allowFullScreen
-                              title={video.title}
-                            />
-                          </div>
-                        )}
-                        <div className="px-4 py-3 bg-black/40 backdrop-blur-sm">
-                          <p className="text-white font-semibold text-sm">{video.title}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
               {/* Estadísticas */}
               {/* <div className="grid grid-cols-3 gap-6 pt-8">
                 <div>
@@ -226,6 +229,128 @@ export default function HomePage() {
               <LandingMap />
             </div>
           </div>
+
+          {/* Videos de instrucciones — carrusel stack */}
+          {videos.length > 0 && (
+            <div className="mt-12 mx-auto relative" style={{ maxWidth: '700px' }}>
+              <div className="relative flex items-center justify-center" style={{ height: '320px' }}>
+
+                {videos.map((video, i) => {
+                  const ytId = getYoutubeId(video.youtubeUrl);
+                  const offset = i - currentVideoIndex;
+                  // Normalizar offset para wrap circular
+                  const total = videos.length;
+                  let norm = offset;
+                  if (norm > total / 2) norm -= total;
+                  if (norm < -total / 2) norm += total;
+
+                  const isActive = norm === 0;
+                  const isVisible = Math.abs(norm) <= 1;
+
+                  const translateX = norm * 75; // % de desplazamiento lateral
+                  const scale = isActive ? 1 : 0.78;
+                  const zIndex = isActive ? 10 : 5 - Math.abs(norm);
+                  const brightness = isActive ? 1 : 0.45;
+
+                  return (
+                    <div
+                      key={video.id}
+                      onClick={() => !isActive && setCurrentVideoIndex(i)}
+                      style={{
+                        position: 'absolute',
+                        width: '100%',
+                        maxWidth: '560px',
+                        transform: `translateX(${translateX}%) scale(${scale})`,
+                        transition: 'transform 0.45s ease-in-out, filter 0.45s ease-in-out, opacity 0.45s ease-in-out',
+                        filter: `brightness(${brightness})`,
+                        opacity: isVisible ? 1 : 0,
+                        zIndex,
+                        cursor: isActive ? 'default' : 'pointer',
+                        pointerEvents: isVisible ? 'auto' : 'none',
+                      }}
+                    >
+                      <div className="rounded-2xl overflow-hidden shadow-2xl">
+                        {ytId && (
+                          <div className="aspect-video bg-black">
+                            {isActive ? (
+                              <iframe
+                                src={`https://www.youtube.com/embed/${ytId}`}
+                                className="w-full h-full"
+                                allowFullScreen
+                                title={video.title}
+                              />
+                            ) : (
+                              /* Thumbnail estático para los laterales — no carga el iframe */
+                              <img
+                                src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                                alt={video.title}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                        )}
+                        <div className="px-4 py-3 bg-black/60 backdrop-blur-sm flex items-center justify-between">
+                          <p className="text-white font-semibold text-sm truncate">{video.title}</p>
+                          {isActive && (
+                            <span className="text-white/50 text-xs ml-3 flex-shrink-0">
+                              {currentVideoIndex + 1} / {videos.length}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Flecha izquierda — extremo izquierdo de la pantalla */}
+                {videos.length > 1 && (
+                  <button
+                    onClick={() => setCurrentVideoIndex((i) => (i - 1 + videos.length) % videos.length)}
+                    className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
+                    style={{ borderRadius: '0 8px 8px 0', left: 'calc(-50vw + 50%)' }}
+                    aria-label="Video anterior"
+                  >
+                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Flecha derecha — extremo derecho de la pantalla */}
+                {videos.length > 1 && (
+                  <button
+                    onClick={() => setCurrentVideoIndex((i) => (i + 1) % videos.length)}
+                    className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
+                    style={{ borderRadius: '8px 0 0 8px', right: 'calc(-50vw + 50%)' }}
+                    aria-label="Video siguiente"
+                  >
+                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Dots indicadores */}
+              {videos.length > 1 && (
+                <div className="flex justify-center gap-2 mt-5">
+                  {videos.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentVideoIndex(i)}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: i === currentVideoIndex ? '24px' : '8px',
+                        height: '8px',
+                        background: i === currentVideoIndex ? '#42CE1D' : 'rgba(255,255,255,0.35)',
+                      }}
+                      aria-label={`Ir al video ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Wave separator */}
@@ -293,6 +418,81 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Lugares más frecuentados — solo si hay datos */}
+      {(topPickups.length > 0 || topDropoffs.length > 0) && <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                Lugares más frecuentados
+              </h2>
+              <p className="text-xl text-black max-w-2xl mx-auto">
+                Los destinos y puntos de recogida con más actividad en los últimos 30 días
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-10">
+              {/* Top recogidas */}
+              {topPickups.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-[#42CE1D]/10 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900">Puntos de recogida</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {topPickups.map((place, i) => (
+                      <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-xl px-5 py-4 hover:bg-green-50 transition-colors">
+                        <span className="text-2xl font-bold text-[#42CE1D] w-7 text-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 font-medium truncate">{place.address}</p>
+                        </div>
+                        <span className="flex-shrink-0 text-sm font-semibold text-[#42CE1D] bg-[#42CE1D]/10 px-3 py-1 rounded-full">
+                          {place.trip_count} {place.trip_count === 1 ? 'viaje' : 'viajes'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Top destinos */}
+              {topDropoffs.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900">Destinos populares</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {topDropoffs.map((place, i) => (
+                      <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-xl px-5 py-4 hover:bg-orange-50 transition-colors">
+                        <span className="text-2xl font-bold text-orange-500 w-7 text-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 font-medium truncate">{place.address}</p>
+                        </div>
+                        <span className="flex-shrink-0 text-sm font-semibold text-orange-500 bg-orange-100 px-3 py-1 rounded-full">
+                          {place.trip_count} {place.trip_count === 1 ? 'viaje' : 'viajes'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>}
 
       {/* Features Section */}
       <section className="py-20 bg-white">

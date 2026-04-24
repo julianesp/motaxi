@@ -162,6 +162,32 @@ export default function HomePage() {
                 )}
               </div>
 
+              {/* Videos de instrucciones */}
+              {videos.length > 0 && (
+                <div className={`grid gap-6 pt-4 ${videos.length === 1 ? '' : 'sm:grid-cols-2'}`}>
+                  {videos.map((video) => {
+                    const ytId = getYoutubeId(video.youtubeUrl);
+                    return (
+                      <div key={video.id} className="rounded-2xl overflow-hidden shadow-xl">
+                        {ytId && (
+                          <div className="aspect-video bg-black">
+                            <iframe
+                              src={`https://www.youtube.com/embed/${ytId}`}
+                              className="w-full h-full"
+                              allowFullScreen
+                              title={video.title}
+                            />
+                          </div>
+                        )}
+                        <div className="px-4 py-3 bg-black/40 backdrop-blur-sm">
+                          <p className="text-white font-semibold text-sm">{video.title}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Estadísticas */}
               {/* <div className="grid grid-cols-3 gap-6 pt-8">
                 <div>
@@ -399,44 +425,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Videos de instrucciones */}
-      {videos.length > 0 && (
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                ¿Cómo funciona MoTaxi?
-              </h2>
-              <p className="text-xl text-black max-w-2xl mx-auto">
-                Aprende a usar la plataforma con estos videos de instrucciones
-              </p>
-            </div>
-            <div className={`grid gap-8 ${videos.length === 1 ? 'max-w-2xl mx-auto' : 'md:grid-cols-2'}`}>
-              {videos.map((video) => {
-                const ytId = getYoutubeId(video.youtubeUrl);
-                return (
-                  <div key={video.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                    {ytId && (
-                      <div className="aspect-video bg-black">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${ytId}`}
-                          className="w-full h-full"
-                          allowFullScreen
-                          title={video.title}
-                        />
-                      </div>
-                    )}
-                    <div className="px-6 py-4">
-                      <h3 className="text-lg font-bold text-gray-900">{video.title}</h3>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* CTA Section */}
       {!user && (

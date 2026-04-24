@@ -5,9 +5,15 @@ import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
 
 interface InstructionVideo {
+  id: string;
   title: string;
-  url: string;
+  youtubeUrl: string;
   uploadedAt: number;
+}
+
+function getYoutubeId(url: string): string | null {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
 }
 import dynamic from "next/dynamic";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
@@ -407,18 +413,26 @@ export default function HomePage() {
               </p>
             </div>
             <div className={`grid gap-8 ${videos.length === 1 ? 'max-w-2xl mx-auto' : 'md:grid-cols-2'}`}>
-              {videos.map((video) => (
-                <div key={video.url} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                  <video
-                    src={video.url}
-                    controls
-                    className="w-full aspect-video bg-black"
-                  />
-                  <div className="px-6 py-4">
-                    <h3 className="text-lg font-bold text-gray-900">{video.title}</h3>
+              {videos.map((video) => {
+                const ytId = getYoutubeId(video.youtubeUrl);
+                return (
+                  <div key={video.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    {ytId && (
+                      <div className="aspect-video bg-black">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ytId}`}
+                          className="w-full h-full"
+                          allowFullScreen
+                          title={video.title}
+                        />
+                      </div>
+                    )}
+                    <div className="px-6 py-4">
+                      <h3 className="text-lg font-bold text-gray-900">{video.title}</h3>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

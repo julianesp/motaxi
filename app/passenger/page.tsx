@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useMemo } from "react";
+import { useState, useEffect, Suspense, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import dynamic from "next/dynamic";
@@ -185,6 +185,7 @@ export default function PassengerHomePage() {
   // Tipo de vehículo preferido por el pasajero
   const [vehicleType, setVehicleType] = useState<"moto" | "taxi" | "carro" | "piaggio" | null>(null);
   const [vehicleCarouselIndex, setVehicleCarouselIndex] = useState(0);
+  const vehicleTouchStartX = useRef<number | null>(null);
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
@@ -935,7 +936,23 @@ export default function PassengerHomePage() {
                         </button>
 
                         {/* Carrusel */}
-                        <div className="flex-1 overflow-hidden mx-8 relative" style={{ height: '90px' }}>
+                        <div
+                          className="flex-1 overflow-hidden mx-8 relative"
+                          style={{ height: '90px' }}
+                          onTouchStart={(e) => { vehicleTouchStartX.current = e.touches[0].clientX; }}
+                          onTouchEnd={(e) => {
+                            if (vehicleTouchStartX.current === null) return;
+                            const diff = vehicleTouchStartX.current - e.changedTouches[0].clientX;
+                            if (Math.abs(diff) > 30) {
+                              if (diff > 0) {
+                                setVehicleCarouselIndex((i) => (i + 1) % vehicleOpts.length);
+                              } else {
+                                setVehicleCarouselIndex((i) => (i - 1 + vehicleOpts.length) % vehicleOpts.length);
+                              }
+                            }
+                            vehicleTouchStartX.current = null;
+                          }}
+                        >
                           {vehicleOpts.map((opt, i) => {
                             const total = vehicleOpts.length;
                             let norm = i - vehicleCarouselIndex;

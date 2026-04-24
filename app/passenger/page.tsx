@@ -186,6 +186,7 @@ export default function PassengerHomePage() {
   const [vehicleType, setVehicleType] = useState<"moto" | "taxi" | "carro" | "piaggio" | null>(null);
   const [vehicleCarouselIndex, setVehicleCarouselIndex] = useState(0);
   const vehicleTouchStartX = useRef<number | null>(null);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
@@ -922,6 +923,7 @@ export default function PassengerHomePage() {
                       { value: "piaggio" as const, icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
                     ];
                     return (
+                      <div className="space-y-1">
                       <div className="relative flex items-center" style={{ height: '90px' }}>
                         {/* Flecha izquierda */}
                         <button
@@ -944,6 +946,7 @@ export default function PassengerHomePage() {
                             if (vehicleTouchStartX.current === null) return;
                             const diff = vehicleTouchStartX.current - e.changedTouches[0].clientX;
                             if (Math.abs(diff) > 30) {
+                              setShowSwipeHint(false);
                               if (diff > 0) {
                                 setVehicleCarouselIndex((i) => (i + 1) % vehicleOpts.length);
                               } else {
@@ -1015,6 +1018,37 @@ export default function PassengerHomePage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
+                      </div>
+
+                      {/* Hint swipe */}
+                      {showSwipeHint && (
+                        <>
+                          <style>{`
+                            @keyframes swipe-hint {
+                              0%   { transform: translateX(18px); opacity: 0; }
+                              15%  { opacity: 1; }
+                              85%  { opacity: 1; }
+                              100% { transform: translateX(-18px); opacity: 0; }
+                            }
+                            .swipe-hint-finger {
+                              animation: swipe-hint 1.4s ease-in-out 2;
+                              animation-fill-mode: forwards;
+                            }
+                          `}</style>
+                          <div
+                            className="flex items-center justify-center gap-1.5 mt-1"
+                            onAnimationEnd={() => setShowSwipeHint(false)}
+                          >
+                            <span
+                              className="swipe-hint-finger text-lg select-none"
+                              style={{ display: 'inline-block' }}
+                            >
+                              👆
+                            </span>
+                            <span className="text-xs text-gray-400">desliza para ver más</span>
+                          </div>
+                        </>
+                      )}
                       </div>
                     );
                   })()}

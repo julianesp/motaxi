@@ -184,6 +184,7 @@ export default function PassengerHomePage() {
 
   // Tipo de vehículo preferido por el pasajero
   const [vehicleType, setVehicleType] = useState<"moto" | "taxi" | "carro" | "piaggio" | null>(null);
+  const [vehicleCarouselIndex, setVehicleCarouselIndex] = useState(0);
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
@@ -910,32 +911,96 @@ export default function PassengerHomePage() {
                 {/* Selector de tipo de vehículo */}
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-gray-600">
-                    ¿En qué quieres viajar?
+                    ¿Cuál vehículo necesitas?
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
+                  {(() => {
+                    const vehicleOpts = [
                       { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Rápido · económico" },
                       { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
                       { value: "carro" as const, icon: "🚐", label: "Carro / Van", sub: "Cómodo · espacioso" },
                       { value: "piaggio" as const, icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setVehicleType(vehicleType === opt.value ? null : opt.value)}
-                        className={`flex flex-col items-center justify-center py-2 px-2 rounded-2xl border-2 transition-all duration-200 ${
-                          vehicleType === opt.value
-                            ? "border-[#008000] bg-green-50 shadow-md"
-                            : "border-gray-200 hover:border-green-300 bg-white"
-                        }`}
-                      >
-                        <span className="text-xl mb-0.5">{opt.icon}</span>
-                        <span className={`text-sm font-bold ${vehicleType === opt.value ? "text-[#008000]" : "text-gray-700"}`}>
-                          {opt.label}
-                        </span>
-                        <span className="text-xs text-gray-400">{opt.sub}</span>
-                      </button>
-                    ))}
-                  </div>
+                    ];
+                    return (
+                      <div className="relative flex items-center" style={{ height: '90px' }}>
+                        {/* Flecha izquierda */}
+                        <button
+                          type="button"
+                          onClick={() => setVehicleCarouselIndex((i) => (i - 1 + vehicleOpts.length) % vehicleOpts.length)}
+                          className="absolute left-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-l-2xl shadow-sm transition-colors"
+                          aria-label="Anterior"
+                        >
+                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Carrusel */}
+                        <div className="flex-1 overflow-hidden mx-8 relative" style={{ height: '90px' }}>
+                          {vehicleOpts.map((opt, i) => {
+                            const total = vehicleOpts.length;
+                            let norm = i - vehicleCarouselIndex;
+                            if (norm > total / 2) norm -= total;
+                            if (norm < -total / 2) norm += total;
+                            const isActive = norm === 0;
+                            const isVisible = Math.abs(norm) <= 1;
+                            const translateX = norm * 110;
+                            const scale = isActive ? 1 : 0.75;
+                            const opacity = isActive ? 1 : 0.4;
+                            const isSelected = vehicleType === opt.value;
+                            return (
+                              <div
+                                key={opt.value}
+                                onClick={() => {
+                                  if (!isActive) {
+                                    setVehicleCarouselIndex(i);
+                                  } else {
+                                    setVehicleType(isSelected ? null : opt.value);
+                                  }
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: '50%',
+                                  width: '120px',
+                                  marginLeft: '-60px',
+                                  height: '86px',
+                                  transform: `translateX(${translateX}%) scale(${scale})`,
+                                  transition: 'transform 0.3s ease, opacity 0.3s ease',
+                                  opacity,
+                                  zIndex: isActive ? 10 : 5,
+                                  cursor: 'pointer',
+                                  pointerEvents: isVisible ? 'auto' : 'none',
+                                }}
+                                className={`flex flex-col items-center justify-center rounded-2xl border-2 transition-colors ${
+                                  isSelected
+                                    ? "border-[#008000] bg-green-50 shadow-md"
+                                    : "border-gray-200 bg-white"
+                                }`}
+                              >
+                                <span className="text-2xl mb-0.5">{opt.icon}</span>
+                                <span className={`text-xs font-bold ${isSelected ? "text-[#008000]" : "text-gray-700"}`}>
+                                  {opt.label}
+                                </span>
+                                <span className="text-xs text-gray-400">{opt.sub}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Flecha derecha */}
+                        <button
+                          type="button"
+                          onClick={() => setVehicleCarouselIndex((i) => (i + 1) % vehicleOpts.length)}
+                          className="absolute right-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-r-2xl shadow-sm transition-colors"
+                          aria-label="Siguiente"
+                        >
+                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Pickup Input */}

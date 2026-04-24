@@ -53,9 +53,9 @@ driverRoutes.get('/profile', async (c) => {
     if (!driver) {
       // Crear el registro faltante con valores por defecto
       await c.env.DB.prepare(
-        `INSERT INTO drivers (id, verification_status, is_available, profile_completed)
-         VALUES (?, 'pending', 0, 0)`
-      ).bind(user.id).run();
+        `INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, verification_status, is_available, profile_completed)
+         VALUES (?, ?, ?, '', '', 'pending', 0, 0)`
+      ).bind(user.id, `tmp_${user.id}`, `tmp_${user.id}`).run();
 
       const newDriver = await c.env.DB.prepare(
         `SELECT d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.license_number,
@@ -265,9 +265,9 @@ driverRoutes.put('/availability', async (c) => {
       if (!driver) {
         // El registro en drivers no existe — crearlo con valores por defecto
         await c.env.DB.prepare(
-          `INSERT INTO drivers (id, verification_status, is_available, profile_completed)
-           VALUES (?, 'pending', 0, 0)`
-        ).bind(user.id).run();
+          `INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, verification_status, is_available, profile_completed)
+           VALUES (?, ?, ?, '', '', 'pending', 0, 0)`
+        ).bind(user.id, `tmp_${user.id}`, `tmp_${user.id}`).run();
 
         return c.json({
           error: 'Debes completar tu perfil antes de activarte',

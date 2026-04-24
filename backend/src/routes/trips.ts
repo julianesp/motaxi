@@ -435,6 +435,10 @@ tripRoutes.put('/:id/accept', async (c) => {
       .bind(user.id, 'accepted', Math.floor(Date.now() / 1000), calculatedFare, tripId)
       .run();
 
+    // Marcar conductor como no disponible (ocupado en viaje)
+    await c.env.DB.prepare('UPDATE drivers SET is_available = 0 WHERE id = ?')
+      .bind(user.id).run();
+
     // alias para mantener el resto del código igual
     const driver = driverData;
 
@@ -666,6 +670,10 @@ tripRoutes.put('/:id/accept-offer', async (c) => {
       .bind(driver_id, 'accepted', Math.floor(Date.now() / 1000), offer.offered_price, tripId)
       .run();
 
+    // Marcar conductor como no disponible (ocupado en viaje)
+    await c.env.DB.prepare('UPDATE drivers SET is_available = 0 WHERE id = ?')
+      .bind(driver_id).run();
+
     // Crear notificación para el conductor
     await c.env.DB.prepare(
       `INSERT INTO notifications (id, user_id, title, message, type, data)
@@ -779,6 +787,19 @@ tripRoutes.put('/:id/status', async (c) => {
       await c.env.DB.prepare('UPDATE trips SET status = ? WHERE id = ?')
         .bind(status, tripId)
         .run();
+    }
+
+    // Sincronizar disponibilidad del conductor según estado del viaje
+    if (trip.driver_id) {
+      if (status === 'accepted' || status === 'in_progress') {
+        // Conductor ocupado — no aparece en búsquedas de pasajeros
+        await c.env.DB.prepare('UPDATE drivers SET is_available = 0 WHERE id = ?')
+          .bind(trip.driver_id).run();
+      } else if (status === 'completed' || status === 'cancelled') {
+        // Viaje terminado — restaurar disponibilidad solo si el conductor la tenía activa
+        await c.env.DB.prepare('UPDATE drivers SET is_available = 1 WHERE id = ?')
+          .bind(trip.driver_id).run();
+      }
     }
 
     const updatedTrip = await c.env.DB.prepare('SELECT * FROM trips WHERE id = ?')

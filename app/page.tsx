@@ -3,6 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
+
+interface InstructionVideo {
+  title: string;
+  url: string;
+  uploadedAt: number;
+}
 import dynamic from "next/dynamic";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 import Navbar from "@/components/Navbar/page";
@@ -28,6 +34,7 @@ export default function HomePage() {
     null,
   );
   const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
+  const [videos, setVideos] = useState<InstructionVideo[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -54,6 +61,13 @@ export default function HomePage() {
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, [user]);
+
+  useEffect(() => {
+    fetch('/api/videos')
+      .then(res => res.json())
+      .then(data => setVideos(data.sort((a: InstructionVideo, b: InstructionVideo) => a.uploadedAt - b.uploadedAt)))
+      .catch(() => {});
+  }, []);
 
   if (loading) {
     return (
@@ -379,6 +393,36 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Videos de instrucciones */}
+      {videos.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                ¿Cómo funciona MoTaxi?
+              </h2>
+              <p className="text-xl text-black max-w-2xl mx-auto">
+                Aprende a usar la plataforma con estos videos de instrucciones
+              </p>
+            </div>
+            <div className={`grid gap-8 ${videos.length === 1 ? 'max-w-2xl mx-auto' : 'md:grid-cols-2'}`}>
+              {videos.map((video) => (
+                <div key={video.url} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                  <video
+                    src={video.url}
+                    controls
+                    className="w-full aspect-video bg-black"
+                  />
+                  <div className="px-6 py-4">
+                    <h3 className="text-lg font-bold text-gray-900">{video.title}</h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       {!user && (

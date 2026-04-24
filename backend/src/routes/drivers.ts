@@ -282,12 +282,7 @@ driverRoutes.put('/availability', async (c) => {
         }, 400);
       }
 
-      if (driver.verification_status !== 'approved') {
-        return c.json({
-          error: 'Tu cuenta debe estar verificada para activarte',
-          notVerified: true
-        }, 400);
-      }
+      // Verificación de cuenta deshabilitada temporalmente
     }
 
     await c.env.DB.prepare('UPDATE drivers SET is_available = ? WHERE id = ?')

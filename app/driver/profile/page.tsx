@@ -520,11 +520,6 @@ export default function DriverProfilePage() {
                     Conductor Destacado
                   </div>
                 )}
-                {driverInfo && (
-                  <div className={`px-4 py-2 rounded-full text-sm font-medium border ${getVerificationStatusColor(driverInfo.verification_status)}`}>
-                    {getVerificationStatusText(driverInfo.verification_status)}
-                  </div>
-                )}
               </div>
             </div>
 

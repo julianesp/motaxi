@@ -744,3 +744,97 @@ adminRoutes.delete('/users/:id', async (c) => {
     return c.json({ error: error.message || 'Failed to delete user' }, 500);
   }
 });
+
+/**
+ * POST /admin/notify-drivers
+ * Enviar notificación a todos los conductores (o uno específico)
+ */
+adminRoutes.post('/notify-drivers', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { title, message, driver_id } = body;
+
+    if (!title || !message) {
+      return c.json({ error: 'title y message son requeridos' }, 400);
+    }
+
+    // Si driver_id viene, notificar solo a ese conductor; si no, a todos
+    let drivers: any[];
+    if (driver_id) {
+      const d = await c.env.DB.prepare('SELECT id FROM users WHERE id = ? AND role = ?')
+        .bind(driver_id, 'driver').first();
+      drivers = d ? [d] : [];
+    } else {
+      const res = await c.env.DB.prepare(
+        "SELECT id FROM users WHERE role = 'driver'"
+      ).all();
+      drivers = res.results || [];
+    }
+
+    if (drivers.length === 0) {
+      return c.json({ error: 'No se encontraron conductores' }, 404);
+    }
+
+    const { v4: uuidv4 } = await import('uuid');
+    const now = Math.floor(Date.now() / 1000);
+
+    // Insertar notificación en la DB para cada conductor
+    for (const driver of drivers) {
+      await c.env.DB.prepare(
+        `INSERT INTO notifications (id, user_id, title, message, type, data, created_at)
+         VALUES (?, ?, ?, ?, 'admin_broadcast', '{}', ?)`
+      ).bind(uuidv4(), driver.id, title, message, now).run();
+    }
+
+    // Enviar Web Push si está configurado
+    let pushSent = 0;
+    if (c.env.VAPID_PUBLIC_KEY && c.env.VAPID_PRIVATE_KEY) {
+      const { sendWebPush } = await import('../services/web-push');
+      const driverIds = drivers.map((d: any) => d.id);
+      const placeholders = driverIds.map(() => '?').join(',');
+      const pushSubs = await c.env.DB.prepare(
+        `SELECT wps.endpoint, wps.p256dh, wps.auth
+         FROM web_push_subscriptions wps
+         WHERE wps.user_id IN (${placeholders})`
+      ).bind(...driverIds).all();
+
+      for (const sub of (pushSubs.results || []) as any[]) {
+        const result = await sendWebPush(
+          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+          { title, body: message, icon: '/logo.png', tag: `admin-broadcast-${now}` },
+          c.env.VAPID_PUBLIC_KEY,
+          c.env.VAPID_PRIVATE_KEY
+        ).catch(() => ({ success: false }));
+        if ((result as any).success) pushSent++;
+      }
+    }
+
+    return c.json({
+      success: true,
+      drivers_notified: drivers.length,
+      push_sent: pushSent,
+    });
+  } catch (error: any) {
+    console.error('Notify drivers error:', error);
+    return c.json({ error: error.message || 'Failed to send notifications' }, 500);
+  }
+});
+
+/**
+ * GET /admin/drivers/list
+ * Lista simplificada de conductores para selector de notificaciones
+ */
+adminRoutes.get('/drivers/list', async (c) => {
+  try {
+    const drivers = await c.env.DB.prepare(
+      `SELECT u.id, u.full_name, u.email, d.vehicle_model, d.vehicle_plate, d.is_available
+       FROM users u
+       JOIN drivers d ON u.id = d.id
+       WHERE u.role = 'driver'
+       ORDER BY u.full_name ASC`
+    ).all();
+    return c.json({ drivers: drivers.results || [] });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get drivers list' }, 500);
+  }
+});

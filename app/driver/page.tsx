@@ -1248,6 +1248,17 @@ export default function DriverHomePage() {
                         </div>
                       ))}
                     </div>
+                    <div className="bg-[#42CE1D]/10 border border-[#42CE1D]/30 rounded-xl p-4 text-left">
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg">🎉</span>
+                        <div>
+                          <p className="text-sm font-bold text-[#008000] mb-1">¡MoTaxi es gratis por ahora!</p>
+                          <p className="text-xs text-gray-700 leading-relaxed">
+                            Durante esta etapa de lanzamiento, el uso de la plataforma es <strong>completamente gratuito</strong> para todos los conductores. Cuando la plataforma alcance los primeros 50 viajes completados, se informará con anticipación sobre las condiciones de uso futuras.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-left">
                       <p className="text-xs text-blue-700">
                         💡 <strong>Puedes completarlo después</strong> desde tu perfil. Pero necesitas tenerlo completo para activarte como conductor.

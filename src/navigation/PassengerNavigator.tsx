@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import PassengerHomeScreen from '../screens/passenger/PassengerHomeScreen';
 import TripHistoryScreen from '../screens/shared/TripHistoryScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
+import ProfileMenuModal from '../components/ProfileMenuModal';
 
 export type PassengerTabParamList = {
   Home: undefined;
@@ -16,6 +17,8 @@ export type PassengerTabParamList = {
 const Tab = createBottomTabNavigator<PassengerTabParamList>();
 
 const PassengerNavigator: React.FC = () => {
+  const [menuVisible, setMenuVisible] = useState(false);
+
   const getTabBarIcon = (route: any, focused: boolean, color: string, size: number) => {
     let iconName: keyof typeof Ionicons.glyphMap = 'home';
 
@@ -31,30 +34,44 @@ const PassengerNavigator: React.FC = () => {
   };
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => getTabBarIcon(route, focused, color, size),
-        tabBarActiveTintColor: '#FF6B6B',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen
-        name="Home"
-        component={PassengerHomeScreen}
-        options={{ tabBarLabel: 'Inicio' }}
+    <>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => getTabBarIcon(route, focused, color, size),
+          tabBarActiveTintColor: '#FF6B6B',
+          tabBarInactiveTintColor: 'gray',
+          headerShown: false,
+        })}
+      >
+        <Tab.Screen
+          name="Home"
+          component={PassengerHomeScreen}
+          options={{ tabBarLabel: 'Inicio' }}
+        />
+        <Tab.Screen
+          name="History"
+          component={TripHistoryScreen}
+          options={{ tabBarLabel: 'Historial' }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ tabBarLabel: 'Perfil' }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              setMenuVisible(true);
+            },
+          }}
+        />
+      </Tab.Navigator>
+
+      <ProfileMenuModal
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onViewProfile={() => setMenuVisible(false)}
       />
-      <Tab.Screen
-        name="History"
-        component={TripHistoryScreen}
-        options={{ tabBarLabel: 'Historial' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ tabBarLabel: 'Perfil' }}
-      />
-    </Tab.Navigator>
+    </>
   );
 };
 

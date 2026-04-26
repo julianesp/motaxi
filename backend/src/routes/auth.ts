@@ -249,7 +249,7 @@ authRoutes.post('/register', async (c) => {
         c.env.TELEGRAM_BOT_TOKEN,
         c.env.ADMIN_TELEGRAM_CHAT_ID,
         { fullName: full_name, email: email || `(sin email) ${phone}`, role, phone }
-      ).catch(() => {});
+      ).catch((err) => console.error('[Telegram] notifyAdminNewUser failed:', err));
 
       // Hito de pasajeros: notificar si se llega a 20, 30, 50 o 100
       if (role === 'passenger') {

@@ -40,6 +40,7 @@ driverRoutes.get('/profile', async (c) => {
         d.accepts_intercity_trips,
         d.accepts_rural_trips,
         d.night_only,
+        d.whatsapp,
         d.base_fare,
         d.intercity_fare,
         d.rural_fare,
@@ -64,7 +65,7 @@ driverRoutes.get('/profile', async (c) => {
                 d.is_available, d.verification_status, d.rating, d.total_trips,
                 d.current_latitude, d.current_longitude, d.last_location_update,
                 d.municipality, d.accepts_intercity_trips, d.accepts_rural_trips,
-                d.night_only, d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
+                d.night_only, d.whatsapp, d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
                 d.profile_completed, d.profile_skipped_at
          FROM drivers d WHERE d.id = ?`
       ).bind(user.id).first();
@@ -117,6 +118,7 @@ driverRoutes.put('/profile', async (c) => {
       accepts_intercity_trips,
       accepts_rural_trips,
       night_only,
+      whatsapp,
       vehicle_model,
       vehicle_color,
       vehicle_plate,
@@ -146,6 +148,10 @@ driverRoutes.put('/profile', async (c) => {
     if (night_only !== undefined) {
       updates.push('night_only = ?');
       values.push(night_only ? 1 : 0);
+    }
+    if (whatsapp !== undefined) {
+      updates.push('whatsapp = ?');
+      values.push(whatsapp || null);
     }
     if (vehicle_model !== undefined) {
       updates.push('vehicle_model = ?');
@@ -327,7 +333,7 @@ driverRoutes.get('/nearby', async (c) => {
     const drivers = await c.env.DB.prepare(
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
               d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
-              d.municipality, d.night_only,
+              d.municipality, d.night_only, d.whatsapp,
               d.vehicle_types,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,

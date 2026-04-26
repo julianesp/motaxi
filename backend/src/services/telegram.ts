@@ -80,13 +80,16 @@ export class TelegramService {
       phone: string;
     }
   ): Promise<boolean> {
+    const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const roleLabel = user.role === 'driver' ? '🏍️ Conductor' : '👤 Pasajero';
+    const emailLine = user.email && !user.email.includes('motaxi.local')
+      ? `📧 <b>Email:</b> ${escape(user.email)}\n`
+      : '';
     const text = `🆕 <b>Nuevo usuario registrado</b>
 
 ${roleLabel}
-👤 <b>Nombre:</b> ${user.fullName}
-📧 <b>Email:</b> ${user.email}
-📱 <b>Teléfono:</b> ${user.phone}`;
+👤 <b>Nombre:</b> ${escape(user.fullName)}
+${emailLine}📱 <b>Teléfono:</b> ${escape(user.phone)}`;
 
     return this.sendMessage(botToken, adminChatId, text);
   }

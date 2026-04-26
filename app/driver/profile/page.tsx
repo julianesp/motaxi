@@ -20,6 +20,7 @@ interface DriverInfo {
   accepts_intercity_trips?: number;
   accepts_rural_trips?: number;
   night_only?: number;
+  whatsapp?: string;
   base_fare?: number;
   intercity_fare?: number;
   rural_fare?: number;
@@ -55,6 +56,7 @@ export default function DriverProfilePage() {
     accepts_intercity_trips: true,
     accepts_rural_trips: true,
     night_only: false,
+    whatsapp: '',
     vehicle_model: '',
     vehicle_color: '',
     vehicle_plate: '',
@@ -131,6 +133,7 @@ export default function DriverProfilePage() {
           accepts_intercity_trips: driver.accepts_intercity_trips === 1,
           accepts_rural_trips: driver.accepts_rural_trips === 1,
           night_only: driver.night_only === 1,
+          whatsapp: driver.whatsapp || '',
           vehicle_model: driver.vehicle_model || '',
           vehicle_color: driver.vehicle_color || '',
           vehicle_plate: driver.vehicle_plate || '',
@@ -565,6 +568,30 @@ export default function DriverProfilePage() {
                     />
                   ) : (
                     <span className="text-gray-900">{user.email}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* WhatsApp */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  WhatsApp <span className="text-gray-400 font-normal">(opcional — visible para pasajeros)</span>
+                </label>
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.855L.057 23.882l6.19-1.624A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.727.977.995-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/>
+                  </svg>
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      value={driverFormData.whatsapp}
+                      onChange={(e) => setDriverFormData({ ...driverFormData, whatsapp: e.target.value })}
+                      placeholder="Ej: 3001234567"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
+                    />
+                  ) : (
+                    <span className="text-gray-900">{driverInfo?.whatsapp || <span className="text-gray-400">No configurado</span>}</span>
                   )}
                 </div>
               </div>

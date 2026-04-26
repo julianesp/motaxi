@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS drivers (
   vehicle_plate TEXT UNIQUE NOT NULL,
   vehicle_model TEXT NOT NULL,
   vehicle_color TEXT NOT NULL,
+  vehicle_types TEXT DEFAULT 'moto' CHECK (vehicle_types IN ('moto', 'taxi', 'carro', 'piaggio')),
   is_available INTEGER DEFAULT 0,
   rating REAL DEFAULT 5.0,
   total_trips INTEGER DEFAULT 0,

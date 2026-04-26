@@ -28,6 +28,7 @@ driverRoutes.get('/profile', async (c) => {
         d.vehicle_color,
         d.vehicle_plate,
         d.license_number,
+        d.vehicle_types,
         d.is_available,
         d.verification_status,
         d.rating,
@@ -308,8 +309,13 @@ driverRoutes.get('/nearby', async (c) => {
     let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'`;
 
     // Filtrar por tipo de vehículo si se especifica
+    // Los conductores con vehicle_types NULL se tratan como 'moto' (valor por defecto histórico)
     if (vehicleType && ['moto', 'taxi', 'carro', 'piaggio'].includes(vehicleType)) {
-      whereClause += ` AND d.vehicle_types = '${vehicleType}'`;
+      if (vehicleType === 'moto') {
+        whereClause += ` AND (d.vehicle_types = 'moto' OR d.vehicle_types IS NULL)`;
+      } else {
+        whereClause += ` AND d.vehicle_types = '${vehicleType}'`;
+      }
     }
 
     const drivers = await c.env.DB.prepare(

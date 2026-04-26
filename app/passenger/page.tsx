@@ -973,6 +973,7 @@ export default function PassengerHomePage() {
                                 onClick={() => {
                                   if (!isActive) {
                                     setVehicleCarouselIndex(i);
+                                    setVehicleType(opt.value);
                                   } else {
                                     setVehicleType(isSelected ? null : opt.value);
                                   }

@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../contexts/AuthContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -44,8 +44,16 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({
 
   const handleNavigate = (screen: keyof RootStackParamList) => {
     onClose();
-    // pequeño delay para que el modal cierre antes de navegar
     setTimeout(() => navigation.navigate(screen as any), 200);
+  };
+
+  const handleViewProfile = () => {
+    onClose();
+    setTimeout(() => {
+      navigation.dispatch(
+        CommonActions.navigate({ name: 'Profile' })
+      );
+    }, 200);
   };
 
   if (!user) return null;
@@ -82,7 +90,7 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({
           <View style={styles.divider} />
 
           {/* Opciones */}
-          <TouchableOpacity style={styles.option} onPress={onViewProfile}>
+          <TouchableOpacity style={styles.option} onPress={handleViewProfile}>
             <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="person-outline" size={20} color="#42CE1D" />
             </View>

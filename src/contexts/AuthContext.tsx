@@ -85,10 +85,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (email: string, password: string): Promise<boolean> => {
+  const signIn = async (identifier: string, password: string): Promise<boolean> => {
     try {
+      const isPhone = /^\+?\d[\d\s\-]{7,}$/.test(identifier.trim());
       const response = await apiClient.post('/auth/login', {
-        email,
+        [isPhone ? 'phone' : 'email']: identifier.trim(),
         password,
       });
 

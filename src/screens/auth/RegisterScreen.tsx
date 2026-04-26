@@ -32,8 +32,17 @@ const RegisterScreen: React.FC<Props> = ({ route }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [vehicleType, setVehicleType] = useState<'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular'>('moto');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
+
+  const VEHICLE_OPTIONS: { value: 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular'; label: string; icon: string }[] = [
+    { value: 'moto', label: 'Mototaxi', icon: '🏍️' },
+    { value: 'taxi', label: 'Taxi', icon: '🚕' },
+    { value: 'carro', label: 'Carro / Van', icon: '🚐' },
+    { value: 'piaggio', label: 'Piaggio', icon: '🛻' },
+    { value: 'particular', label: 'Particular', icon: '🚗' },
+  ];
 
   const handleRegister = async () => {
     if (!fullName || !email || !phone || !password || !confirmPassword) {
@@ -58,6 +67,7 @@ const RegisterScreen: React.FC<Props> = ({ route }) => {
         full_name: fullName,
         phone,
         role,
+        ...(role === 'driver' && { vehicle_types: vehicleType }),
       });
 
       setLoading(false);
@@ -155,6 +165,31 @@ const RegisterScreen: React.FC<Props> = ({ route }) => {
                   editable={!loading}
                 />
               </View>
+
+              {role === 'driver' && (
+                <View style={styles.vehicleSection}>
+                  <Text style={styles.vehicleLabel}>Tipo de vehículo</Text>
+                  <View style={styles.vehicleGrid}>
+                    {VEHICLE_OPTIONS.map((opt) => (
+                      <TouchableOpacity
+                        key={opt.value}
+                        style={[
+                          styles.vehicleOption,
+                          vehicleType === opt.value && styles.vehicleOptionSelected,
+                        ]}
+                        onPress={() => setVehicleType(opt.value)}
+                        disabled={loading}
+                      >
+                        <Text style={styles.vehicleIcon}>{opt.icon}</Text>
+                        <Text style={[
+                          styles.vehicleOptionText,
+                          vehicleType === opt.value && styles.vehicleOptionTextSelected,
+                        ]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
 
               <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={20} color="#666" />
@@ -270,6 +305,54 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  vehicleSection: {
+    marginBottom: 15,
+  },
+  vehicleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#444',
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+  vehicleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  vehicleOption: {
+    flexBasis: '30%',
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  vehicleOptionSelected: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#f0faf0',
+  },
+  vehicleIcon: {
+    fontSize: 26,
+    marginBottom: 4,
+  },
+  vehicleOptionText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#666',
+    textAlign: 'center',
+  },
+  vehicleOptionTextSelected: {
+    color: '#4CAF50',
   },
 });
 

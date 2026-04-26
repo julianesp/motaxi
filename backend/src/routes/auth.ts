@@ -133,7 +133,7 @@ authRoutes.post('/verify-otp', async (c) => {
 authRoutes.post('/register', async (c) => {
   try {
     const body = await c.req.json();
-    const { email, password, phone, full_name, role } = body;
+    const { email, password, phone, full_name, role, vehicle_types } = body;
 
     // Validación básica — email es opcional, phone es obligatorio
     if (!password || !phone || !full_name || !role) {
@@ -216,11 +216,14 @@ authRoutes.post('/register', async (c) => {
       const tempPlate = `PENDING-${userId.substring(0, 8)}`;
       const tempLicense = `PENDING-${userId.substring(0, 8)}`;
 
+      const validVehicleTypes = ['moto', 'taxi', 'carro', 'piaggio', 'particular'];
+      const finalVehicleType = vehicle_types && validVehicleTypes.includes(vehicle_types) ? vehicle_types : 'moto';
+
       // Auto-aprobación habilitada temporalmente (sin verificación manual)
       await c.env.DB.prepare(
         'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, vehicle_types, rating, verification_status, is_verified, verified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       )
-        .bind(userId, tempLicense, tempPlate, 'PENDING', 'PENDING', 'moto', null, 'approved', 1, Math.floor(Date.now() / 1000))
+        .bind(userId, tempLicense, tempPlate, 'PENDING', 'PENDING', finalVehicleType, null, 'approved', 1, Math.floor(Date.now() / 1000))
         .run();
 
       // Crear trial de 30 días al registrarse

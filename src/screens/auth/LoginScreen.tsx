@@ -19,20 +19,20 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
 const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!identifier || !password) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return;
     }
 
     setLoading(true);
-    const success = await signIn(email, password);
+    const success = await signIn(identifier, password);
     setLoading(false);
 
     if (!success) {
@@ -53,12 +53,12 @@ const LoginScreen: React.FC = () => {
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#666" />
+              <Ionicons name="person-outline" size={20} color="#666" />
               <TextInput
                 style={styles.input}
-                placeholder="Correo electrónico"
-                value={email}
-                onChangeText={setEmail}
+                placeholder="Correo electrónico o número de celular"
+                value={identifier}
+                onChangeText={setIdentifier}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!loading}

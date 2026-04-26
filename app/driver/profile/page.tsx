@@ -19,6 +19,7 @@ interface DriverInfo {
   municipality?: string;
   accepts_intercity_trips?: number;
   accepts_rural_trips?: number;
+  night_only?: number;
   base_fare?: number;
   intercity_fare?: number;
   rural_fare?: number;
@@ -53,6 +54,7 @@ export default function DriverProfilePage() {
     municipality: '',
     accepts_intercity_trips: true,
     accepts_rural_trips: true,
+    night_only: false,
     vehicle_model: '',
     vehicle_color: '',
     vehicle_plate: '',
@@ -128,6 +130,7 @@ export default function DriverProfilePage() {
           municipality: driver.municipality || '',
           accepts_intercity_trips: driver.accepts_intercity_trips === 1,
           accepts_rural_trips: driver.accepts_rural_trips === 1,
+          night_only: driver.night_only === 1,
           vehicle_model: driver.vehicle_model || '',
           vehicle_color: driver.vehicle_color || '',
           vehicle_plate: driver.vehicle_plate || '',
@@ -847,6 +850,31 @@ export default function DriverProfilePage() {
                           </span>
                         )}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Conductor nocturno */}
+                  <div className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">🌙 Solo viajes nocturnos</p>
+                      <p className="text-xs text-gray-500">Los pasajeros verán que trabajas de 6pm a 6am</p>
+                    </div>
+                    <div>
+                      {isEditing ? (
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={driverFormData.night_only}
+                            onChange={(e) => setDriverFormData({ ...driverFormData, night_only: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                      ) : (
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${driverInfo.night_only ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {driverInfo.night_only ? '🌙 Sí' : 'No'}
+                        </span>
+                      )}
                     </div>
                   </div>
 

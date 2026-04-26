@@ -174,8 +174,8 @@ driverRoutes.put('/profile', async (c) => {
       values.push(per_km_fare);
     }
     if (vehicle_types !== undefined) {
-      if (!['moto', 'taxi', 'carro', 'piaggio'].includes(vehicle_types)) {
-        return c.json({ error: 'vehicle_types must be: moto, taxi, carro, or piaggio' }, 400);
+      if (!['moto', 'taxi', 'carro', 'piaggio', 'particular'].includes(vehicle_types)) {
+        return c.json({ error: 'vehicle_types must be: moto, taxi, carro, piaggio, or particular' }, 400);
       }
       updates.push('vehicle_types = ?');
       values.push(vehicle_types);
@@ -310,7 +310,7 @@ driverRoutes.get('/nearby', async (c) => {
 
     // Filtrar por tipo de vehículo si se especifica
     // Los conductores con vehicle_types NULL se tratan como 'moto' (valor por defecto histórico)
-    if (vehicleType && ['moto', 'taxi', 'carro', 'piaggio'].includes(vehicleType)) {
+    if (vehicleType && ['moto', 'taxi', 'carro', 'piaggio', 'particular'].includes(vehicleType)) {
       if (vehicleType === 'moto') {
         whereClause += ` AND (d.vehicle_types = 'moto' OR d.vehicle_types IS NULL)`;
       } else {

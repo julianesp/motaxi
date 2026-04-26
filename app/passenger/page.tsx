@@ -183,7 +183,7 @@ export default function PassengerHomePage() {
   const [isCheckingActiveTrip, setIsCheckingActiveTrip] = useState(false);
 
   // Tipo de vehículo preferido por el pasajero
-  const [vehicleType, setVehicleType] = useState<"moto" | "taxi" | "carro" | "piaggio" | null>(null);
+  const [vehicleType, setVehicleType] = useState<"moto" | "taxi" | "carro" | "piaggio" | "particular" | null>(null);
   const [vehicleCarouselIndex, setVehicleCarouselIndex] = useState(0);
   const vehicleTouchStartX = useRef<number | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(true);
@@ -919,6 +919,7 @@ export default function PassengerHomePage() {
                     const vehicleOpts = [
                       { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Rápido · económico" },
                       { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
+                      { value: "particular" as const, icon: "🚗", label: "Particular", sub: "Carro personal" },
                       { value: "carro" as const, icon: "🚐", label: "Carro / Van", sub: "Cómodo · espacioso" },
                       { value: "piaggio" as const, icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
                     ];
@@ -1295,7 +1296,7 @@ export default function PassengerHomePage() {
                                 <div className="flex items-center gap-1.5">
                                   {driver.vehicle_types && (
                                     <span className="text-base flex-shrink-0" title={driver.vehicle_types}>
-                                      {({ moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻' } as Record<string, string>)[driver.vehicle_types] ?? '🚗'}
+                                      {({ moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻', particular: '🚗' } as Record<string, string>)[driver.vehicle_types] ?? '🚗'}
                                     </span>
                                   )}
                                   <span className="text-sm font-semibold text-gray-800 truncate">{driver.full_name}</span>
@@ -1412,6 +1413,8 @@ export default function PassengerHomePage() {
                     "🏍️ Solicitar mototaxi"
                   ) : vehicleType === "taxi" ? (
                     "🚕 Solicitar taxi"
+                  ) : vehicleType === "particular" ? (
+                    "🚗 Solicitar particular"
                   ) : vehicleType === "carro" ? (
                     "🚐 Solicitar carro / van"
                   ) : vehicleType === "piaggio" ? (

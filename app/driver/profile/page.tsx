@@ -61,7 +61,7 @@ export default function DriverProfilePage() {
     intercity_fare: '' as number | string,
     rural_fare: '' as number | string,
     per_km_fare: '' as number | string,
-    vehicle_types: 'moto' as 'moto' | 'taxi' | 'carro' | 'piaggio',
+    vehicle_types: 'moto' as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular',
   });
 
   useEffect(() => {
@@ -136,7 +136,7 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || '',
           rural_fare: driver.rural_fare || '',
           per_km_fare: driver.per_km_fare || '',
-          vehicle_types: (driver.vehicle_types as 'moto' | 'taxi' | 'carro' | 'piaggio') || 'moto',
+          vehicle_types: (driver.vehicle_types as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular') || 'moto',
         });
       }
     } catch (error) {
@@ -628,6 +628,7 @@ export default function DriverProfilePage() {
                             { value: 'taxi', label: '🚕', desc: 'Taxi' },
                             { value: 'carro', label: '🚐', desc: 'Carro / Van' },
                             { value: 'piaggio', label: '🛻', desc: 'Piaggio' },
+                            { value: 'particular', label: '🚗', desc: 'Particular' },
                           ] as const).map((opt) => (
                             <button
                               key={opt.value}
@@ -647,7 +648,7 @@ export default function DriverProfilePage() {
                       ) : (
                         <div className="flex items-center">
                           <span className="text-gray-900">
-                            {({ moto: '🏍️ Mototaxi', taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio' } as Record<string, string>)[driverInfo.vehicle_types ?? ''] ?? '🏍️ Mototaxi'}
+                            {({ moto: '🏍️ Mototaxi', taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio', particular: '🚗 Particular' } as Record<string, string>)[driverInfo.vehicle_types ?? ''] ?? '🏍️ Mototaxi'}
                           </span>
                         </div>
                       )}

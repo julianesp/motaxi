@@ -218,6 +218,7 @@ export default function PassengerHomePage() {
   }, [nearbyDrivers]);
   const [driverDetailDriver, setDriverDetailDriver] =
     useState<NearbyDriver | null>(null);
+  const [photoExpanded, setPhotoExpanded] = useState(false);
   const [passengerCustomPrice, setPassengerCustomPrice] = useState<
     number | null
   >(null);
@@ -1336,12 +1337,9 @@ export default function PassengerHomePage() {
                                 </span>
                                 <button
                                   onClick={() => setDriverDetailDriver(driver)}
-                                  className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"
-                                  title="Ver información"
+                                  className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition-colors flex-shrink-0"
                                 >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
+                                  Ver
                                 </button>
                               </div>
                             </div>
@@ -1460,7 +1458,7 @@ export default function PassengerHomePage() {
       {driverDetailDriver && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50"
-          onClick={() => setDriverDetailDriver(null)}
+          onClick={() => setDriverDetailDriver(null); setPhotoExpanded(false)}
         >
           <div
             className="bg-white rounded-t-3xl w-full max-w-md shadow-2xl pb-safe"
@@ -1474,11 +1472,21 @@ export default function PassengerHomePage() {
             {/* Encabezado con foto grande */}
             <div className="flex items-center gap-4 px-5 py-4">
               {driverDetailDriver.profile_image ? (
-                <img
-                  src={driverDetailDriver.profile_image}
-                  alt={driverDetailDriver.full_name}
-                  className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-100 flex-shrink-0"
-                />
+                <button
+                  onClick={() => setPhotoExpanded(true)}
+                  className="relative flex-shrink-0 group focus:outline-none"
+                >
+                  <img
+                    src={driverDetailDriver.profile_image}
+                    alt={driverDetailDriver.full_name}
+                    className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-100"
+                  />
+                  <div className="absolute inset-0 rounded-2xl bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    </svg>
+                  </div>
+                </button>
               ) : (
                 <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1516,7 +1524,7 @@ export default function PassengerHomePage() {
                 </p>
               </div>
               <button
-                onClick={() => setDriverDetailDriver(null)}
+                onClick={() => setDriverDetailDriver(null); setPhotoExpanded(false)}
                 className="self-start text-gray-400 hover:text-gray-600 p-1"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1579,7 +1587,7 @@ export default function PassengerHomePage() {
               <button
                 onClick={() => {
                   setSelectedDriver(driverDetailDriver);
-                  setDriverDetailDriver(null);
+                  setDriverDetailDriver(null); setPhotoExpanded(false);
                 }}
                 className="flex-1 py-3 bg-[#42CE1D] text-white rounded-xl font-semibold text-sm hover:bg-[#38b018] transition-colors"
               >
@@ -1587,6 +1595,28 @@ export default function PassengerHomePage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Lightbox foto del conductor */}
+      {photoExpanded && driverDetailDriver?.profile_image && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[200] p-4"
+          onClick={() => setPhotoExpanded(false)}
+        >
+          <img
+            src={driverDetailDriver.profile_image}
+            alt={driverDetailDriver.full_name}
+            className="max-w-full max-h-full rounded-2xl object-contain shadow-2xl"
+          />
+          <button
+            onClick={() => setPhotoExpanded(false)}
+            className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 

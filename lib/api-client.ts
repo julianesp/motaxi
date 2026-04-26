@@ -232,6 +232,8 @@ export const driversAPI = {
     municipality?: string;
     accepts_intercity_trips?: boolean;
     accepts_rural_trips?: boolean;
+    night_only?: boolean;
+    whatsapp?: string;
     vehicle_model?: string;
     vehicle_color?: string;
     vehicle_plate?: string;

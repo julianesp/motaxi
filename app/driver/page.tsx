@@ -182,12 +182,13 @@ export default function DriverHomePage() {
         if (response.driver) {
           setIsAvailable(response.driver.is_available === 1);
 
-          // Pre-cargar datos existentes
+          // Pre-cargar datos existentes (ignorar valores PENDING del registro inicial)
+          const clean = (v: string) => (!v || v.startsWith('PENDING') ? '' : v);
           setProfileData({
-            vehicle_model: response.driver.vehicle_model || '',
-            vehicle_color: response.driver.vehicle_color || '',
-            vehicle_plate: response.driver.vehicle_plate || '',
-            license_number: response.driver.license_number || '',
+            vehicle_model: clean(response.driver.vehicle_model),
+            vehicle_color: clean(response.driver.vehicle_color),
+            vehicle_plate: clean(response.driver.vehicle_plate),
+            license_number: clean(response.driver.license_number),
             municipality: response.driver.municipality || '',
             vehicle_types: response.driver.vehicle_types || '',
           });

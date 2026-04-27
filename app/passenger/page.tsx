@@ -1606,9 +1606,9 @@ export default function PassengerHomePage() {
                   Llamar
                 </a>
               )}
-              {driverDetailDriver.whatsapp && (
+              {(driverDetailDriver.whatsapp || driverDetailDriver.phone) && (
                 <a
-                  href={`https://wa.me/57${driverDetailDriver.whatsapp.replace(/\D/g, '')}`}
+                  href={`https://wa.me/57${(driverDetailDriver.whatsapp || driverDetailDriver.phone)!.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 py-3 bg-[#25D366] text-white rounded-xl font-semibold text-sm text-center hover:bg-[#1ebe5d] transition-colors flex items-center justify-center gap-2"

@@ -16,6 +16,7 @@ interface AuthContextType {
     phone: string;
     full_name: string;
     role: 'passenger' | 'driver';
+    vehicle_types?: string;
   }) => Promise<{ user: User }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -93,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phone: string;
     full_name: string;
     role: 'passenger' | 'driver';
+    vehicle_types?: string;
   }): Promise<{ user: User }> => {
     try {
       const response = await authAPI.register(data);

@@ -25,6 +25,7 @@ function RegisterForm() {
     confirmPassword: "",
     email: "",
     role: roleParam || ("passenger" as UserRole),
+    vehicle_types: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -50,6 +51,10 @@ function RegisterForm() {
 
     if (!formData.full_name.trim()) {
       setError("Ingresa tu nombre completo");
+      return;
+    }
+    if (formData.role === "driver" && !formData.vehicle_types) {
+      setError("Selecciona el tipo de vehículo");
       return;
     }
     if (!/^\d{10}$/.test(formData.phone.replace(/\s/g, ""))) {
@@ -85,6 +90,7 @@ function RegisterForm() {
         phone: formData.phone,
         password: formData.password,
         role: formData.role,
+        vehicle_types: formData.role === "driver" ? formData.vehicle_types : undefined,
       });
 
       if (registeredUser.email === "admin@neurai.dev") {
@@ -174,6 +180,36 @@ function RegisterForm() {
                   autoComplete="name"
                 />
               </div>
+
+              {formData.role === "driver" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Tipo de vehículo
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "moto", label: "Moto", emoji: "🏍️" },
+                      { value: "taxi", label: "Taxi", emoji: "🚖" },
+                      { value: "carro", label: "Carro / Van", emoji: "🚗" },
+                      { value: "piaggio", label: "Piaggio", emoji: "🛺" },
+                    ].map((v) => (
+                      <button
+                        key={v.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, vehicle_types: v.value })}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                          formData.vehicle_types === v.value
+                            ? "border-[#42CE1D] bg-[#42CE1D] bg-opacity-20 text-[#42CE1D]"
+                            : "border-gray-600 text-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        <span className="text-lg">{v.emoji}</span>
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-1">

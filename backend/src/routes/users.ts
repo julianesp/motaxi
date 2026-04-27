@@ -182,21 +182,40 @@ userRoutes.delete('/account', async (c) => {
     const db = c.env.DB;
 
     const tryRun = async (sql: string, ...params: any[]) => {
-      try { await db.prepare(sql).bind(...params).run(); } catch { /* tabla no existe */ }
+      try { await db.prepare(sql).bind(...params).run(); } catch { /* ignorar */ }
     };
 
-    // Si es conductor: limpiar trips.driver_id PRIMERO para evitar FK constraint
+    // Deshabilitar FK constraints para poder borrar en cualquier orden
+    await tryRun('PRAGMA foreign_keys = OFF');
+
     if (user.role === 'driver') {
-      await db.prepare('UPDATE trips SET driver_id = NULL WHERE driver_id = ?').bind(id).run();
+      // Nullificar referencias del conductor en trips
+      await tryRun('UPDATE trips SET driver_id = NULL WHERE driver_id = ?', id);
+      // Tablas que referencian drivers
+      await tryRun('DELETE FROM driver_price_offers WHERE driver_id = ?', id);
+      await tryRun('DELETE FROM earnings WHERE driver_id = ?', id);
+      await tryRun('DELETE FROM wallet_transactions WHERE driver_id = ?', id);
+      await tryRun('DELETE FROM driver_payouts WHERE driver_id = ?', id);
+      await tryRun('DELETE FROM driver_wallets WHERE driver_id = ?', id);
+      await tryRun('DELETE FROM driver_of_month WHERE driver_id = ?', id);
+      await tryRun('DELETE FROM trip_shares WHERE shared_by_user_id = ?', id);
+      await tryRun('DELETE FROM drivers WHERE id = ?', id);
+    } else if (user.role === 'passenger') {
+      await tryRun('DELETE FROM driver_price_offers WHERE trip_id IN (SELECT id FROM trips WHERE passenger_id = ?)', id);
+      await tryRun('DELETE FROM trip_shares WHERE trip_id IN (SELECT id FROM trips WHERE passenger_id = ?)', id);
+      await tryRun('DELETE FROM sos_alerts WHERE trip_id IN (SELECT id FROM trips WHERE passenger_id = ?)', id);
+      await tryRun('DELETE FROM earnings WHERE trip_id IN (SELECT id FROM trips WHERE passenger_id = ?)', id);
+      await tryRun('DELETE FROM payment_transactions WHERE trip_id IN (SELECT id FROM trips WHERE passenger_id = ?)', id);
+      await tryRun('DELETE FROM conversations WHERE passenger_id = ?', id);
+      await tryRun('DELETE FROM trips WHERE passenger_id = ?', id);
+      await tryRun('DELETE FROM passengers WHERE id = ?', id);
     }
 
-    // Sesiones
+    // Tablas comunes que referencian users
     await tryRun('DELETE FROM sessions WHERE user_id = ?', id);
     await tryRun('DELETE FROM web_push_subscriptions WHERE user_id = ?', id);
     await tryRun('DELETE FROM password_resets WHERE user_id = ?', id);
     await tryRun('DELETE FROM notifications WHERE user_id = ?', id);
-
-    // Datos personales
     await tryRun('DELETE FROM emergency_contacts WHERE user_id = ?', id);
     await tryRun('DELETE FROM sos_alerts WHERE user_id = ?', id);
     await tryRun('DELETE FROM payment_methods WHERE user_id = ?', id);
@@ -205,32 +224,18 @@ userRoutes.delete('/account', async (c) => {
     await tryRun('DELETE FROM favorite_locations WHERE user_id = ?', id);
     await tryRun('DELETE FROM saved_named_places WHERE user_id = ?', id);
     await tryRun('DELETE FROM named_places WHERE created_by = ?', id);
-
-    // Mensajes y conversaciones
     await tryRun('DELETE FROM typing_indicators WHERE user_id = ?', id);
     await tryRun('DELETE FROM messages WHERE sender_id = ?', id);
     await tryRun('DELETE FROM conversations WHERE passenger_id = ? OR driver_id = ?', id, id);
-
-    // Subscripciones
     await tryRun('DELETE FROM subscriptions WHERE user_id = ?', id);
-
-    if (user.role === 'driver') {
-      await tryRun('DELETE FROM driver_price_offers WHERE driver_id = ?', id);
-      await tryRun('DELETE FROM earnings WHERE driver_id = ?', id);
-      await tryRun('DELETE FROM wallet_transactions WHERE driver_id = ?', id);
-      await tryRun('DELETE FROM driver_payouts WHERE driver_id = ?', id);
-      await tryRun('DELETE FROM driver_wallets WHERE driver_id = ?', id);
-      await tryRun('DELETE FROM trip_shares WHERE shared_by_user_id = ?', id);
-      await tryRun('DELETE FROM drivers WHERE id = ?', id);
-    } else if (user.role === 'passenger') {
-      await tryRun('DELETE FROM driver_price_offers WHERE trip_id IN (SELECT id FROM trips WHERE passenger_id = ?)', id);
-      await tryRun('DELETE FROM trip_shares WHERE trip_id IN (SELECT id FROM trips WHERE passenger_id = ?)', id);
-      await tryRun('DELETE FROM trips WHERE passenger_id = ?', id);
-      await tryRun('DELETE FROM passengers WHERE id = ?', id);
-    }
+    await tryRun('DELETE FROM trip_shares WHERE shared_by_user_id = ?', id);
+    await tryRun('DELETE FROM phone_verifications WHERE phone = (SELECT phone FROM users WHERE id = ?)', id);
 
     // Usuario principal
     await db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
+
+    // Re-habilitar FK constraints
+    await tryRun('PRAGMA foreign_keys = ON');
 
     return c.json({ message: 'Account deleted successfully' });
   } catch (error: any) {

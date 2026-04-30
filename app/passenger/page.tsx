@@ -1111,8 +1111,8 @@ export default function PassengerHomePage() {
                       }}
                       className={`py-2 px-3 md:px-4 rounded-xl text-xs font-medium transition-all duration-200 ${
                         mapClickMode === "pickup"
-                          ? "bg-green-600 text-white shadow-lg shadow-green-200"
-                          : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                          ? "bg-[#008000] text-white shadow-lg shadow-[#008000]/30"
+                          : "bg-[#008000]/10 text-[#008000] hover:bg-[#008000]/20 border border-[#008000]/30"
                       }`}
                     >
                       {mapClickMode === "pickup"
@@ -1179,7 +1179,7 @@ export default function PassengerHomePage() {
                 {/* Destination Input */}
                 <div className="space-y-2">
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full ring-2 ring-red-200 z-10"></div>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#008000] rounded-full ring-2 ring-[#008000]/30 z-10"></div>
                     <LocationPicker
                       value={destination.address}
                       onChange={(value) => {
@@ -1206,7 +1206,7 @@ export default function PassengerHomePage() {
                           setDestination({ address: "", latitude: 0, longitude: 0 });
                           setShowRecentPlaces(true);
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-700 transition-colors z-10"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors z-10"
                         title="Limpiar destino"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1254,8 +1254,8 @@ export default function PassengerHomePage() {
                     }}
                     className={`w-full py-2 px-4 rounded-xl text-xs font-medium transition-all duration-200 ${
                       mapClickMode === "destination"
-                        ? "bg-red-600 text-white shadow-lg shadow-red-200"
-                        : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                        ? "bg-[#008000] text-white shadow-lg shadow-[#008000]/30"
+                        : "bg-[#008000]/10 text-[#008000] hover:bg-[#008000]/20 border border-[#008000]/30"
                     }`}
                   >
                     {mapClickMode === "destination"

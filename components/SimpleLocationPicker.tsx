@@ -84,7 +84,7 @@ export default function SimpleLocationPicker({
     }
   };
 
-  const iconColor = icon === 'pickup' ? 'bg-green-500' : 'bg-red-500';
+  const iconColor = 'bg-[#008000]';
 
   return (
     <div ref={containerRef} className="relative">
@@ -97,7 +97,7 @@ export default function SimpleLocationPicker({
         onChange={(e) => onChange(e.target.value)}
         onFocus={handleFocus}
         placeholder={placeholder}
-        className={`w-full px-12 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-${icon === 'pickup' ? 'green' : 'red'}-500 focus:border-transparent bg-white shadow-sm ${className}`}
+        className={`w-full px-12 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000] focus:border-transparent bg-white shadow-sm ${className}`}
         style={{ touchAction: 'manipulation' }}
       />
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -135,10 +135,10 @@ export default function SimpleLocationPicker({
                 className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-3"
               >
                 <div
-                  className={`w-10 h-10 ${icon === 'pickup' ? 'bg-green-100' : 'bg-red-100'} rounded-full flex items-center justify-center flex-shrink-0`}
+                  className={`w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0`}
                 >
                   <svg
-                    className={`w-5 h-5 ${icon === 'pickup' ? 'text-green-600' : 'text-red-600'}`}
+                    className={`w-5 h-5 text-[#008000]`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -180,9 +180,9 @@ export default function SimpleLocationPicker({
                 className="w-full text-left px-3 py-3 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-3"
               >
                 <div
-                  className={`w-10 h-10 ${icon === 'pickup' ? 'bg-green-100' : 'bg-red-100'} rounded-full flex items-center justify-center flex-shrink-0`}
+                  className={`w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0`}
                 >
-                  <span className={`${icon === 'pickup' ? 'text-green-600' : 'text-red-600'} font-bold`}>
+                  <span className={`text-[#008000] font-bold`}>
                     {municipality.name[0]}
                   </span>
                 </div>

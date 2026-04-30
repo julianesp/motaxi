@@ -241,23 +241,31 @@ export default function PassengerHomePage() {
     }
   }, [destination.address, recentPlaces.length]);
 
+  // Calcula el precio justo para un conductor dado una distancia
+  // Lógica: base_fare cubre el primer km urbano.
+  // Por cada km adicional se suma per_km_fare.
+  // Mínimo: base_fare.
+  const calcFare = (baseFare: number, perKm: number, distKm: number) => {
+    const base = baseFare ?? 5000;
+    const rate = perKm ?? 1500;
+    const extraKm = Math.max(0, distKm - 1);
+    return Math.round(base + extraKm * rate);
+  };
+
   // Precio recomendado calculado automáticamente
   const recommendedPrice = useMemo(() => {
     if (!estimatedDistance) return null;
     if (selectedDriver) {
-      return Math.round(
-        (selectedDriver.base_fare ?? 5000) +
-          estimatedDistance * (selectedDriver.per_km_fare ?? 2000)
-      );
+      return calcFare(selectedDriver.base_fare, selectedDriver.per_km_fare, estimatedDistance);
     }
     if (nearbyDrivers.length > 0) {
-      const nearest = sortedNearbyDrivers[0];
-      return Math.round(
-        (nearest.base_fare ?? 5000) +
-          estimatedDistance * (nearest.per_km_fare ?? 2000)
+      // Promedio de los conductores cercanos para un precio justo
+      const fares = sortedNearbyDrivers.map(d =>
+        calcFare(d.base_fare, d.per_km_fare, estimatedDistance)
       );
+      return Math.round(fares.reduce((s, f) => s + f, 0) / fares.length);
     }
-    return Math.round(5000 + estimatedDistance * 2000);
+    return calcFare(5000, 1500, estimatedDistance);
   }, [estimatedDistance, selectedDriver, nearbyDrivers, sortedNearbyDrivers]);
 
   useEffect(() => {
@@ -511,23 +519,14 @@ export default function PassengerHomePage() {
     // Calcular tarifa estimada basada en conductores disponibles
     let estimatedFare = 5000; // Valor por defecto si no hay conductores
     if (passengerCustomPrice) {
-      // El pasajero propuso un precio personalizado
       estimatedFare = passengerCustomPrice;
     } else if (selectedDriver) {
-      // Usar tarifa del conductor seleccionado
-      estimatedFare = Math.round(
-        (selectedDriver.base_fare ?? 5000) +
-          distance * (selectedDriver.per_km_fare ?? 2000),
-      );
+      estimatedFare = calcFare(selectedDriver.base_fare, selectedDriver.per_km_fare, distance);
     } else if (nearbyDrivers.length > 0) {
-      // Usar tarifa del conductor más cercano
       const nearestDriver = nearbyDrivers[0];
-      const baseFare = nearestDriver.base_fare ?? 5000;
-      const perKmFare = nearestDriver.per_km_fare ?? 2000;
-      estimatedFare = Math.round(baseFare + distance * perKmFare);
+      estimatedFare = calcFare(nearestDriver.base_fare, nearestDriver.per_km_fare, distance);
     } else {
-      // Si no hay conductores, usar tarifa estándar del sistema
-      estimatedFare = Math.round(5000 + distance * 2000);
+      estimatedFare = calcFare(5000, 1500, distance);
     }
 
     try {
@@ -1283,16 +1282,13 @@ export default function PassengerHomePage() {
                 )}
 
                 {/* Panel de tarifa estilo InDrive - solo cuando hay origen y destino */}
-                {pickup.latitude && destination.latitude && estimatedDistance && recommendedPrice && (
+                {!!(pickup.latitude && destination.latitude && estimatedDistance && recommendedPrice) && (
                   <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
                     {/* Lista de conductores */}
                     {nearbyDrivers.length > 0 && (
                       <div className="divide-y divide-gray-50">
                         {sortedNearbyDrivers.slice(0, 4).map((driver) => {
-                          const driverFare = Math.round(
-                            (driver.base_fare ?? 5000) +
-                              estimatedDistance * (driver.per_km_fare ?? 2000),
-                          );
+                          const driverFare = calcFare(driver.base_fare, driver.per_km_fare, estimatedDistance!);
                           const isSelected = selectedDriver?.id === driver.id;
                           return (
                             <div
@@ -1353,9 +1349,14 @@ export default function PassengerHomePage() {
                                 </div>
                               </button>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className="text-base font-bold text-[#006600]">
-                                  ${driverFare.toLocaleString()}
-                                </span>
+                                <div className="text-right">
+                                  <div className="text-base font-bold text-[#006600]">
+                                    ${driverFare.toLocaleString()}
+                                  </div>
+                                  <div className="text-[10px] text-gray-400 leading-tight">
+                                    Precio estimado
+                                  </div>
+                                </div>
                                 <button
                                   onClick={() => setDriverDetailDriver(driver)}
                                   className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition-colors flex-shrink-0"
@@ -1381,42 +1382,41 @@ export default function PassengerHomePage() {
                       </div>
                     )}
 
-                    {/* Panel de precio estilo InDrive */}
+                    {/* Panel de precio */}
                     <div className="border-t border-gray-100 px-3 py-3 space-y-2">
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>Tarifa recomendada</span>
-                        <span className="font-semibold text-gray-700">${recommendedPrice.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => adjustCustomPrice(-500)}
-                          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-xl font-bold transition-colors flex-shrink-0"
-                        >
-                          −
-                        </button>
-                        <div className="flex-1 text-center">
-                          <div className="text-2xl font-bold text-[#008000]">
-                            ${(passengerCustomPrice ?? recommendedPrice).toLocaleString()}
-                          </div>
-                          {passengerCustomPrice && passengerCustomPrice !== recommendedPrice && (
-                            <button
-                              onClick={() => setPassengerCustomPrice(null)}
-                              className="text-xs text-gray-400 underline hover:text-gray-600"
-                            >
-                              Usar recomendado
-                            </button>
-                          )}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-400">Tu oferta al conductor</p>
+                          <p className="text-[10px] text-gray-300">Basada en las tarifas de cada conductor</p>
                         </div>
-                        <button
-                          onClick={() => adjustCustomPrice(500)}
-                          className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-xl font-bold transition-colors flex-shrink-0"
-                        >
-                          +
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => adjustCustomPrice(-500)}
+                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-lg font-bold transition-colors"
+                          >
+                            −
+                          </button>
+                          <div className="text-center min-w-[80px]">
+                            <div className="text-xl font-bold text-[#008000]">
+                              ${(passengerCustomPrice ?? recommendedPrice).toLocaleString()}
+                            </div>
+                            {passengerCustomPrice && passengerCustomPrice !== recommendedPrice && (
+                              <button
+                                onClick={() => setPassengerCustomPrice(null)}
+                                className="text-[10px] text-gray-400 underline hover:text-gray-600 leading-tight"
+                              >
+                                Restablecer
+                              </button>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => adjustCustomPrice(500)}
+                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-lg font-bold transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-xs text-center text-gray-400">
-                        Los conductores verán tu oferta y decidirán aceptarla
-                      </p>
                     </div>
                   </div>
                 )}

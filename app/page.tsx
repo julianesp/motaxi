@@ -26,8 +26,8 @@ const LandingMap = dynamic(() => import("@/components/LandingMap"), {
   loading: () => (
     <div className="w-full h-full flex items-center justify-center rounded-2xl top-2 bg-gradient-to-br from-green-900/20 to-black/20">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#42CE1D] mx-auto"></div>
-        <p className="mt-4 text-[#42CE1D]">Cargando mapa...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000] mx-auto"></div>
+        <p className="mt-4 text-[#008000]">Cargando mapa...</p>
       </div>
     </div>
   ),
@@ -106,12 +106,13 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#008000] via-purple-600 to-pink-500">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#008000] to-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto"></div>
           <p className="mt-4 text-white text-lg font-medium">
             Cargando MoTaxi...
           </p>
+
         </div>
       </div>
     );
@@ -301,7 +302,7 @@ export default function HomePage() {
                       style={{
                         width: i === currentVideoIndex ? '24px' : '8px',
                         height: '8px',
-                        background: i === currentVideoIndex ? '#42CE1D' : 'rgba(255,255,255,0.35)',
+                        background: i === currentVideoIndex ? '#008000' : 'rgba(255,255,255,0.35)',
                       }}
                       aria-label={`Ir al video ${i + 1}`}
                     />
@@ -329,7 +330,7 @@ export default function HomePage() {
       </section>
 
       {/* Municipios Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
@@ -395,8 +396,8 @@ export default function HomePage() {
               {topPickups.length > 0 && (
                 <div>
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-[#42CE1D]/10 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -405,14 +406,14 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-3">
                     {topPickups.map((place, i) => (
-                      <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-xl px-5 py-4 hover:bg-green-50 transition-colors">
-                        <span className="text-2xl font-bold text-[#42CE1D] w-7 text-center flex-shrink-0">
+                      <div key={i} className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors">
+                        <span className="text-2xl font-bold text-[#008000] w-7 text-center flex-shrink-0">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
                           <p className="text-gray-900 font-medium truncate">{place.address}</p>
                         </div>
-                        <span className="flex-shrink-0 text-sm font-semibold text-[#42CE1D] bg-[#42CE1D]/10 px-3 py-1 rounded-full">
+                        <span className="flex-shrink-0 text-sm font-semibold text-[#008000] bg-[#008000]/10 px-3 py-1 rounded-full">
                           {place.trip_count} {place.trip_count === 1 ? 'viaje' : 'viajes'}
                         </span>
                       </div>
@@ -425,8 +426,8 @@ export default function HomePage() {
               {topDropoffs.length > 0 && (
                 <div>
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
                       </svg>
                     </div>
@@ -434,14 +435,14 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-3">
                     {topDropoffs.map((place, i) => (
-                      <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-xl px-5 py-4 hover:bg-orange-50 transition-colors">
-                        <span className="text-2xl font-bold text-orange-500 w-7 text-center flex-shrink-0">
+                      <div key={i} className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors">
+                        <span className="text-2xl font-bold text-[#008000] w-7 text-center flex-shrink-0">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
                           <p className="text-gray-900 font-medium truncate">{place.address}</p>
                         </div>
-                        <span className="flex-shrink-0 text-sm font-semibold text-orange-500 bg-orange-100 px-3 py-1 rounded-full">
+                        <span className="flex-shrink-0 text-sm font-semibold text-[#008000] bg-[#008000]/10 px-3 py-1 rounded-full">
                           {place.trip_count} {place.trip_count === 1 ? 'viaje' : 'viajes'}
                         </span>
                       </div>
@@ -586,7 +587,7 @@ export default function HomePage() {
       </section>
 
       {/* Mapa Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">

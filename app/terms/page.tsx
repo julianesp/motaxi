@@ -118,7 +118,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold mb-3">10. Contacto</h2>
             <p className="text-gray-700 leading-relaxed">
               Para consultas sobre estos términos, contáctanos en{" "}
-              <a href="mailto:admin@neurai.dev" className="text-[#42CE1D] hover:underline">
+              <a href="mailto:admin@neurai.dev" className="text-[#008000] hover:underline">
                 admin@neurai.dev
               </a>
               . Valle de Sibundoy, Putumayo, Colombia.

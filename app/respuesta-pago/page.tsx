@@ -45,7 +45,7 @@ function RespuestaPagoContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#42CE1D]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000]"></div>
       </div>
     );
   }
@@ -123,7 +123,7 @@ function RespuestaPagoContent() {
         {/* Actions */}
         <div className="space-y-3">
           <Link href={redirectPath}
-            className="block w-full py-3 px-4 bg-[#42CE1D] hover:bg-[#35a818] text-white font-semibold rounded-xl transition-colors">
+            className="block w-full py-3 px-4 bg-[#008000] hover:bg-[#35a818] text-white font-semibold rounded-xl transition-colors">
             Ir a mi perfil
           </Link>
           {!isApproved && (
@@ -142,7 +142,7 @@ export default function RespuestaPagoPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#42CE1D]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000]"></div>
       </div>
     }>
       <RespuestaPagoContent />

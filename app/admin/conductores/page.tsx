@@ -27,14 +27,14 @@ interface Driver {
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Pendiente', color: 'text-yellow-400 bg-yellow-400/10' },
-  approved: { label: 'Aprobado', color: 'text-[#42CE1D] bg-[#42CE1D]/10' },
+  pending: { label: 'Pendiente', color: 'text-white bg-white/10' },
+  approved: { label: 'Aprobado', color: 'text-[#008000] bg-[#008000]/10' },
   rejected: { label: 'Rechazado', color: 'text-red-400 bg-red-400/10' },
 };
 
 const subLabels: Record<string, { label: string; color: string }> = {
-  active: { label: 'Activa', color: 'text-[#42CE1D] bg-[#42CE1D]/10' },
-  trial: { label: 'Prueba', color: 'text-yellow-400 bg-yellow-400/10' },
+  active: { label: 'Activa', color: 'text-[#008000] bg-[#008000]/10' },
+  trial: { label: 'Prueba', color: 'text-white bg-white/10' },
   expired: { label: 'Expirada', color: 'text-red-400 bg-red-400/10' },
   cancelled: { label: 'Cancelada', color: 'text-gray-400 bg-gray-400/10' },
 };
@@ -123,12 +123,12 @@ export default function ConductoresPage() {
           placeholder="Buscar por nombre, email, placa..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#42CE1D]"
+          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#008000]"
         />
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#42CE1D]"
+          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#008000]"
         >
           <option value="">Todos los estados</option>
           <option value="pending">Pendientes</option>
@@ -139,7 +139,7 @@ export default function ConductoresPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#42CE1D]"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#008000]"></div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-gray-500">No hay conductores</div>
@@ -151,8 +151,8 @@ export default function ConductoresPage() {
             const daysColor = driver.days_remaining <= 3
               ? 'text-red-400'
               : driver.days_remaining <= 7
-              ? 'text-yellow-400'
-              : 'text-[#42CE1D]';
+              ? 'text-white'
+              : 'text-[#008000]';
 
             return (
               <div key={driver.id} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
@@ -197,7 +197,7 @@ export default function ConductoresPage() {
                       <div className="flex items-center gap-2 mt-2">
                         <span className={`text-xs px-2 py-0.5 rounded ${vs.color}`}>{vs.label}</span>
                         {driver.is_available === 1 && (
-                          <span className="text-xs px-2 py-0.5 rounded text-[#42CE1D] bg-[#42CE1D]/10">Online</span>
+                          <span className="text-xs px-2 py-0.5 rounded text-[#008000] bg-[#008000]/10">Online</span>
                         )}
                       </div>
                       {driver.total_trips > 0 && (
@@ -214,7 +214,7 @@ export default function ConductoresPage() {
                         <button
                           onClick={() => verify(driver.id)}
                           disabled={actionLoading === driver.id}
-                          className="px-4 py-2 bg-[#42CE1D] hover:bg-[#38b518] text-gray-900 font-semibold text-sm rounded-lg transition-colors disabled:opacity-50"
+                          className="px-4 py-2 bg-[#008000] hover:bg-[#38b518] text-gray-900 font-semibold text-sm rounded-lg transition-colors disabled:opacity-50"
                         >
                           Aprobar
                         </button>
@@ -240,7 +240,7 @@ export default function ConductoresPage() {
                       <button
                         onClick={() => verify(driver.id)}
                         disabled={actionLoading === driver.id}
-                        className="px-4 py-2 bg-[#42CE1D]/10 hover:bg-[#42CE1D]/20 text-[#42CE1D] font-semibold text-sm rounded-lg transition-colors"
+                        className="px-4 py-2 bg-[#008000]/10 hover:bg-[#008000]/20 text-[#008000] font-semibold text-sm rounded-lg transition-colors"
                       >
                         Reactivar
                       </button>
@@ -259,13 +259,13 @@ export default function ConductoresPage() {
                   <div className="mt-3 flex gap-3">
                     {driver.photo_license && (
                       <a href={driver.photo_license} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-blue-400 hover:text-blue-300 underline">
+                        className="text-xs text-[#008000] hover:text-[#006600] underline">
                         Ver licencia
                       </a>
                     )}
                     {driver.photo_vehicle && (
                       <a href={driver.photo_vehicle} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-blue-400 hover:text-blue-300 underline">
+                        className="text-xs text-[#008000] hover:text-[#006600] underline">
                         Ver foto vehículo
                       </a>
                     )}

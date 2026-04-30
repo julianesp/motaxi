@@ -447,7 +447,7 @@ export default function TripTrackingPage() {
                   {[0,1,2].map(i => (
                     <div
                       key={i}
-                      className="w-2.5 h-2.5 bg-[#42CE1D] rounded-full animate-bounce"
+                      className="w-2.5 h-2.5 bg-[#008000] rounded-full animate-bounce"
                       style={{ animationDelay: `${i * 0.15}s` }}
                     />
                   ))}
@@ -461,7 +461,7 @@ export default function TripTrackingPage() {
               <div className="rounded-xl border border-gray-200 overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
                   <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-[#42CE1D] rounded-full animate-pulse inline-block"></span>
+                    <span className="w-2 h-2 bg-[#008000] rounded-full animate-pulse inline-block"></span>
                     Conductores disponibles
                   </h3>
                   <span className="text-xs font-semibold text-[#008000] bg-green-100 px-2 py-0.5 rounded-full">
@@ -549,7 +549,7 @@ export default function TripTrackingPage() {
                               }
                             }
                           }}
-                          className="flex-1 py-2 px-3 bg-[#42CE1D] hover:bg-[#35b015] text-white rounded-lg text-sm font-bold transition-colors"
+                          className="flex-1 py-2 px-3 bg-[#008000] hover:bg-[#006600] text-white rounded-lg text-sm font-bold transition-colors"
                         >
                           Aceptar
                         </button>

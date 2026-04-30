@@ -101,7 +101,7 @@ export default function EpaycoSubscriptionCheckout({ user, onClose, onSuccess }:
         icon: "warning",
         title: "Completa el formulario",
         text: `Faltan: ${missing.join(", ")}`,
-        confirmButtonColor: "#42CE1D",
+        confirmButtonColor: "#008000",
       });
       return false;
     }
@@ -118,7 +118,7 @@ export default function EpaycoSubscriptionCheckout({ user, onClose, onSuccess }:
         await loadEpaycoScript();
       }
     } catch (err: any) {
-      Swal.fire({ icon: "error", title: "Error de carga", text: err.message, confirmButtonColor: "#42CE1D" });
+      Swal.fire({ icon: "error", title: "Error de carga", text: err.message, confirmButtonColor: "#008000" });
       setLoading(false);
       return;
     }
@@ -166,7 +166,7 @@ export default function EpaycoSubscriptionCheckout({ user, onClose, onSuccess }:
         onSuccess?.();
       }, 2000);
     } catch (error: any) {
-      Swal.fire({ icon: "error", title: "Error", text: error.message || "Error al procesar el pago", confirmButtonColor: "#42CE1D" });
+      Swal.fire({ icon: "error", title: "Error", text: error.message || "Error al procesar el pago", confirmButtonColor: "#008000" });
       setLoading(false);
     }
   };
@@ -184,7 +184,7 @@ export default function EpaycoSubscriptionCheckout({ user, onClose, onSuccess }:
 
       {/* Price banner */}
       <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-4 mb-5 text-center">
-        <p className="text-3xl font-bold text-[#42CE1D]">$14.900 <span className="text-base font-normal text-gray-500">/ mes</span></p>
+        <p className="text-3xl font-bold text-[#008000]">$14.900 <span className="text-base font-normal text-gray-500">/ mes</span></p>
         <p className="text-sm text-gray-600 mt-1">Acceso completo a MoTaxi</p>
       </div>
 
@@ -244,7 +244,7 @@ export default function EpaycoSubscriptionCheckout({ user, onClose, onSuccess }:
             Cancelar
           </button>
           <button onClick={handlePayment} disabled={loading}
-            className="flex-1 bg-[#42CE1D] hover:bg-[#35a818] disabled:bg-green-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+            className="flex-1 bg-[#008000] hover:bg-[#35a818] disabled:bg-green-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
             {loading ? (
               <>
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

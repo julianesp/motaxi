@@ -115,7 +115,7 @@ export default function NotificacionesPage() {
           <select
             value={selectedDriver}
             onChange={e => setSelectedDriver(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#42CE1D] transition-colors"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#008000] transition-colors"
           >
             <option value="all">Todos los conductores ({drivers.length})</option>
             {drivers.map(d => (
@@ -135,7 +135,7 @@ export default function NotificacionesPage() {
             onChange={e => setTitle(e.target.value)}
             placeholder="Ej: Actualización importante"
             maxLength={80}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#42CE1D] transition-colors"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#008000] transition-colors"
           />
           <p className="text-xs text-gray-500 mt-1 text-right">{title.length}/80</p>
         </div>
@@ -149,7 +149,7 @@ export default function NotificacionesPage() {
             placeholder="Escribe el mensaje para los conductores..."
             rows={4}
             maxLength={300}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#42CE1D] transition-colors resize-none"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#008000] transition-colors resize-none"
           />
           <p className="text-xs text-gray-500 mt-1 text-right">{message.length}/300</p>
         </div>
@@ -158,7 +158,7 @@ export default function NotificacionesPage() {
         {result && (
           <div className={`rounded-lg px-4 py-3 text-sm font-medium ${
             result.success
-              ? 'bg-[#42CE1D]/10 border border-[#42CE1D]/30 text-[#42CE1D]'
+              ? 'bg-[#008000]/10 border border-[#008000]/30 text-[#008000]'
               : 'bg-red-500/10 border border-red-500/30 text-red-400'
           }`}>
             {result.success ? '✓ ' : '✗ '}{result.text}
@@ -169,7 +169,7 @@ export default function NotificacionesPage() {
         <button
           onClick={handleSend}
           disabled={sending || !title.trim() || !message.trim()}
-          className="w-full py-3 bg-[#42CE1D] hover:bg-[#38b018] disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 bg-[#008000] hover:bg-[#38b018] disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
         >
           {sending ? (
             <>

@@ -213,7 +213,7 @@ export default function DriverHomePage() {
                   icon: 'warning',
                   title: '¡Completa tu perfil!',
                   html: 'Han pasado más de 7 días. Los pasajeros no pueden ver tu vehículo.<br><br><b>Completa tus datos ahora para recibir más viajes.</b>',
-                  confirmButtonColor: '#42CE1D',
+                  confirmButtonColor: '#008000',
                   confirmButtonText: 'Completar ahora',
                   showCancelButton: true,
                   cancelButtonText: 'Más tarde',
@@ -447,7 +447,7 @@ export default function DriverHomePage() {
           icon: isSubscription ? 'warning' : 'error',
           title: isSubscription ? 'Suscripción requerida' : 'Error',
           text: msg,
-          confirmButtonColor: '#42CE1D',
+          confirmButtonColor: '#008000',
           ...(isSubscription ? { confirmButtonText: 'Ver mi perfil', showCancelButton: true, cancelButtonText: 'Cancelar' } : {}),
         }).then((result) => {
           if (isSubscription && result.isConfirmed) {
@@ -486,13 +486,13 @@ export default function DriverHomePage() {
             Tu período de prueba ha vencido. Suscríbete para continuar usando MoTaxi y recibir viajes.
           </p>
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
-            <p className="text-3xl font-bold text-[#42CE1D]">$14.900 COP</p>
+            <p className="text-3xl font-bold text-[#008000]">$14.900 COP</p>
             <p className="text-gray-500 text-sm">por mes</p>
           </div>
           {!showCheckout ? (
             <button
               onClick={() => setShowCheckout(true)}
-              className="w-full py-3 px-6 bg-[#42CE1D] text-white font-semibold rounded-xl hover:bg-[#38b018] transition-colors"
+              className="w-full py-3 px-6 bg-[#008000] text-white font-semibold rounded-xl hover:bg-[#006600] transition-colors"
             >
               Suscribirme ahora
             </button>
@@ -525,7 +525,7 @@ export default function DriverHomePage() {
     <div className="h-screen flex flex-col">
       {/* Banner para activar notificaciones push */}
       {showPushBanner && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#42CE1D] text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md">
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-[#008000] text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md">
           <div className="flex items-center gap-2 min-w-0">
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -539,7 +539,7 @@ export default function DriverHomePage() {
                 if (ok) setDismissedPushBanner(true);
               }}
               disabled={pushLoading}
-              className="bg-white text-[#42CE1D] text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-60"
+              className="bg-white text-[#008000] text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-60"
             >
               {pushLoading ? 'Activando...' : 'Activar'}
             </button>
@@ -566,7 +566,7 @@ export default function DriverHomePage() {
               <button
                 onClick={toggleAvailability}
                 className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none ${
-                  isAvailable ? 'bg-[#42CE1D]' : 'bg-red-500'
+                  isAvailable ? 'bg-[#008000]' : 'bg-red-500'
                 }`}
                 title={isAvailable ? 'Disponible' : 'No disponible'}
               >
@@ -688,7 +688,7 @@ export default function DriverHomePage() {
                         <p className="text-xs text-gray-400">Conductor</p>
                       </div>
                       <button onClick={() => { setShowProfileMenu(false); router.push('/driver/profile'); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-                        <svg className="w-4 h-4 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        <svg className="w-4 h-4 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         <span className="text-sm text-gray-700">Ver perfil</span>
                       </button>
                       <button onClick={() => { setShowProfileMenu(false); router.push('/driver/profile#settings'); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
@@ -1253,7 +1253,7 @@ export default function DriverHomePage() {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-[#42CE1D] h-2 rounded-full transition-all duration-500"
+                    className="bg-[#008000] h-2 rounded-full transition-all duration-500"
                     style={{ width: `${(onboardingStep / 3) * 100}%` }}
                   />
                 </div>
@@ -1264,7 +1264,7 @@ export default function DriverHomePage() {
                 {/* PASO 1: Bienvenida */}
                 {onboardingStep === 1 && (
                   <div className="text-center space-y-5">
-                    <div className="w-20 h-20 bg-gradient-to-br from-[#42CE1D] to-[#008000] rounded-full flex items-center justify-center mx-auto shadow-lg">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-full flex items-center justify-center mx-auto shadow-lg">
                       <span className="text-4xl">🏍️</span>
                     </div>
                     <div>
@@ -1285,7 +1285,7 @@ export default function DriverHomePage() {
                         </div>
                       ))}
                     </div>
-                    <div className="bg-[#42CE1D]/10 border border-[#42CE1D]/30 rounded-xl p-4 text-left">
+                    <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-xl p-4 text-left">
                       <div className="flex items-start gap-2">
                         <span className="text-lg">🎉</span>
                         <div>
@@ -1316,7 +1316,7 @@ export default function DriverHomePage() {
                       </button>
                       <button
                         onClick={() => setOnboardingStep(2)}
-                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm"
+                        className="flex-1 py-3 px-4 bg-[#008000] text-white rounded-xl font-bold hover:bg-[#006600] transition-colors shadow-md text-sm"
                       >
                         Empezar →
                       </button>
@@ -1351,7 +1351,7 @@ export default function DriverHomePage() {
                               onClick={() => setProfileData({ ...profileData, vehicle_types: type.value })}
                               className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all text-left ${
                                 profileData.vehicle_types === type.value
-                                  ? 'border-[#42CE1D] bg-green-50'
+                                  ? 'border-[#008000] bg-green-50'
                                   : 'border-gray-200 hover:border-gray-300 bg-white'
                               }`}
                             >
@@ -1372,7 +1372,7 @@ export default function DriverHomePage() {
                           value={profileData.vehicle_model}
                           onChange={(e) => setProfileData({ ...profileData, vehicle_model: e.target.value })}
                           placeholder="Ej: Boxer 100, Discover 125..."
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#008000] text-gray-900 transition-colors"
                         />
                       </div>
                       <div>
@@ -1384,7 +1384,7 @@ export default function DriverHomePage() {
                           value={profileData.vehicle_color}
                           onChange={(e) => setProfileData({ ...profileData, vehicle_color: e.target.value })}
                           placeholder="Ej: Rojo, Negro, Azul..."
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#008000] text-gray-900 transition-colors"
                         />
                       </div>
                       <div>
@@ -1396,7 +1396,7 @@ export default function DriverHomePage() {
                           value={profileData.vehicle_plate}
                           onChange={(e) => setProfileData({ ...profileData, vehicle_plate: e.target.value.toUpperCase() })}
                           placeholder="Ej: ABC123"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 uppercase tracking-widest transition-colors"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#008000] text-gray-900 uppercase tracking-widest transition-colors"
                           maxLength={6}
                         />
                       </div>
@@ -1419,7 +1419,7 @@ export default function DriverHomePage() {
                           }
                           setOnboardingStep(3);
                         }}
-                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm"
+                        className="flex-1 py-3 px-4 bg-[#008000] text-white rounded-xl font-bold hover:bg-[#006600] transition-colors shadow-md text-sm"
                       >
                         Siguiente →
                       </button>
@@ -1440,7 +1440,7 @@ export default function DriverHomePage() {
                       <select
                         value={profileData.municipality}
                         onChange={(e) => setProfileData({ ...profileData, municipality: e.target.value })}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#42CE1D] text-gray-900 transition-colors"
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#008000] text-gray-900 transition-colors"
                       >
                         <option value="">Selecciona un municipio</option>
                         <option value="colon">Colón</option>
@@ -1472,7 +1472,7 @@ export default function DriverHomePage() {
                       <button
                         onClick={handleCompleteProfile}
                         disabled={isSubmittingProfile}
-                        className="flex-1 py-3 px-4 bg-[#42CE1D] text-white rounded-xl font-bold hover:bg-[#38b018] transition-colors shadow-md text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 py-3 px-4 bg-[#008000] text-white rounded-xl font-bold hover:bg-[#006600] transition-colors shadow-md text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isSubmittingProfile ? (
                           <>

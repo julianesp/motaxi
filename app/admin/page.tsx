@@ -74,7 +74,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#42CE1D]"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#008000]"></div>
       </div>
     );
   }
@@ -104,22 +104,22 @@ export default function AdminDashboard() {
             title="Comisiones de viajes"
             value={`$${Math.round(revenue.platform_commission_month).toLocaleString()}`}
             subtitle={`De $${Math.round(revenue.total_fares_month).toLocaleString()} en tarifas`}
-            color="text-[#42CE1D]"
-            icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
+            color="text-[#008000]"
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
           />
           <StatCard
             title="Ingresos suscripciones"
             value={`$${Math.round(subscriptions.monthly_revenue).toLocaleString()}`}
             subtitle={`${subscriptions.active} suscripciones activas`}
-            color="text-blue-400"
-            icon={<svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
+            color="text-[#008000]"
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
           />
           <StatCard
             title="Total estimado"
             value={`$${Math.round(totalRevenue).toLocaleString()}`}
             subtitle="Comisiones + suscripciones"
-            color="text-purple-400"
-            icon={<svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            color="text-white"
+            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
         </div>
       </div>
@@ -139,22 +139,22 @@ export default function AdminDashboard() {
             title="Conductores"
             value={drivers.total}
             subtitle={`${drivers.approved} aprobados`}
-            color="text-[#42CE1D]"
-            icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+            color="text-[#008000]"
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
           />
           <StatCard
             title="Pasajeros"
             value={passengers.total}
             subtitle={`+${users.this_month} este mes`}
-            color="text-yellow-400"
-            icon={<svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
+            color="text-white"
+            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
           />
           <StatCard
             title="Pendientes verificación"
             value={drivers.pending}
             subtitle="Conductores por aprobar"
-            color={drivers.pending > 0 ? 'text-orange-400' : 'text-gray-400'}
-            icon={<svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            color={drivers.pending > 0 ? 'text-white' : 'text-gray-400'}
+            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
         </div>
       </div>
@@ -166,14 +166,14 @@ export default function AdminDashboard() {
           <StatCard title="Total viajes" value={trips.total} color="text-white"
             icon={<svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>}
           />
-          <StatCard title="Completados hoy" value={trips.completed_today} color="text-[#42CE1D]"
-            icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="Completados hoy" value={trips.completed_today} color="text-[#008000]"
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="Completados este mes" value={trips.completed_month} color="text-blue-400"
-            icon={<svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+          <StatCard title="Completados este mes" value={trips.completed_month} color="text-[#008000]"
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
           />
-          <StatCard title="En curso ahora" value={trips.active} color={trips.active > 0 ? 'text-[#42CE1D]' : 'text-gray-400'}
-            icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+          <StatCard title="En curso ahora" value={trips.active} color={trips.active > 0 ? 'text-[#008000]' : 'text-gray-400'}
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
           />
         </div>
       </div>
@@ -182,17 +182,17 @@ export default function AdminDashboard() {
       <div>
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Suscripciones</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard title="Activas" value={subscriptions.active} color="text-[#42CE1D]"
-            icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="Activas" value={subscriptions.active} color="text-[#008000]"
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="En prueba (trial)" value={subscriptions.trial} color="text-yellow-400"
-            icon={<svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="En prueba (trial)" value={subscriptions.trial} color="text-white"
+            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="Expiradas" value={subscriptions.expired} color={subscriptions.expired > 0 ? 'text-red-400' : 'text-gray-400'}
-            icon={<svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="Expiradas" value={subscriptions.expired} color={subscriptions.expired > 0 ? 'text-white' : 'text-gray-400'}
+            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="Conductores online" value={drivers.online} subtitle="Disponibles ahora" color="text-[#42CE1D]"
-            icon={<svg className="w-5 h-5 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" /></svg>}
+          <StatCard title="Conductores online" value={drivers.online} subtitle="Disponibles ahora" color="text-[#008000]"
+            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" /></svg>}
           />
         </div>
       </div>
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#42CE1D]" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-4 h-4 text-[#008000]" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.67l-2.95-.924c-.642-.204-.657-.641.136-.953l11.57-4.461c.537-.194 1.006.131.948.889z"/>
               </svg>
               <span className="text-sm text-white font-medium">
@@ -226,8 +226,8 @@ export default function AdminDashboard() {
                   </div>
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                     u.role === 'driver'
-                      ? 'text-[#42CE1D] bg-[#42CE1D]/10'
-                      : 'text-blue-400 bg-blue-400/10'
+                      ? 'text-[#008000] bg-[#008000]/10'
+                      : 'text-white bg-white/10'
                   }`}>
                     {u.role === 'driver' ? 'Conductor' : 'Pasajero'}
                   </span>
@@ -280,13 +280,13 @@ function QRSection() {
         <div className="flex-1 text-center sm:text-left">
           <p className="text-white font-semibold text-lg mb-1">Motaxi App</p>
           <p className="text-gray-400 text-sm mb-1">Escanea para abrir la aplicación</p>
-          <p className="text-[#42CE1D] text-sm font-mono mb-4">{APP_URL}</p>
+          <p className="text-[#008000] text-sm font-mono mb-4">{APP_URL}</p>
           <p className="text-gray-500 text-xs mb-4">
             Al escanear este QR con la cámara del teléfono, el sistema mostrará la opción <span className="text-gray-300">"Abrir en el navegador"</span> automáticamente.
           </p>
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 bg-[#42CE1D] hover:bg-[#38b018] text-black font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 bg-[#008000] hover:bg-[#38b018] text-black font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

@@ -52,7 +52,7 @@ select {
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 active:bg-gray-400;
+    @apply bg-white text-[#008000] border border-[#008000] hover:bg-green-50 active:bg-green-100;
   }
 
   .btn-outline {

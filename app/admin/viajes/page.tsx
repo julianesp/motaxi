@@ -25,11 +25,11 @@ interface Trip {
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  requested: { label: 'Solicitado', color: 'text-yellow-400 bg-yellow-400/10' },
-  accepted: { label: 'Aceptado', color: 'text-blue-400 bg-blue-400/10' },
-  driver_arriving: { label: 'Conductor en camino', color: 'text-blue-400 bg-blue-400/10' },
-  in_progress: { label: 'En curso', color: 'text-[#42CE1D] bg-[#42CE1D]/10' },
-  completed: { label: 'Completado', color: 'text-[#42CE1D] bg-[#42CE1D]/10' },
+  requested: { label: 'Solicitado', color: 'text-white bg-white/10' },
+  accepted: { label: 'Aceptado', color: 'text-[#008000] bg-[#008000]/10' },
+  driver_arriving: { label: 'Conductor en camino', color: 'text-[#008000] bg-[#008000]/10' },
+  in_progress: { label: 'En curso', color: 'text-[#008000] bg-[#008000]/10' },
+  completed: { label: 'Completado', color: 'text-[#008000] bg-[#008000]/10' },
   cancelled: { label: 'Cancelado', color: 'text-red-400 bg-red-400/10' },
 };
 
@@ -98,7 +98,7 @@ export default function ViajesPage() {
           <div className="space-y-3">
             {topRoutes.map((route, i) => (
               <div key={i} className="flex items-center gap-4 bg-gray-800/50 rounded-lg px-4 py-3">
-                <span className="text-lg font-bold text-[#42CE1D] w-6 text-center flex-shrink-0">{i + 1}</span>
+                <span className="text-lg font-bold text-[#008000] w-6 text-center flex-shrink-0">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-300 text-xs truncate">
                     <span className="text-gray-500 mr-1">📍</span>{route.pickup_address}
@@ -107,7 +107,7 @@ export default function ViajesPage() {
                     <span className="text-gray-500 mr-1">🏁</span>{route.dropoff_address}
                   </p>
                 </div>
-                <span className="flex-shrink-0 text-xs font-semibold text-[#42CE1D] bg-[#42CE1D]/10 px-3 py-1 rounded-full">
+                <span className="flex-shrink-0 text-xs font-semibold text-[#008000] bg-[#008000]/10 px-3 py-1 rounded-full">
                   {route.trip_count} {route.trip_count === 1 ? 'viaje' : 'viajes'}
                 </span>
               </div>
@@ -122,12 +122,12 @@ export default function ViajesPage() {
           placeholder="Buscar pasajero, conductor, dirección..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#42CE1D]"
+          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#008000]"
         />
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#42CE1D]"
+          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#008000]"
         >
           <option value="">Todos los estados</option>
           <option value="requested">Solicitados</option>
@@ -139,7 +139,7 @@ export default function ViajesPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#42CE1D]"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#008000]"></div>
         </div>
       ) : (
         <>
@@ -183,7 +183,7 @@ export default function ViajesPage() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           {trip.fare > 0 ? (
-                            <span className="text-[#42CE1D] font-semibold">${trip.fare.toLocaleString()}</span>
+                            <span className="text-[#008000] font-semibold">${trip.fare.toLocaleString()}</span>
                           ) : <span className="text-gray-500">—</span>}
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-xs">

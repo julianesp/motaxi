@@ -143,7 +143,7 @@ export default function DriverEarningsPage() {
           {/* Earnings Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Today */}
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="bg-gradient-to-br from-[#008000] to-[#006600] rounded-2xl p-6 text-white shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium opacity-90">Hoy</span>
                 <svg className="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ export default function DriverEarningsPage() {
             </div>
 
             {/* Month */}
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="bg-gradient-to-br from-[#008000] to-black rounded-2xl p-6 text-white shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium opacity-90">Este Mes</span>
                 <svg className="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">

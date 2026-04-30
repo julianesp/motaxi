@@ -89,7 +89,7 @@ export default function AdminVideos() {
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Ej: Cómo pedir un viaje"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#42CE1D]"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#008000]"
             required
           />
         </div>
@@ -100,7 +100,7 @@ export default function AdminVideos() {
             value={youtubeUrl}
             onChange={e => setYoutubeUrl(e.target.value)}
             placeholder="https://youtu.be/..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#42CE1D]"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#008000]"
             required
           />
         </div>
@@ -122,7 +122,7 @@ export default function AdminVideos() {
         <button
           type="submit"
           disabled={saving}
-          className="bg-[#42CE1D] hover:bg-[#38b018] disabled:opacity-50 text-black font-semibold px-6 py-2 rounded-lg text-sm transition-colors"
+          className="bg-[#008000] hover:bg-[#38b018] disabled:opacity-50 text-black font-semibold px-6 py-2 rounded-lg text-sm transition-colors"
         >
           {saving ? 'Guardando...' : 'Agregar video'}
         </button>
@@ -135,7 +135,7 @@ export default function AdminVideos() {
         </h2>
         {loading ? (
           <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#42CE1D]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008000]"></div>
           </div>
         ) : videos.length === 0 ? (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-gray-500 text-sm">

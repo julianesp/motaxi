@@ -772,7 +772,7 @@ export default function PassengerHomePage() {
                         <p className="text-xs text-gray-400">Pasajero</p>
                       </div>
                       <button onClick={() => { setShowProfileMenu(false); router.push("/passenger/profile"); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-                        <svg className="w-4 h-4 text-[#42CE1D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        <svg className="w-4 h-4 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         <span className="text-sm text-gray-700">Ver perfil</span>
                       </button>
                       <button onClick={() => { setShowProfileMenu(false); router.push("/passenger/profile#settings"); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
@@ -911,7 +911,7 @@ export default function PassengerHomePage() {
                     onClick={() => setTripMode("delivery")}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
                       tripMode === "delivery"
-                        ? "bg-white text-orange-600 shadow-sm"
+                        ? "bg-white text-[#008000] shadow-sm"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -922,7 +922,7 @@ export default function PassengerHomePage() {
 
                 {/* Explicación del modo envío */}
                 {tripMode === "delivery" && (
-                  <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 text-xs text-orange-700">
+                  <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
                     <span className="shrink-0 mt-0.5">ℹ️</span>
                     <span>
                       El conductor <strong>no lleva pasajero</strong>. Irá a recoger tu paquete y lo entregará en el destino indicado.
@@ -1122,7 +1122,7 @@ export default function PassengerHomePage() {
                     <button
                       onClick={handleGetCurrentLocation}
                       disabled={isLocating}
-                      className="py-2 px-3 md:px-4 rounded-xl text-xs font-medium transition-all duration-200 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
+                      className="py-2 px-3 md:px-4 rounded-xl text-xs font-medium transition-all duration-200 bg-[#008000]/10 text-[#008000] hover:bg-[#008000]/20 border border-[#008000]/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
                     >
                       {isLocating ? (
                         <>
@@ -1266,10 +1266,10 @@ export default function PassengerHomePage() {
 
                 {/* Campo de nota para envío de paquete */}
                 {tripMode === "delivery" && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3 space-y-2">
+                  <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-2xl p-3 space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-orange-500">📦</span>
-                      <span className="text-sm font-semibold text-orange-700">Detalles del paquete</span>
+                      <span>📦</span>
+                      <span className="text-sm font-semibold text-[#008000]">Detalles del paquete</span>
                     </div>
                     <textarea
                       value={deliveryNote}
@@ -1277,7 +1277,7 @@ export default function PassengerHomePage() {
                       placeholder="Ej: Caja pequeña de ropa, llama al llegar · Nombre del destinatario: Juan · Frágil"
                       rows={3}
                       maxLength={300}
-                      className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none placeholder-gray-400"
+                      className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 resize-none placeholder-gray-400"
                     />
                     <p className="text-xs text-gray-400 text-right">{deliveryNote.length}/300</p>
                   </div>
@@ -1333,7 +1333,7 @@ export default function PassengerHomePage() {
                                     </span>
                                   )}
                                   <span className="text-sm font-semibold text-gray-800 truncate">{driver.full_name}</span>
-                                  {isSelected && <span className="text-xs text-[#42CE1D] font-bold flex-shrink-0">✓</span>}
+                                  {isSelected && <span className="text-xs text-[#008000] font-bold flex-shrink-0">✓</span>}
                                 </div>
                                 <div className="text-xs text-gray-400 flex items-center gap-1.5">
                                   <span>⭐ {driver.rating != null ? driver.rating.toFixed(1) : 'Nuevo'}</span>
@@ -1348,7 +1348,7 @@ export default function PassengerHomePage() {
                                   {driver.night_only === 1 && (
                                     <>
                                       <span>·</span>
-                                      <span className="text-blue-500 font-medium">🌙 Solo nocturno</span>
+                                      <span className="text-[#008000] font-medium">🌙 Solo nocturno</span>
                                     </>
                                   )}
                                 </div>
@@ -1377,7 +1377,7 @@ export default function PassengerHomePage() {
 
                     {/* Sin conductores */}
                     {nearbyDrivers.length === 0 && (
-                      <div className="px-3 py-3 text-center text-sm text-amber-700 bg-amber-50">
+                      <div className="px-3 py-3 text-center text-sm text-[#008000] bg-[#008000]/10">
                         No hay conductores disponibles en tu zona ahora
                       </div>
                     )}
@@ -1522,7 +1522,7 @@ export default function PassengerHomePage() {
                     {driverDetailDriver.full_name}
                   </h3>
                   {driverDetailDriver.rating >= 4.5 && driverDetailDriver.total_trips >= 20 && (
-                    <span className="inline-flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
+                    <span className="inline-flex items-center gap-0.5 bg-[#008000] text-white px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
                       ⭐ Destacado
                     </span>
                   )}
@@ -1536,7 +1536,7 @@ export default function PassengerHomePage() {
                     </span>
                   )}
                   {driverDetailDriver.night_only === 1 && (
-                    <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                    <span className="inline-flex items-center gap-1 bg-[#008000]/10 text-[#008000] px-2 py-0.5 rounded-full text-xs font-medium">
                       🌙 Solo nocturno (6pm–6am)
                     </span>
                   )}
@@ -1557,15 +1557,15 @@ export default function PassengerHomePage() {
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 px-5 mb-4">
-              <div className="bg-yellow-50 rounded-xl p-3 text-center">
+              <div className="bg-[#008000]/10 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-500 mb-0.5">Calificación</p>
-                <p className="font-bold text-yellow-600 text-base">
+                <p className="font-bold text-[#008000] text-base">
                   ⭐ {driverDetailDriver.rating != null ? driverDetailDriver.rating.toFixed(1) : 'Nuevo'}
                 </p>
               </div>
-              <div className="bg-blue-50 rounded-xl p-3 text-center">
+              <div className="bg-[#008000]/10 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-500 mb-0.5">Viajes</p>
-                <p className="font-bold text-blue-600 text-base">
+                <p className="font-bold text-[#008000] text-base">
                   {driverDetailDriver.total_trips || 0}
                 </p>
               </div>
@@ -1624,7 +1624,7 @@ export default function PassengerHomePage() {
                   setSelectedDriver(driverDetailDriver);
                   setDriverDetailDriver(null); setPhotoExpanded(false);
                 }}
-                className="flex-1 py-3 bg-[#42CE1D] text-white rounded-xl font-semibold text-sm hover:bg-[#38b018] transition-colors"
+                className="flex-1 py-3 bg-[#008000] text-white rounded-xl font-semibold text-sm hover:bg-[#38b018] transition-colors"
               >
                 Seleccionar conductor
               </button>
@@ -1660,12 +1660,12 @@ export default function PassengerHomePage() {
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
             {/* Header nocturno */}
-            <div className="bg-gradient-to-br from-gray-900 to-blue-950 px-6 pt-6 pb-4 text-center">
+            <div className="bg-gradient-to-br from-black to-[#008000] px-6 pt-6 pb-4 text-center">
               <div className="text-5xl mb-3">🌙</div>
               <h2 className="text-xl font-bold text-white mb-1">
                 Viaje nocturno
               </h2>
-              <p className="text-blue-200 text-sm">
+              <p className="text-green-100 text-sm">
                 Son las {new Date().getHours()}:
                 {String(new Date().getMinutes()).padStart(2, "0")} — ten
                 precaución
@@ -1704,8 +1704,8 @@ export default function PassengerHomePage() {
                   </span>
                 </div>
               ))}
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-1">
-                <p className="text-xs text-amber-800 font-medium">
+              <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-xl p-3 mt-1">
+                <p className="text-xs text-[#008000] font-medium">
                   💡 En la noche, los viajes en <strong>carro</strong> son una
                   opción más cómoda y segura. Selecciónalo abajo.
                 </p>

@@ -35,7 +35,7 @@ function RevenueCard({ data, period }: { data: PeriodRevenue; period: string }) 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
       <p className="text-gray-400 text-sm mb-3">{periodLabels[period]}</p>
-      <p className="text-2xl font-bold text-[#42CE1D]">${Math.round(data.platform_commission).toLocaleString()}</p>
+      <p className="text-2xl font-bold text-[#008000]">${Math.round(data.platform_commission).toLocaleString()}</p>
       <p className="text-xs text-gray-500 mt-1">Comisión de plataforma</p>
       <div className="mt-3 pt-3 border-t border-gray-800 space-y-1">
         <div className="flex justify-between text-sm">
@@ -77,7 +77,7 @@ export default function IngresosPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#42CE1D]"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#008000]"></div>
       </div>
     );
   }
@@ -89,7 +89,7 @@ export default function IngresosPage() {
   });
 
   const statusColors: Record<string, string> = {
-    approved: 'text-[#42CE1D] bg-[#42CE1D]/10',
+    approved: 'text-[#008000] bg-[#008000]/10',
     pending: 'text-yellow-400 bg-yellow-400/10',
     processing: 'text-blue-400 bg-blue-400/10',
     declined: 'text-red-400 bg-red-400/10',
@@ -143,7 +143,7 @@ export default function IngresosPage() {
       </div>
 
       {/* Resumen este mes */}
-      <div className="bg-gradient-to-r from-[#42CE1D]/10 to-blue-500/10 border border-[#42CE1D]/20 rounded-xl p-5">
+      <div className="bg-gradient-to-r from-[#008000]/10 to-blue-500/10 border border-[#008000]/20 rounded-xl p-5">
         <p className="text-gray-300 text-sm mb-2">Total estimado este mes</p>
         <p className="text-3xl font-bold text-white">
           ${Math.round(revenue.trips.month.platform_commission + revenue.subscriptions.month_revenue).toLocaleString()}
@@ -186,7 +186,7 @@ export default function IngresosPage() {
                         {statusLabels[p.status] || p.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-[#42CE1D]">
+                    <td className="px-4 py-3 text-right font-semibold text-[#008000]">
                       ${Number(p.amount).toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(p.created_at)}</td>

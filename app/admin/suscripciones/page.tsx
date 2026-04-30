@@ -22,8 +22,8 @@ interface Subscription {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  active: { label: 'Activa', color: 'text-[#42CE1D] bg-[#42CE1D]/10' },
-  trial: { label: 'Prueba', color: 'text-yellow-400 bg-yellow-400/10' },
+  active: { label: 'Activa', color: 'text-[#008000] bg-[#008000]/10' },
+  trial: { label: 'Prueba', color: 'text-white bg-white/10' },
   expired: { label: 'Expirada', color: 'text-red-400 bg-red-400/10' },
   cancelled: { label: 'Cancelada', color: 'text-gray-400 bg-gray-400/10' },
 };
@@ -84,7 +84,7 @@ export default function SuscripcionesPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Suscripciones</h1>
         <div className="flex flex-wrap gap-4 mt-2">
-          <span className="text-sm text-[#42CE1D]">{summary.active} activas</span>
+          <span className="text-sm text-[#008000]">{summary.active} activas</span>
           <span className="text-sm text-yellow-400">{summary.trial} en prueba</span>
           <span className="text-sm text-red-400">{summary.expired} expiradas</span>
           {summary.expiringSoon > 0 && (
@@ -99,12 +99,12 @@ export default function SuscripcionesPage() {
           placeholder="Buscar usuario..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#42CE1D]"
+          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#008000]"
         />
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#42CE1D]"
+          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#008000]"
         >
           <option value="">Todos los estados</option>
           <option value="active">Activas</option>
@@ -116,7 +116,7 @@ export default function SuscripcionesPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#42CE1D]"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#008000]"></div>
         </div>
       ) : (
         <div className="space-y-3">
@@ -128,7 +128,7 @@ export default function SuscripcionesPage() {
               ? 'text-red-400'
               : sub.days_remaining <= 7
               ? 'text-yellow-400'
-              : 'text-[#42CE1D]';
+              : 'text-[#008000]';
 
             return (
               <div key={sub.id} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
@@ -139,7 +139,7 @@ export default function SuscripcionesPage() {
                       <p className="font-semibold text-white">{sub.full_name}</p>
                       <p className="text-gray-400">{sub.email}</p>
                       <p className="text-gray-400">{sub.phone}</p>
-                      <span className={`mt-1 inline-block text-xs ${sub.role === 'driver' ? 'text-[#42CE1D]' : 'text-blue-400'}`}>
+                      <span className={`mt-1 inline-block text-xs ${sub.role === 'driver' ? 'text-[#008000]' : 'text-blue-400'}`}>
                         {sub.role === 'driver' ? 'Conductor' : 'Pasajero'}
                       </span>
                     </div>
@@ -184,7 +184,7 @@ export default function SuscripcionesPage() {
                       <button
                         onClick={() => activate(sub.user_id)}
                         disabled={activating === sub.user_id}
-                        className="px-4 py-2 bg-[#42CE1D] hover:bg-[#38b518] text-gray-900 font-semibold text-sm rounded-lg transition-colors disabled:opacity-50"
+                        className="px-4 py-2 bg-[#008000] hover:bg-[#38b518] text-gray-900 font-semibold text-sm rounded-lg transition-colors disabled:opacity-50"
                       >
                         {activating === sub.user_id ? 'Activando...' : 'Activar manualmente'}
                       </button>

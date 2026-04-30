@@ -92,7 +92,7 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({
           {/* Opciones */}
           <TouchableOpacity style={styles.option} onPress={handleViewProfile}>
             <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="person-outline" size={20} color="#42CE1D" />
+              <Ionicons name="person-outline" size={20} color="#008000" />
             </View>
             <Text style={styles.optionText}>Ver perfil completo</Text>
             <Ionicons name="chevron-forward" size={18} color="#999" />
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#42CE1D',
+    backgroundColor: '#008000',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,

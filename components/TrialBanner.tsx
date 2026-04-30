@@ -27,19 +27,19 @@ export default function TrialBanner({ user }: TrialBannerProps) {
     const isUrgent = status.days_left <= 3;
     return (
       <>
-        <div className={`rounded-2xl p-4 border ${isUrgent ? "bg-amber-50 border-amber-300" : "bg-blue-50 border-blue-200"}`}>
+        <div className="rounded-2xl p-4 border bg-[#008000]/10 border-[#008000]/30">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isUrgent ? "bg-amber-100" : "bg-blue-100"}`}>
-                <svg className={`w-5 h-5 ${isUrgent ? "text-amber-600" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-[#008000]/20">
+                <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <p className={`font-semibold text-sm ${isUrgent ? "text-amber-800" : "text-blue-800"}`}>
+                <p className="font-semibold text-sm text-[#003300]">
                   {isUrgent ? `¡Solo quedan ${status.days_left} día${status.days_left !== 1 ? "s" : ""} de prueba!` : `Período de prueba gratuito`}
                 </p>
-                <p className={`text-xs mt-0.5 ${isUrgent ? "text-amber-600" : "text-blue-600"}`}>
+                <p className="text-xs mt-0.5 text-[#008000]">
                   {isUrgent
                     ? "Suscríbete para no perder el acceso al servicio."
                     : `Te quedan ${status.days_left} días gratis. Después necesitarás una suscripción.`}
@@ -48,7 +48,7 @@ export default function TrialBanner({ user }: TrialBannerProps) {
             </div>
             <button
               onClick={() => setShowCheckout(true)}
-              className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${isUrgent ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+              className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors bg-[#008000] hover:bg-[#006600] text-white"
             >
               Suscribirme
             </button>
@@ -86,7 +86,7 @@ export default function TrialBanner({ user }: TrialBannerProps) {
           </div>
           <button
             onClick={() => setShowCheckout(true)}
-            className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#42CE1D] hover:bg-[#35a818] text-white transition-colors"
+            className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#008000] hover:bg-[#35a818] text-white transition-colors"
           >
             Suscribirme
           </button>

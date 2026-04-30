@@ -13,7 +13,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-900 text-white py-12">
+    <footer className="bg-[#003300] text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Contenedor de tres columnas */}
         <div className="grid md:grid-cols-3 gap-8">
@@ -47,7 +47,7 @@ export default function Footer() {
             <p className="text-gray-400">Colombia</p>
             <a
               href="mailto:admin@neurai.dev"
-              className="inline-block mt-3 text-[#42CE1D] hover:text-green-400 transition-colors text-sm"
+              className="inline-block mt-3 text-[#008000] hover:text-green-400 transition-colors text-sm"
             >
               admin@neurai.dev
             </a>
@@ -83,7 +83,7 @@ export default function Footer() {
               height={20}
               className="rounded-sm"
             />
-            <span className="font-semibold text-[#42CE1D] hover:text-green-400 transition-colors">neurai.dev</span>
+            <span className="font-semibold text-[#008000] hover:text-green-400 transition-colors">neurai.dev</span>
           </a>
         </div>
       </div>

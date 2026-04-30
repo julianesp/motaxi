@@ -39,7 +39,7 @@ export default function RoleSelectionPage() {
               onClick={() => setSelectedRole("passenger")}
               className={`rounded-xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 selectedRole === "passenger"
-                  ? "border-[#42CE1D] bg-green-50 shadow-md"
+                  ? "border-[#008000] bg-green-50 shadow-md"
                   : "border-gray-200 hover:border-green-300"
               }`}
             >
@@ -51,12 +51,12 @@ export default function RoleSelectionPage() {
               </div>
               <span className="text-base font-bold text-gray-800">Pasajero</span>
               <ul className="text-xs text-gray-500 space-y-1 text-left w-full">
-                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Solicita viajes</li>
-                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Conductores verificados</li>
-                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Día y noche</li>
+                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Solicita viajes</li>
+                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Conductores verificados</li>
+                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Día y noche</li>
               </ul>
               {selectedRole === "passenger" && (
-                <span className="text-xs font-semibold text-[#42CE1D]">Seleccionado ✓</span>
+                <span className="text-xs font-semibold text-[#008000]">Seleccionado ✓</span>
               )}
             </button>
 
@@ -65,7 +65,7 @@ export default function RoleSelectionPage() {
               onClick={() => setSelectedRole("driver")}
               className={`rounded-xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 selectedRole === "driver"
-                  ? "border-[#42CE1D] bg-green-50 shadow-md"
+                  ? "border-[#008000] bg-green-50 shadow-md"
                   : "border-gray-200 hover:border-green-300"
               }`}
             >
@@ -77,12 +77,12 @@ export default function RoleSelectionPage() {
               </div>
               <span className="text-base font-bold text-gray-800">Conductor</span>
               <ul className="text-xs text-gray-500 space-y-1 text-left w-full">
-                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Genera ingresos</li>
-                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Horarios flexibles</li>
-                <li className="flex items-center gap-1"><span className="text-[#42CE1D]">✓</span> Moto o carro</li>
+                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Genera ingresos</li>
+                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Horarios flexibles</li>
+                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Moto o carro</li>
               </ul>
               {selectedRole === "driver" && (
-                <span className="text-xs font-semibold text-[#42CE1D]">Seleccionado ✓</span>
+                <span className="text-xs font-semibold text-[#008000]">Seleccionado ✓</span>
               )}
             </button>
           </div>
@@ -92,7 +92,7 @@ export default function RoleSelectionPage() {
             onClick={handleContinue}
             disabled={!selectedRole}
             className="w-full py-3 rounded-xl text-white font-semibold text-base transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ backgroundColor: selectedRole ? "#42CE1D" : "#9ca3af" }}
+            style={{ backgroundColor: selectedRole ? "#008000" : "#9ca3af" }}
           >
             Continuar
           </button>

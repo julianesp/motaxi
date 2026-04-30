@@ -46,7 +46,7 @@ export default function OpenInBrowser() {
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white px-6 text-center">
       <div className="max-w-sm w-full">
         {/* Ícono */}
-        <div className="w-20 h-20 bg-[#42CE1D] rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 bg-[#008000] rounded-full flex items-center justify-center mx-auto mb-6">
           <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -63,11 +63,11 @@ export default function OpenInBrowser() {
         {/* Instrucciones visuales */}
         <div className="bg-gray-50 rounded-2xl p-5 mb-6 text-left space-y-3">
           <div className="flex items-start gap-3">
-            <span className="w-7 h-7 rounded-full bg-[#42CE1D] text-white text-sm font-bold flex items-center justify-center shrink-0">1</span>
+            <span className="w-7 h-7 rounded-full bg-[#008000] text-white text-sm font-bold flex items-center justify-center shrink-0">1</span>
             <p className="text-gray-600 text-sm">Toca los <strong>tres puntos (···)</strong> o el ícono de menú en la esquina superior derecha.</p>
           </div>
           <div className="flex items-start gap-3">
-            <span className="w-7 h-7 rounded-full bg-[#42CE1D] text-white text-sm font-bold flex items-center justify-center shrink-0">2</span>
+            <span className="w-7 h-7 rounded-full bg-[#008000] text-white text-sm font-bold flex items-center justify-center shrink-0">2</span>
             <p className="text-gray-600 text-sm">Selecciona <strong>"Abrir en Chrome"</strong> o <strong>"Abrir en navegador"</strong>.</p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function OpenInBrowser() {
         {/* Botón copiar enlace como alternativa */}
         <button
           onClick={handleCopyLink}
-          className="w-full py-3 px-6 border-2 border-[#42CE1D] text-[#42CE1D] font-semibold rounded-xl hover:bg-[#42CE1D] hover:text-white transition-colors"
+          className="w-full py-3 px-6 border-2 border-[#008000] text-[#008000] font-semibold rounded-xl hover:bg-[#008000] hover:text-white transition-colors"
         >
           Copiar enlace
         </button>

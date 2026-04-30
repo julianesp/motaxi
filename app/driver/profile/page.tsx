@@ -168,7 +168,7 @@ export default function DriverProfilePage() {
       const res = await apiClient.get('/telegram/link-token');
       if (res.data.linked) {
         setTelegramLinked(true);
-        Swal.fire({ icon: 'info', title: 'Ya vinculado', text: 'Tu cuenta de Telegram ya está conectada.', confirmButtonColor: '#42CE1D' });
+        Swal.fire({ icon: 'info', title: 'Ya vinculado', text: 'Tu cuenta de Telegram ya está conectada.', confirmButtonColor: '#008000' });
       } else {
         const result = await Swal.fire({
           icon: 'info',
@@ -181,7 +181,7 @@ export default function DriverProfilePage() {
               <li><b>3.</b> ¡Listo! Recibirás alertas de viajes</li>
             </ol>
           `,
-          confirmButtonColor: '#42CE1D',
+          confirmButtonColor: '#008000',
           confirmButtonText: '📲 Abrir bot',
           showCancelButton: true,
           cancelButtonText: 'Cancelar',
@@ -193,14 +193,14 @@ export default function DriverProfilePage() {
             icon: 'success',
             title: '¡Ya casi!',
             html: 'Ahora en Telegram toca <b>INICIAR</b> o <b>START</b> para terminar la activación.',
-            confirmButtonColor: '#42CE1D',
+            confirmButtonColor: '#008000',
             confirmButtonText: 'Listo',
           });
           checkTelegramStatus();
         }
       }
     } catch {
-      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el enlace de Telegram.', confirmButtonColor: '#42CE1D' });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el enlace de Telegram.', confirmButtonColor: '#008000' });
     } finally {
       setTelegramLoading(false);
     }
@@ -221,9 +221,9 @@ export default function DriverProfilePage() {
       const { apiClient } = await import('@/lib/api-client');
       await apiClient.delete('/telegram/unlink');
       setTelegramLinked(false);
-      Swal.fire({ icon: 'success', title: 'Desvinculado', text: 'Telegram desconectado correctamente.', confirmButtonColor: '#42CE1D' });
+      Swal.fire({ icon: 'success', title: 'Desvinculado', text: 'Telegram desconectado correctamente.', confirmButtonColor: '#008000' });
     } catch {
-      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo desvincular Telegram.', confirmButtonColor: '#42CE1D' });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo desvincular Telegram.', confirmButtonColor: '#008000' });
     }
   };
 
@@ -251,12 +251,12 @@ export default function DriverProfilePage() {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      Swal.fire({ icon: 'warning', title: 'Formato inválido', text: 'Por favor selecciona una imagen válida.', confirmButtonColor: '#42CE1D' });
+      Swal.fire({ icon: 'warning', title: 'Formato inválido', text: 'Por favor selecciona una imagen válida.', confirmButtonColor: '#008000' });
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      Swal.fire({ icon: 'warning', title: 'Imagen muy grande', text: 'La imagen no puede superar 2MB.', confirmButtonColor: '#42CE1D' });
+      Swal.fire({ icon: 'warning', title: 'Imagen muy grande', text: 'La imagen no puede superar 2MB.', confirmButtonColor: '#008000' });
       return;
     }
 
@@ -311,11 +311,11 @@ export default function DriverProfilePage() {
       await fetchDriverInfo();
 
       setIsEditing(false);
-      Swal.fire({ icon: 'success', title: 'Perfil actualizado', text: 'Perfil actualizado correctamente', confirmButtonColor: '#42CE1D' });
+      Swal.fire({ icon: 'success', title: 'Perfil actualizado', text: 'Perfil actualizado correctamente', confirmButtonColor: '#008000' });
     } catch (error: any) {
       console.error('Error updating profile:', error);
       const msg = error?.response?.data?.error || error?.message || 'Error al actualizar el perfil. Intenta nuevamente.';
-      Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#42CE1D' });
+      Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#008000' });
     } finally {
       setIsSaving(false);
     }
@@ -388,12 +388,12 @@ export default function DriverProfilePage() {
         <div className="max-w-2xl mx-auto">
           {/* Conductor del Mes */}
           {driverOfMonth && (
-            <div className="mb-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="mb-4 bg-[#008000]/10 border border-[#008000]/30 rounded-2xl px-4 py-3 flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#008000]/20 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-xl">🏆</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-yellow-700 uppercase tracking-wide">Conductor del Mes</p>
+                <p className="text-xs font-semibold text-[#008000] uppercase tracking-wide">Conductor del Mes</p>
                 <p className="text-sm font-bold text-gray-800 truncate">{driverOfMonth.full_name}</p>
                 <p className="text-xs text-gray-500">
                   ⭐ {driverOfMonth.avg_rating?.toFixed(1)} · {driverOfMonth.month_trips} viajes
@@ -401,7 +401,7 @@ export default function DriverProfilePage() {
                 </p>
               </div>
               <div className="text-right flex-shrink-0">
-                <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">1 mes gratis</span>
+                <span className="text-xs bg-[#008000] text-white px-2 py-0.5 rounded-full font-semibold">1 mes gratis</span>
               </div>
             </div>
           )}
@@ -411,7 +411,7 @@ export default function DriverProfilePage() {
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
                 {/* Header verde */}
-                <div className="bg-gradient-to-r from-[#008000] to-[#42CE1D] px-6 py-5 text-center">
+                <div className="bg-gradient-to-r from-[#008000] to-[#008000] px-6 py-5 text-center">
                   <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-3xl">🎉</span>
                   </div>
@@ -449,13 +449,13 @@ export default function DriverProfilePage() {
 
           {/* Banner: recordatorio de email */}
           {user.email?.endsWith('@motaxi.local') && (
-            <div className="mb-4 bg-amber-50 border border-amber-300 rounded-2xl p-4 flex items-start gap-3">
-              <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-4 bg-[#008000]/10 border border-[#008000]/30 rounded-2xl p-4 flex items-start gap-3">
+              <svg className="w-5 h-5 text-[#008000] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="text-sm font-semibold text-amber-800">Agrega tu correo electrónico</p>
-                <p className="text-xs text-amber-700 mt-0.5">
+                <p className="text-sm font-semibold text-[#008000]">Agrega tu correo electrónico</p>
+                <p className="text-xs text-[#008000]/80 mt-0.5">
                   Sin un email registrado no podrás recuperar tu contraseña si la olvidas. Toca <strong>Editar Perfil</strong> para agregarlo.
                 </p>
               </div>
@@ -480,7 +480,7 @@ export default function DriverProfilePage() {
                   {/* Botón de cambiar foto - siempre visible */}
                   <label
                     htmlFor="photo-upload"
-                    className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#42CE1D] hover:bg-[#35a818] rounded-full flex items-center justify-center cursor-pointer shadow-md transition-colors"
+                    className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#008000] hover:bg-[#35a818] rounded-full flex items-center justify-center cursor-pointer shadow-md transition-colors"
                     title="Cambiar foto de perfil"
                   >
                     {isUploadingPhoto ? (
@@ -513,13 +513,13 @@ export default function DriverProfilePage() {
                 <p className="text-green-100 mb-2">Conductor</p>
                 {/* Badge Conductor del Mes */}
                 {isDriverOfMonth && (
-                  <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold mb-1 shadow-md">
+                  <div className="flex items-center gap-1.5 bg-[#008000] text-white px-3 py-1 rounded-full text-xs font-bold mb-1 shadow-md">
                     🏆 Conductor del Mes — ¡Mes gratis!
                   </div>
                 )}
                 {/* Badge Conductor Destacado */}
                 {driverInfo && driverInfo.rating >= 4.5 && driverInfo.total_trips >= 20 && (
-                  <div className="flex items-center gap-1.5 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold mb-2 shadow-md">
+                  <div className="flex items-center gap-1.5 bg-white text-[#008000] px-3 py-1 rounded-full text-xs font-bold mb-2 shadow-md">
                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
@@ -895,10 +895,10 @@ export default function DriverProfilePage() {
                             onChange={(e) => setDriverFormData({ ...driverFormData, night_only: e.target.checked })}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#008000]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008000]"></div>
                         </label>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${driverInfo.night_only ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${driverInfo.night_only ? 'bg-[#008000]/10 text-[#008000]' : 'bg-gray-100 text-gray-800'}`}>
                           {driverInfo.night_only ? '🌙 Sí' : 'No'}
                         </span>
                       )}
@@ -1027,14 +1027,14 @@ export default function DriverProfilePage() {
                     </div>
 
                     {isEditing && (
-                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="mt-4 p-4 bg-[#008000]/10 border border-[#008000]/30 rounded-lg">
                         <div className="flex items-start space-x-2">
-                          <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-[#008000] mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <div className="flex-1">
-                            <p className="text-sm text-blue-800 font-medium">Información sobre tarifas</p>
-                            <p className="text-xs text-blue-700 mt-1">
+                            <p className="text-sm text-[#008000] font-medium">Información sobre tarifas</p>
+                            <p className="text-xs text-[#008000]/80 mt-1">
                               Estas tarifas son referenciales y pueden variar según la distancia del viaje.
                               Asegúrate de establecer tarifas competitivas y justas.
                             </p>
@@ -1156,10 +1156,10 @@ export default function DriverProfilePage() {
                     Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cambiar el modo. Contacta soporte.', confirmButtonColor: '#008000' });
                   }
                 }}
-                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-blue-50 transition-colors border border-blue-100 min-h-[90px]"
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
               >
                 <span className="text-2xl">🧍</span>
-                <span className="text-sm font-medium text-blue-600">Ser Pasajero</span>
+                <span className="text-sm font-medium text-[#008000]">Ser Pasajero</span>
               </button>
 
               {/* Compartir */}

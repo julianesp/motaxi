@@ -77,7 +77,7 @@ export default function UsuariosPage() {
     if (status === 'expired') return 'text-red-400';
     if (status === 'active' && days !== null && days <= 3) return 'text-red-400';
     if (status === 'active' && days !== null && days <= 7) return 'text-yellow-400';
-    if (status === 'active') return 'text-[#42CE1D]';
+    if (status === 'active') return 'text-[#008000]';
     if (status === 'trial') return 'text-yellow-400';
     return 'text-gray-400';
   };
@@ -111,12 +111,12 @@ export default function UsuariosPage() {
           placeholder="Buscar nombre, email, teléfono..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#42CE1D]"
+          className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#008000]"
         />
         <select
           value={roleFilter}
           onChange={e => setRoleFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#42CE1D]"
+          className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#008000]"
         >
           <option value="">Todos los roles</option>
           <option value="driver">Conductores</option>
@@ -126,7 +126,7 @@ export default function UsuariosPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#42CE1D]"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#008000]"></div>
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -157,7 +157,7 @@ export default function UsuariosPage() {
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                         user.role === 'driver'
-                          ? 'text-[#42CE1D] bg-[#42CE1D]/10'
+                          ? 'text-[#008000] bg-[#008000]/10'
                           : 'text-blue-400 bg-blue-400/10'
                       }`}>
                         {user.role === 'driver' ? 'Conductor' : 'Pasajero'}

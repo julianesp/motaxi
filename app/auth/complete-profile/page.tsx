@@ -73,7 +73,7 @@ export default function CompleteProfilePage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#42CE1D] text-black font-bold rounded-xl hover:bg-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-[#008000] text-black font-bold rounded-xl hover:bg-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Guardando..." : "Continuar"}
           </button>

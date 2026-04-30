@@ -163,13 +163,13 @@ export default function DriverHistoryPage() {
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Estadísticas Generales */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+            <div className="bg-gradient-to-br from-[#008000] to-[#006600] rounded-2xl shadow-lg p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm mb-1">Total de Viajes</p>
+                  <p className="text-green-100 text-sm mb-1">Total de Viajes</p>
                   <p className="text-3xl font-bold">{stats.totalTrips}</p>
                 </div>
-                <svg className="w-12 h-12 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-12 h-12 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
               </div>
@@ -187,13 +187,13 @@ export default function DriverHistoryPage() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+            <div className="bg-gradient-to-br from-[#008000] to-black rounded-2xl shadow-lg p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm mb-1">Promedio por Viaje</p>
+                  <p className="text-green-100 text-sm mb-1">Promedio por Viaje</p>
                   <p className="text-3xl font-bold">${Math.round(stats.averageEarnings).toLocaleString()}</p>
                 </div>
-                <svg className="w-12 h-12 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-12 h-12 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>

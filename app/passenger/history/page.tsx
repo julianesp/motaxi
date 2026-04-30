@@ -219,12 +219,12 @@ export default function PassengerHistoryPage() {
               <p className="text-green-100 text-xs mb-1">Total viajes</p>
               <p className="text-3xl font-bold">{totalTrips}</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-4 text-white text-center">
-              <p className="text-blue-100 text-xs mb-1">Total gastado</p>
+            <div className="bg-gradient-to-br from-[#008000] to-[#006600] rounded-2xl shadow-lg p-4 text-white text-center">
+              <p className="text-green-100 text-xs mb-1">Total gastado</p>
               <p className="text-2xl font-bold">${totalSpent.toLocaleString()}</p>
             </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-4 text-white text-center">
-              <p className="text-purple-100 text-xs mb-1">Promedio</p>
+            <div className="bg-gradient-to-br from-[#008000] to-black rounded-2xl shadow-lg p-4 text-white text-center">
+              <p className="text-green-100 text-xs mb-1">Promedio</p>
               <p className="text-2xl font-bold">${Math.round(avgFare).toLocaleString()}</p>
             </div>
           </div>

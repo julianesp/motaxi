@@ -143,8 +143,8 @@ function RegisterForm() {
 
           {/* Indicador de pasos */}
           <div className="flex items-center gap-2">
-            <div className={`flex-1 h-1.5 rounded-full ${step >= 1 ? "bg-[#42CE1D]" : "bg-gray-600"}`} />
-            <div className={`flex-1 h-1.5 rounded-full ${step >= 2 ? "bg-[#42CE1D]" : "bg-gray-600"}`} />
+            <div className={`flex-1 h-1.5 rounded-full ${step >= 1 ? "bg-[#008000]" : "bg-gray-600"}`} />
+            <div className={`flex-1 h-1.5 rounded-full ${step >= 2 ? "bg-[#008000]" : "bg-gray-600"}`} />
           </div>
 
           {/* Error */}
@@ -199,7 +199,7 @@ function RegisterForm() {
                         onClick={() => setFormData({ ...formData, vehicle_types: v.value })}
                         className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
                           formData.vehicle_types === v.value
-                            ? "border-[#42CE1D] bg-[#42CE1D] bg-opacity-20 text-[#42CE1D]"
+                            ? "border-[#008000] bg-[#008000] bg-opacity-20 text-[#008000]"
                             : "border-gray-600 text-gray-300 hover:border-gray-400"
                         }`}
                       >

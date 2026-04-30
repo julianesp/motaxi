@@ -89,7 +89,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="text-gray-700 leading-relaxed mt-3">
               Para ejercer estos derechos, contáctanos en{" "}
-              <a href="mailto:admin@neurai.dev" className="text-[#42CE1D] hover:underline">
+              <a href="mailto:admin@neurai.dev" className="text-[#008000] hover:underline">
                 admin@neurai.dev
               </a>
               .
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mb-3">8. Contacto</h2>
             <p className="text-gray-700 leading-relaxed">
               Si tienes preguntas sobre esta política, escríbenos a{" "}
-              <a href="mailto:admin@neurai.dev" className="text-[#42CE1D] hover:underline">
+              <a href="mailto:admin@neurai.dev" className="text-[#008000] hover:underline">
                 admin@neurai.dev
               </a>
               . Estamos ubicados en el Valle de Sibundoy, Putumayo, Colombia.

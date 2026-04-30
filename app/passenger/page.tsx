@@ -1383,40 +1383,44 @@ export default function PassengerHomePage() {
                     )}
 
                     {/* Panel de precio */}
-                    <div className="border-t border-gray-100 px-3 py-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-gray-400">Tu oferta al conductor</p>
-                          <p className="text-[10px] text-gray-300">Basada en las tarifas de cada conductor</p>
+                    <div className="border-t border-gray-100 px-3 py-3">
+                      <p className="text-xs text-gray-400 mb-2">Tu oferta al conductor</p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => adjustCustomPrice(-500)}
+                          className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-xl font-bold transition-colors flex-shrink-0"
+                        >
+                          −
+                        </button>
+                        <div className="flex-1 relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#008000] font-bold text-lg pointer-events-none">$</span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={passengerCustomPrice ?? recommendedPrice ?? ''}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
+                              if (!isNaN(val) && val > 0) setPassengerCustomPrice(val);
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            className="w-full pl-7 pr-3 py-2 text-lg font-bold text-center text-[#008000] border-2 border-[#008000]/30 rounded-xl focus:outline-none focus:border-[#008000] bg-[#008000]/5"
+                          />
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => adjustCustomPrice(-500)}
-                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-lg font-bold transition-colors"
-                          >
-                            −
-                          </button>
-                          <div className="text-center min-w-[80px]">
-                            <div className="text-xl font-bold text-[#008000]">
-                              ${(passengerCustomPrice ?? recommendedPrice).toLocaleString()}
-                            </div>
-                            {passengerCustomPrice && passengerCustomPrice !== recommendedPrice && (
-                              <button
-                                onClick={() => setPassengerCustomPrice(null)}
-                                className="text-[10px] text-gray-400 underline hover:text-gray-600 leading-tight"
-                              >
-                                Restablecer
-                              </button>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => adjustCustomPrice(500)}
-                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-lg font-bold transition-colors"
-                          >
-                            +
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => adjustCustomPrice(500)}
+                          className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 text-xl font-bold transition-colors flex-shrink-0"
+                        >
+                          +
+                        </button>
                       </div>
+                      {passengerCustomPrice && passengerCustomPrice !== recommendedPrice && (
+                        <button
+                          onClick={() => setPassengerCustomPrice(null)}
+                          className="mt-1.5 text-[10px] text-gray-400 underline hover:text-gray-600 w-full text-center"
+                        >
+                          Restablecer precio sugerido
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

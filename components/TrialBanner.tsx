@@ -37,12 +37,12 @@ export default function TrialBanner({ user }: TrialBannerProps) {
               </div>
               <div>
                 <p className="font-semibold text-sm text-[#003300]">
-                  {isUrgent ? `¡Solo quedan ${status.days_left} día${status.days_left !== 1 ? "s" : ""} de prueba!` : `Período de prueba gratuito`}
+                  {isUrgent ? `¡Solo quedan ${status.days_left} día${status.days_left !== 1 ? "s" : ""} de prueba!` : `Período de prueba — 30 días`}
                 </p>
                 <p className="text-xs mt-0.5 text-[#008000]">
                   {isUrgent
                     ? "Suscríbete para no perder el acceso al servicio."
-                    : `Te quedan ${status.days_left} días gratis. Después necesitarás una suscripción.`}
+                    : `Te quedan ${status.days_left} días de prueba. Después necesitarás una suscripción.`}
                 </p>
               </div>
             </div>
@@ -81,7 +81,7 @@ export default function TrialBanner({ user }: TrialBannerProps) {
             </div>
             <div>
               <p className="font-semibold text-sm text-red-800">Período de prueba vencido</p>
-              <p className="text-xs text-red-600 mt-0.5">Tu período de prueba gratuito ha terminado. Suscríbete por <strong>$14.900/mes</strong> para continuar.</p>
+              <p className="text-xs text-red-600 mt-0.5">Tu período de prueba ha terminado. Suscríbete por <strong>$14.900/mes</strong> para continuar.</p>
             </div>
           </div>
           <button

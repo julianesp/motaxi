@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { MUNICIPALITIES } from '@/lib/constants/municipalities';
 import TrialBanner from '@/components/TrialBanner';
+import { useSubscription } from '@/lib/hooks/useSubscription';
 import Swal from 'sweetalert2';
 
 interface DriverInfo {
@@ -32,10 +33,35 @@ export default function DriverProfilePage() {
   const router = useRouter();
   const { user, loading, logout, refreshUser } = useAuth();
   const [isDriverOfMonth, setIsDriverOfMonth] = useState(false);
-  const [showFreeModal, setShowFreeModal] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('motaxi_free_notice_seen') !== '1';
-  });
+  const { status: subscriptionStatus } = useSubscription();
+
+  // Conteo regresivo: mostrar alerta una vez al día a partir del día 7 de prueba
+  useEffect(() => {
+    if (!subscriptionStatus?.is_trial_active) return;
+    const daysLeft = subscriptionStatus.days_left;
+    const totalTrialDays = 30;
+    const daysElapsed = totalTrialDays - daysLeft;
+    if (daysElapsed < 7) return; // Solo mostrar desde el día 7
+
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const lastSeen = localStorage.getItem('motaxi_trial_alert_date');
+    if (lastSeen === today) return;
+
+    localStorage.setItem('motaxi_trial_alert_date', today);
+
+    const isUrgent = daysLeft <= 3;
+    Swal.fire({
+      icon: isUrgent ? 'warning' : 'info',
+      title: isUrgent ? '⏰ ¡Prueba por vencer!' : '📅 Tu período de prueba',
+      html: isUrgent
+        ? `<p>Solo te quedan <strong>${daysLeft} día${daysLeft !== 1 ? 's' : ''}</strong> de prueba.<br/>Suscríbete para no perder el acceso.</p>`
+        : `<p>Te quedan <strong>${daysLeft} días</strong> de los 30 de prueba.<br/>Cuando termine necesitarás una suscripción para continuar.</p>`,
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#008000',
+      background: '#fff',
+    });
+  }, [subscriptionStatus]);
+
   const [driverOfMonth, setDriverOfMonth] = useState<{ full_name: string; avg_rating: number; month_trips: number; municipality?: string } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -401,43 +427,7 @@ export default function DriverProfilePage() {
                 </p>
               </div>
               <div className="text-right flex-shrink-0">
-                <span className="text-xs bg-[#008000] text-white px-2 py-0.5 rounded-full font-semibold">1 mes gratis</span>
-              </div>
-            </div>
-          )}
-
-          {/* Modal: app gratuita hasta nuevo aviso */}
-          {showFreeModal && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
-                {/* Header verde */}
-                <div className="bg-gradient-to-r from-[#008000] to-[#008000] px-6 py-5 text-center">
-                  <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-3xl">🎉</span>
-                  </div>
-                  <h2 className="text-white font-bold text-xl">¡MoTaxi es gratis!</h2>
-                  <p className="text-green-100 text-sm mt-1">Hasta nuevo aviso</p>
-                </div>
-                {/* Contenido */}
-                <div className="px-6 py-5 text-center">
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    Durante esta etapa de lanzamiento, <strong>todos los conductores pueden usar MoTaxi sin ningún costo</strong>.
-                    Recibe viajes, genera ingresos y ayúdanos a crecer.
-                  </p>
-                  <p className="text-gray-500 text-xs mt-3">
-                    Cuando se acerque el momento de activar la suscripción, te avisaremos con anticipación.
-                  </p>
-                  <button
-                    onClick={() => {
-                      localStorage.setItem('motaxi_free_notice_seen', '1');
-                      setShowFreeModal(false);
-                    }}
-                    className="mt-5 w-full py-3 bg-[#008000] hover:bg-[#006600] text-white font-semibold rounded-xl transition-colors"
-                  >
-                    ¡Entendido, a trabajar!
-                  </button>
-                  <p className="text-xs text-gray-400 mt-2">No volveremos a mostrarte este mensaje</p>
-                </div>
+                <span className="text-xs bg-[#008000] text-white px-2 py-0.5 rounded-full font-semibold">🏆 Conductor del Mes</span>
               </div>
             </div>
           )}
@@ -514,7 +504,7 @@ export default function DriverProfilePage() {
                 {/* Badge Conductor del Mes */}
                 {isDriverOfMonth && (
                   <div className="flex items-center gap-1.5 bg-[#008000] text-white px-3 py-1 rounded-full text-xs font-bold mb-1 shadow-md">
-                    🏆 Conductor del Mes — ¡Mes gratis!
+                    🏆 Conductor del Mes
                   </div>
                 )}
                 {/* Badge Conductor Destacado */}

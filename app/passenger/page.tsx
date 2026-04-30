@@ -1178,42 +1178,58 @@ export default function PassengerHomePage() {
 
                 {/* Destination Input */}
                 <div className="space-y-2">
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#008000] rounded-full ring-2 ring-[#008000]/30 z-10"></div>
-                    <LocationPicker
-                      value={destination.address}
-                      onChange={(value) => {
-                        setDestination({ ...destination, address: value });
-                        setShowRecentPlaces(value === "");
-                      }}
-                      onSelectPlace={(place) => {
-                        setDestination({
-                          address: place.address,
-                          latitude: place.latitude,
-                          longitude: place.longitude,
-                          place_id: place.place_id,
-                        });
+                  <div className="flex items-stretch gap-2">
+                    <div className="relative flex-1">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#008000] rounded-full ring-2 ring-[#008000]/30 z-10"></div>
+                      <LocationPicker
+                        value={destination.address}
+                        onChange={(value) => {
+                          setDestination({ ...destination, address: value });
+                          setShowRecentPlaces(value === "");
+                        }}
+                        onSelectPlace={(place) => {
+                          setDestination({
+                            address: place.address,
+                            latitude: place.latitude,
+                            longitude: place.longitude,
+                            place_id: place.place_id,
+                          });
+                          setShowRecentPlaces(false);
+                        }}
+                        placeholder="¿A dónde vas?"
+                        className="text-black"
+                        icon="destination"
+                        favorites={[]}
+                      />
+                      {destination.address && (
+                        <button
+                          onClick={() => {
+                            setDestination({ address: "", latitude: 0, longitude: 0 });
+                            setShowRecentPlaces(true);
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors z-10"
+                          title="Limpiar destino"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setMapClickMode("destination");
+                        setIsPanelMinimized(true);
                         setShowRecentPlaces(false);
                       }}
-                      placeholder="¿A dónde vas?"
-                      className="text-black"
-                      icon="destination"
-                      favorites={[]}
-                    />
-                    {destination.address && (
-                      <button
-                        onClick={() => {
-                          setDestination({ address: "", latitude: 0, longitude: 0 });
-                          setShowRecentPlaces(true);
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors z-10"
-                        title="Limpiar destino"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
+                      className={`flex-shrink-0 px-3 rounded-xl text-xs font-medium transition-all duration-200 ${
+                        mapClickMode === "destination"
+                          ? "bg-[#008000] text-white shadow-lg shadow-[#008000]/30"
+                          : "bg-[#008000]/10 text-[#008000] hover:bg-[#008000]/20 border border-[#008000]/30"
+                      }`}
+                    >
+                      {mapClickMode === "destination" ? "📍" : "🗺️ Mapa"}
+                    </button>
                   </div>
 
                   {/* Historial de lugares recientes - estilo InDrive */}
@@ -1245,23 +1261,6 @@ export default function PassengerHomePage() {
                       ))}
                     </div>
                   )}
-
-                  <button
-                    onClick={() => {
-                      setMapClickMode("destination");
-                      setIsPanelMinimized(true);
-                      setShowRecentPlaces(false);
-                    }}
-                    className={`w-full py-2 px-4 rounded-xl text-xs font-medium transition-all duration-200 ${
-                      mapClickMode === "destination"
-                        ? "bg-[#008000] text-white shadow-lg shadow-[#008000]/30"
-                        : "bg-[#008000]/10 text-[#008000] hover:bg-[#008000]/20 border border-[#008000]/30"
-                    }`}
-                  >
-                    {mapClickMode === "destination"
-                      ? "📍 Toca el mapa para seleccionar"
-                      : "🗺️ Seleccionar en el mapa"}
-                  </button>
                 </div>
 
                 {/* Campo de nota para envío de paquete */}

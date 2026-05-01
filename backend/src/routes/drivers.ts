@@ -12,17 +12,43 @@ export const driverRoutes = new Hono<{ Bindings: Env }>();
 driverRoutes.get('/photos/public', async (c) => {
   try {
     const photos = await c.env.DB.prepare(
-      `SELECT dp.id, dp.image_key, dp.caption, dp.created_at, u.full_name as driver_name
+      `SELECT dp.id, dp.image_key, dp.caption, dp.created_at, dp.likes, u.full_name as driver_name
        FROM driver_photos dp
        JOIN users u ON dp.driver_id = u.id
        WHERE dp.is_visible = 1
-       ORDER BY dp.created_at DESC
+       ORDER BY dp.likes DESC, dp.created_at DESC
        LIMIT 30`
     ).all();
 
     return c.json({ photos: photos.results });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to get public photos' }, 500);
+  }
+});
+
+/**
+ * POST /drivers/photos/:id/like
+ * Dar like a una foto (anónimo, sin autenticación)
+ */
+driverRoutes.post('/photos/:id/like', async (c) => {
+  try {
+    const photoId = c.req.param('id');
+    const exists = await c.env.DB.prepare(
+      'SELECT id FROM driver_photos WHERE id = ? AND is_visible = 1'
+    ).bind(photoId).first();
+    if (!exists) return c.json({ error: 'Photo not found' }, 404);
+
+    await c.env.DB.prepare(
+      'UPDATE driver_photos SET likes = likes + 1 WHERE id = ?'
+    ).bind(photoId).run();
+
+    const updated = await c.env.DB.prepare(
+      'SELECT likes FROM driver_photos WHERE id = ?'
+    ).bind(photoId).first<{ likes: number }>();
+
+    return c.json({ success: true, likes: updated?.likes ?? 0 });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to like photo' }, 500);
   }
 });
 

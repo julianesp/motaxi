@@ -45,8 +45,11 @@ export default function HomePage() {
   const [topPickups, setTopPickups] = useState<{ address: string; trip_count: number }[]>([]);
   const [topDropoffs, setTopDropoffs] = useState<{ address: string; trip_count: number }[]>([]);
 
-  interface PublicPhoto { id: string; image_key: string; caption: string | null; created_at: number; driver_name: string; }
+  interface PublicPhoto { id: string; image_key: string; caption: string | null; created_at: number; driver_name: string; likes: number; }
   const [publicPhotos, setPublicPhotos] = useState<PublicPhoto[]>([]);
+  const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
+  const [likingId, setLikingId] = useState<string | null>(null);
+  const [expandedPhoto, setExpandedPhoto] = useState<PublicPhoto | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -80,7 +83,30 @@ export default function HomePage() {
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.photos?.length) setPublicPhotos(data.photos); })
       .catch(() => {});
+    try {
+      const stored = localStorage.getItem('motaxi_liked_photos');
+      if (stored) setLikedPhotos(new Set(JSON.parse(stored)));
+    } catch {}
   }, []);
+
+  const handleLikePhoto = async (photoId: string) => {
+    if (likedPhotos.has(photoId) || likingId) return;
+    setLikingId(photoId);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+      const res = await fetch(`${API_URL}/drivers/photos/${photoId}/like`, { method: 'POST' });
+      if (!res.ok) return;
+      const data = await res.json();
+      setPublicPhotos(prev => prev
+        .map(p => p.id === photoId ? { ...p, likes: data.likes } : p)
+        .sort((a, b) => b.likes - a.likes || b.created_at - a.created_at)
+      );
+      const updated = new Set(likedPhotos).add(photoId);
+      setLikedPhotos(updated);
+      localStorage.setItem('motaxi_liked_photos', JSON.stringify([...updated]));
+    } catch {}
+    finally { setLikingId(null); }
+  };
 
   useEffect(() => {
     fetch('/api/videos')
@@ -469,7 +495,7 @@ export default function HomePage() {
       {publicPhotos.length > 0 && (
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
+            <div className="text-center mb-6">
               <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
                 Destinos compartidos por conductores
               </h2>
@@ -477,27 +503,116 @@ export default function HomePage() {
                 Fotos reales de los lugares a donde nuestros conductores llevan a sus pasajeros
               </p>
             </div>
-            <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
+
+            {/* Aviso votación anónima */}
+            <div className="max-w-2xl mx-auto mb-10 flex items-start gap-3 bg-white border border-[#008000]/20 rounded-2xl px-5 py-4 shadow-sm">
+              <svg className="w-5 h-5 text-[#008000] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                <strong className="text-gray-800">Vota por tus fotos favoritas de forma anónima</strong> — no necesitas crear una cuenta ni iniciar sesión. Dale like a las fotos que más te gusten y las mejores subirán automáticamente al inicio de la galería.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {publicPhotos.map(photo => {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+                const liked = likedPhotos.has(photo.id);
+                const isLiking = likingId === photo.id;
                 return (
-                  <div key={photo.id} className="break-inside-avoid rounded-2xl overflow-hidden shadow-md relative group">
+                  <div key={photo.id} className="rounded-2xl overflow-hidden shadow-md relative group h-56 sm:h-64 cursor-pointer">
                     <img
                       src={`${API_URL}/images/${photo.image_key}`}
                       alt={photo.caption || `Foto de ${photo.driver_name}`}
-                      className="w-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
+                      onClick={() => setExpandedPhoto(photo)}
                     />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Info siempre visible en la parte inferior */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-3">
                       {photo.caption && (
-                        <p className="text-white text-sm font-medium leading-snug">{photo.caption}</p>
+                        <p className="text-white text-xs font-medium leading-snug line-clamp-2">{photo.caption}</p>
                       )}
                       <p className="text-white/70 text-xs mt-0.5">{photo.driver_name}</p>
                     </div>
+                    {/* Botón de like */}
+                    <button
+                      onClick={e => { e.stopPropagation(); handleLikePhoto(photo.id); }}
+                      disabled={liked || isLiking}
+                      className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold shadow transition-all
+                        ${liked
+                          ? 'bg-red-500 text-white cursor-default'
+                          : 'bg-white/90 text-gray-700 hover:bg-red-500 hover:text-white'
+                        }`}
+                    >
+                      <svg className="w-3.5 h-3.5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      {photo.likes > 0 && <span>{photo.likes}</span>}
+                    </button>
+                    {/* Icono expandir */}
+                    <button
+                      onClick={() => setExpandedPhoto(photo)}
+                      className="absolute top-2 left-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                      </svg>
+                    </button>
                   </div>
                 );
               })}
             </div>
+
+            {/* Modal para expandir foto */}
+            {expandedPhoto && (() => {
+              const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+              const liked = likedPhotos.has(expandedPhoto.id);
+              return (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                  onClick={() => setExpandedPhoto(null)}
+                >
+                  <div
+                    className="relative max-w-2xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <img
+                      src={`${API_URL}/images/${expandedPhoto.image_key}`}
+                      alt={expandedPhoto.caption || `Foto de ${expandedPhoto.driver_name}`}
+                      className="w-full max-h-[75vh] object-contain bg-black"
+                    />
+                    <div className="bg-white px-4 py-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        {expandedPhoto.caption && (
+                          <p className="text-gray-800 text-sm font-medium truncate">{expandedPhoto.caption}</p>
+                        )}
+                        <p className="text-gray-500 text-xs">{expandedPhoto.driver_name}</p>
+                      </div>
+                      <button
+                        onClick={() => handleLikePhoto(expandedPhoto.id)}
+                        disabled={liked || likingId === expandedPhoto.id}
+                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-all
+                          ${liked ? 'bg-red-500 text-white cursor-default' : 'bg-gray-100 text-gray-700 hover:bg-red-500 hover:text-white'}`}
+                      >
+                        <svg className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        {expandedPhoto.likes > 0 ? expandedPhoto.likes : 'Me gusta'}
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setExpandedPhoto(null)}
+                      className="absolute top-3 right-3 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </section>
       )}

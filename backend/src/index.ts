@@ -54,6 +54,22 @@ app.use('*', async (c, next) => {
   })(c, next);
 });
 
+// Servir imágenes desde R2 (sin autenticación)
+app.get('/images/*', async (c) => {
+  try {
+    if (!c.env.IMAGES) return c.json({ error: 'Storage not configured' }, 500);
+    const key = c.req.path.replace('/images/', '');
+    const object = await c.env.IMAGES.get(key);
+    if (!object) return c.json({ error: 'Not found' }, 404);
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set('Cache-Control', 'public, max-age=31536000');
+    return new Response(object.body, { headers });
+  } catch {
+    return c.json({ error: 'Failed to serve image' }, 500);
+  }
+});
+
 // Health check
 app.get('/', (c) => {
   return c.json({

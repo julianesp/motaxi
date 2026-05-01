@@ -71,6 +71,14 @@ export default function DriverProfilePage() {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(false);
+
+  // Fotos de lugares visitados
+  interface DriverPhoto { id: string; image_key: string; caption: string | null; created_at: number; }
+  const [driverPhotos, setDriverPhotos] = useState<DriverPhoto[]>([]);
+  const [isUploadingPlacePhoto, setIsUploadingPlacePhoto] = useState(false);
+  const [placePhotoCaption, setPlacePhotoCaption] = useState('');
+  const [selectedPlacePhoto, setSelectedPlacePhoto] = useState<File | null>(null);
+  const [placePhotoPreview, setPlacePhotoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -114,6 +122,7 @@ export default function DriverProfilePage() {
       });
       setPhotoPreview((user as any).profile_image || null);
       fetchDriverInfo();
+      fetchDriverPhotos();
       checkTelegramStatus();
     }
   }, [user]);
@@ -260,6 +269,83 @@ export default function DriverProfilePage() {
       setTelegramLinked(!!res.data.linked);
     } catch {
       // silencioso
+    }
+  };
+
+  const fetchDriverPhotos = async () => {
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      const res = await apiClient.get('/drivers/photos/my');
+      setDriverPhotos(res.data.photos || []);
+    } catch {
+      // silencioso
+    }
+  };
+
+  const handlePlacePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({ icon: 'warning', title: 'Formato inválido', text: 'Selecciona una imagen válida.', confirmButtonColor: '#008000' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({ icon: 'warning', title: 'Imagen muy grande', text: 'La imagen no puede superar 5MB.', confirmButtonColor: '#008000' });
+      return;
+    }
+    setSelectedPlacePhoto(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPlacePhotoPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadPlacePhoto = async () => {
+    if (!selectedPlacePhoto) return;
+    setIsUploadingPlacePhoto(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+      const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
+      const fd = new FormData();
+      fd.append('photo', selectedPlacePhoto);
+      if (placePhotoCaption.trim()) fd.append('caption', placePhotoCaption.trim());
+      const res = await fetch(`${API_URL}/drivers/photos`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al subir la foto');
+      }
+      setSelectedPlacePhoto(null);
+      setPlacePhotoPreview(null);
+      setPlacePhotoCaption('');
+      await fetchDriverPhotos();
+      Swal.fire({ icon: 'success', title: 'Foto compartida', text: 'Tu foto ya aparece en la página de inicio.', confirmButtonColor: '#008000' });
+    } catch (error: any) {
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'No se pudo subir la foto.', confirmButtonColor: '#008000' });
+    } finally {
+      setIsUploadingPlacePhoto(false);
+    }
+  };
+
+  const handleDeletePlacePhoto = async (photoId: string) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar foto?',
+      text: 'La foto se quitará de la página de inicio.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient.delete(`/drivers/photos/${photoId}`);
+      await fetchDriverPhotos();
+    } catch {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar la foto.', confirmButtonColor: '#008000' });
     }
   };
 
@@ -1217,6 +1303,104 @@ export default function DriverProfilePage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Fotos de lugares visitados */}
+            <div className="mt-3 bg-white rounded-xl shadow-md p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800">Fotos de lugares visitados</p>
+                  <p className="text-xs text-gray-500">Comparte fotos de los destinos donde llevas a tus pasajeros. Aparecen en la página de inicio.</p>
+                </div>
+              </div>
+
+              {/* Subir nueva foto */}
+              {!placePhotoPreview ? (
+                <label className="flex items-center justify-center w-full border-2 border-dashed border-[#008000]/40 rounded-xl p-5 cursor-pointer hover:border-[#008000] hover:bg-[#008000]/5 transition-colors">
+                  <div className="text-center">
+                    <svg className="w-8 h-8 text-[#008000]/60 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <p className="text-sm text-[#008000] font-medium">Seleccionar foto</p>
+                    <p className="text-xs text-gray-400 mt-1">JPG, PNG · máx. 5MB</p>
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePlacePhotoSelect} />
+                </label>
+              ) : (
+                <div className="space-y-3">
+                  <div className="relative rounded-xl overflow-hidden">
+                    <img src={placePhotoPreview} alt="Vista previa" className="w-full h-48 object-cover" />
+                    <button
+                      onClick={() => { setPlacePhotoPreview(null); setSelectedPlacePhoto(null); }}
+                      className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Descripción del lugar (opcional)"
+                    value={placePhotoCaption}
+                    onChange={e => setPlacePhotoCaption(e.target.value)}
+                    maxLength={120}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#008000]"
+                  />
+                  <button
+                    onClick={handleUploadPlacePhoto}
+                    disabled={isUploadingPlacePhoto}
+                    className="w-full bg-[#008000] text-white font-semibold py-2 rounded-lg hover:bg-[#006800] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {isUploadingPlacePhoto ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                        Subiendo...
+                      </>
+                    ) : 'Publicar foto'}
+                  </button>
+                </div>
+              )}
+
+              {/* Galería de fotos propias */}
+              {driverPhotos.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {driverPhotos.map(photo => {
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+                    return (
+                      <div key={photo.id} className="relative group rounded-lg overflow-hidden aspect-square">
+                        <img
+                          src={`${API_URL}/images/${photo.image_key}`}
+                          alt={photo.caption || 'Foto'}
+                          className="w-full h-full object-cover"
+                        />
+                        {photo.caption && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <p className="text-white text-xs truncate">{photo.caption}</p>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleDeletePlacePhoto(photo.id)}
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {driverPhotos.length === 0 && !placePhotoPreview && (
+                <p className="text-center text-xs text-gray-400 mt-3">Aún no tienes fotos publicadas</p>
+              )}
             </div>
 
             {/* Cerrar sesión */}

@@ -45,6 +45,9 @@ export default function HomePage() {
   const [topPickups, setTopPickups] = useState<{ address: string; trip_count: number }[]>([]);
   const [topDropoffs, setTopDropoffs] = useState<{ address: string; trip_count: number }[]>([]);
 
+  interface PublicPhoto { id: string; image_key: string; caption: string | null; created_at: number; driver_name: string; }
+  const [publicPhotos, setPublicPhotos] = useState<PublicPhoto[]>([]);
+
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
@@ -70,6 +73,14 @@ export default function HomePage() {
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, [user]);
+
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    fetch(`${API_URL}/drivers/photos/public`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.photos?.length) setPublicPhotos(data.photos); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/videos')
@@ -453,6 +464,43 @@ export default function HomePage() {
             </div>
           </div>
         </section>}
+
+      {/* Galería de fotos de conductores */}
+      {publicPhotos.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                Destinos compartidos por conductores
+              </h2>
+              <p className="text-xl text-black max-w-2xl mx-auto">
+                Fotos reales de los lugares a donde nuestros conductores llevan a sus pasajeros
+              </p>
+            </div>
+            <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
+              {publicPhotos.map(photo => {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+                return (
+                  <div key={photo.id} className="break-inside-avoid rounded-2xl overflow-hidden shadow-md relative group">
+                    <img
+                      src={`${API_URL}/images/${photo.image_key}`}
+                      alt={photo.caption || `Foto de ${photo.driver_name}`}
+                      className="w-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {photo.caption && (
+                        <p className="text-white text-sm font-medium leading-snug">{photo.caption}</p>
+                      )}
+                      <p className="text-white/70 text-xs mt-0.5">{photo.driver_name}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features Section */}
       <section className="py-20 bg-white">

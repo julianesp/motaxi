@@ -4,6 +4,28 @@ import { Env } from '../index';
 
 export const driverRoutes = new Hono<{ Bindings: Env }>();
 
+/**
+ * GET /drivers/photos/public
+ * Fotos públicas recientes de todos los conductores (para la homepage)
+ * No requiere autenticación — debe ir ANTES del authMiddleware
+ */
+driverRoutes.get('/photos/public', async (c) => {
+  try {
+    const photos = await c.env.DB.prepare(
+      `SELECT dp.id, dp.image_key, dp.caption, dp.created_at, u.full_name as driver_name
+       FROM driver_photos dp
+       JOIN users u ON dp.driver_id = u.id
+       WHERE dp.is_visible = 1
+       ORDER BY dp.created_at DESC
+       LIMIT 30`
+    ).all();
+
+    return c.json({ photos: photos.results });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get public photos' }, 500);
+  }
+});
+
 driverRoutes.use('*', authMiddleware);
 // Disponibilidad y ubicación requieren suscripción activa
 driverRoutes.use('/availability', subscriptionMiddleware);
@@ -467,5 +489,124 @@ driverRoutes.post('/skip-profile', async (c) => {
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to skip profile' }, 500);
+  }
+});
+
+/**
+ * POST /drivers/photos
+ * Subir una foto de un lugar visitado (conductor autenticado)
+ * Body: multipart/form-data con campo "photo" (archivo) y "caption" (texto opcional)
+ */
+driverRoutes.post('/photos', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can upload photos' }, 403);
+    }
+
+    const formData = await c.req.formData();
+    const file = formData.get('photo') as File | null;
+    const caption = (formData.get('caption') as string | null) || null;
+
+    if (!file) {
+      return c.json({ error: 'No photo provided' }, 400);
+    }
+
+    if (!file.type.startsWith('image/')) {
+      return c.json({ error: 'File must be an image' }, 400);
+    }
+
+    // Limitar tamaño a 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      return c.json({ error: 'Image must be under 5MB' }, 400);
+    }
+
+    // Limitar a 20 fotos por conductor
+    const count = await c.env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM driver_photos WHERE driver_id = ? AND is_visible = 1'
+    ).bind(user.id).first<{ cnt: number }>();
+
+    if ((count?.cnt ?? 0) >= 20) {
+      return c.json({ error: 'Maximum 20 photos allowed. Delete one before uploading.' }, 400);
+    }
+
+    if (!c.env.IMAGES) {
+      return c.json({ error: 'Image storage not configured' }, 500);
+    }
+
+    const id = crypto.randomUUID();
+    const ext = file.type.split('/')[1] || 'jpg';
+    const imageKey = `driver-photos/${user.id}/${id}.${ext}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    await c.env.IMAGES.put(imageKey, arrayBuffer, {
+      httpMetadata: { contentType: file.type },
+    });
+
+    await c.env.DB.prepare(
+      'INSERT INTO driver_photos (id, driver_id, image_key, caption, created_at) VALUES (?, ?, ?, ?, unixepoch())'
+    ).bind(id, user.id, imageKey, caption).run();
+
+    return c.json({ success: true, id, image_key: imageKey });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to upload photo' }, 500);
+  }
+});
+
+/**
+ * GET /drivers/photos/my
+ * Listar fotos propias del conductor autenticado
+ */
+driverRoutes.get('/photos/my', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can access this endpoint' }, 403);
+    }
+
+    const photos = await c.env.DB.prepare(
+      `SELECT id, image_key, caption, created_at
+       FROM driver_photos
+       WHERE driver_id = ? AND is_visible = 1
+       ORDER BY created_at DESC`
+    ).bind(user.id).all();
+
+    return c.json({ photos: photos.results });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get photos' }, 500);
+  }
+});
+
+/**
+ * DELETE /drivers/photos/:id
+ * Eliminar una foto propia del conductor
+ */
+driverRoutes.delete('/photos/:id', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Only drivers can delete photos' }, 403);
+    }
+
+    const photoId = c.req.param('id');
+    const photo = await c.env.DB.prepare(
+      'SELECT image_key FROM driver_photos WHERE id = ? AND driver_id = ?'
+    ).bind(photoId, user.id).first<{ image_key: string }>();
+
+    if (!photo) {
+      return c.json({ error: 'Photo not found' }, 404);
+    }
+
+    if (c.env.IMAGES) {
+      await c.env.IMAGES.delete(photo.image_key);
+    }
+
+    await c.env.DB.prepare(
+      'DELETE FROM driver_photos WHERE id = ? AND driver_id = ?'
+    ).bind(photoId, user.id).run();
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to delete photo' }, 500);
   }
 });

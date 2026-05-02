@@ -838,3 +838,221 @@ adminRoutes.get('/drivers/list', async (c) => {
     return c.json({ error: error.message || 'Failed to get drivers list' }, 500);
   }
 });
+
+/**
+ * POST /admin/emails/broadcast
+ * Enviar email masivo a todos los pasajeros, conductores, o ambos
+ * Body: { target: 'passengers' | 'drivers' | 'all', subject: string, message: string }
+ */
+adminRoutes.post('/emails/broadcast', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { target, subject, message } = body;
+
+    if (!target || !subject || !message) {
+      return c.json({ error: 'target, subject y message son requeridos' }, 400);
+    }
+
+    if (!['passengers', 'drivers', 'all'].includes(target)) {
+      return c.json({ error: 'target debe ser: passengers, drivers, o all' }, 400);
+    }
+
+    const { EmailService } = await import('../utils/email');
+    const emailService = new EmailService(c.env.RESEND_API_KEY, c.env.RESEND_FROM_EMAIL);
+
+    // Obtener emails según el target
+    let whereClause = `WHERE u.email IS NOT NULL AND u.email != '' AND u.email NOT LIKE '%@motaxi.local'`;
+    if (target === 'passengers') {
+      whereClause += ` AND u.role = 'passenger'`;
+    } else if (target === 'drivers') {
+      whereClause += ` AND u.role = 'driver'`;
+    }
+
+    const users = await c.env.DB.prepare(
+      `SELECT u.email, u.full_name FROM users u ${whereClause} ORDER BY u.created_at DESC`
+    ).all();
+
+    const recipients = (users.results || []) as { email: string; full_name: string }[];
+
+    if (recipients.length === 0) {
+      return c.json({ error: 'No hay usuarios con email para este segmento' }, 400);
+    }
+
+    const siteUrl = c.env.SITE_URL || 'https://motaxi.app';
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const recipient of recipients) {
+      const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+    <div style="background:linear-gradient(135deg,#008000,#004d00);padding:36px 24px;text-align:center;">
+      <h1 style="color:#fff;margin:0;font-size:28px;font-weight:700;">MoTaxi</h1>
+      <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Tu servicio de transporte de confianza</p>
+    </div>
+    <div style="padding:36px 32px;">
+      <p style="font-size:16px;color:#555;margin-bottom:16px;">Hola${recipient.full_name ? ` <strong>${recipient.full_name}</strong>` : ''},</p>
+      <div style="font-size:15px;color:#333;line-height:1.7;white-space:pre-wrap;">${message}</div>
+      <div style="margin-top:32px;text-align:center;">
+        <a href="${siteUrl}" style="display:inline-block;background:#008000;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">Abrir MoTaxi</a>
+      </div>
+    </div>
+    <div style="background:#f8f9fa;padding:20px 24px;text-align:center;border-top:1px solid #e9ecef;">
+      <p style="color:#888;font-size:12px;margin:0;">© ${new Date().getFullYear()} MoTaxi · Este es un mensaje oficial de la plataforma</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      const result = await emailService.send({ to: recipient.email, subject, html });
+      if (result.success) {
+        sent++;
+      } else {
+        failed++;
+      }
+    }
+
+    return c.json({ success: true, sent, failed, total: recipients.length });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to send broadcast emails' }, 500);
+  }
+});
+
+/**
+ * GET /admin/qr-requests
+ * Lista de conductores que solicitaron código QR
+ */
+adminRoutes.get('/qr-requests', async (c) => {
+  try {
+    const requests = await c.env.DB.prepare(
+      `SELECT qr.id, qr.driver_id, qr.status, qr.created_at,
+              u.full_name, u.phone, u.email,
+              d.municipality, d.vehicle_model, d.vehicle_plate
+       FROM qr_requests qr
+       JOIN users u ON qr.driver_id = u.id
+       LEFT JOIN drivers d ON qr.driver_id = d.id
+       ORDER BY qr.created_at DESC`
+    ).all();
+    return c.json({ requests: requests.results || [] });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get QR requests' }, 500);
+  }
+});
+
+/**
+ * PUT /admin/qr-requests/:driverId/status
+ * Actualizar estado de solicitud QR
+ * Body: { status: 'pending' | 'contacted' | 'delivered' }
+ */
+adminRoutes.put('/qr-requests/:driverId/status', async (c) => {
+  try {
+    const driverId = c.req.param('driverId');
+    const { status } = await c.req.json();
+
+    if (!['pending', 'contacted', 'delivered'].includes(status)) {
+      return c.json({ error: 'Estado inválido' }, 400);
+    }
+
+    await c.env.DB.prepare(
+      'UPDATE qr_requests SET status = ? WHERE driver_id = ?'
+    ).bind(status, driverId).run();
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to update QR status' }, 500);
+  }
+});
+
+/**
+ * GET /admin/referrals/leaderboard
+ * Ranking de conductores por referidos este mes
+ */
+adminRoutes.get('/referrals/leaderboard', async (c) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const monthStart = Math.floor(new Date(year, month - 1, 1).getTime() / 1000);
+    const monthEnd = Math.floor(new Date(year, month, 0, 23, 59, 59).getTime() / 1000);
+
+    const leaderboard = await c.env.DB.prepare(
+      `SELECT dr.driver_id, COUNT(*) as referral_count,
+              u.full_name, u.email, u.phone, d.municipality
+       FROM driver_referrals dr
+       JOIN users u ON dr.driver_id = u.id
+       LEFT JOIN drivers d ON dr.driver_id = d.id
+       WHERE dr.created_at BETWEEN ? AND ?
+       GROUP BY dr.driver_id
+       ORDER BY referral_count DESC
+       LIMIT 20`
+    ).bind(monthStart, monthEnd).all();
+
+    return c.json({ leaderboard: leaderboard.results || [], month, year });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get leaderboard' }, 500);
+  }
+});
+
+/**
+ * POST /admin/referrals/set-winner
+ * Declarar ganador oficial del mes (aplica mes gratis)
+ * Body: { driver_id: string, month?: number, year?: number }
+ */
+adminRoutes.post('/referrals/set-winner', async (c) => {
+  try {
+    const body = await c.req.json();
+    const now = new Date();
+    const month = body.month ?? (now.getMonth() + 1);
+    const year = body.year ?? now.getFullYear();
+    const { driver_id } = body;
+
+    if (!driver_id) {
+      return c.json({ error: 'driver_id requerido' }, 400);
+    }
+
+    const monthStart = Math.floor(new Date(year, month - 1, 1).getTime() / 1000);
+    const monthEnd = Math.floor(new Date(year, month, 0, 23, 59, 59).getTime() / 1000);
+
+    const count = await c.env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM driver_referrals WHERE driver_id = ? AND created_at BETWEEN ? AND ?'
+    ).bind(driver_id, monthStart, monthEnd).first<{ cnt: number }>();
+
+    const { v4: uuidv4 } = await import('uuid');
+    const id = uuidv4();
+
+    await c.env.DB.prepare(
+      `INSERT OR REPLACE INTO referral_winner (id, driver_id, month, year, referral_count, reward_applied)
+       VALUES (?, ?, ?, ?, ?, 0)`
+    ).bind(id, driver_id, month, year, count?.cnt ?? 0).run();
+
+    // Aplicar mes gratis: extender suscripción 30 días
+    const sub = await c.env.DB.prepare(
+      'SELECT id, expires_at, status FROM subscriptions WHERE driver_id = ? ORDER BY created_at DESC LIMIT 1'
+    ).bind(driver_id).first<{ id: string; expires_at: number; status: string }>();
+
+    if (sub) {
+      const now = Math.floor(Date.now() / 1000);
+      const base = sub.expires_at > now ? sub.expires_at : now;
+      const newExpiry = base + 30 * 24 * 3600;
+      await c.env.DB.prepare(
+        'UPDATE subscriptions SET expires_at = ?, status = ? WHERE id = ?'
+      ).bind(newExpiry, 'active', sub.id).run();
+    }
+
+    await c.env.DB.prepare(
+      'UPDATE referral_winner SET reward_applied = 1 WHERE driver_id = ? AND month = ? AND year = ?'
+    ).bind(driver_id, month, year).run();
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to set winner' }, 500);
+  }
+});

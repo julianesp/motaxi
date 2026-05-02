@@ -15,6 +15,7 @@ function RegisterForm() {
   const { register } = useAuth();
 
   const roleParam = searchParams.get("role") as UserRole | null;
+  const refParam = searchParams.get("ref") || undefined;
 
   // step 1 = datos, step 2 = email opcional
   const [step, setStep] = useState(1);
@@ -91,6 +92,7 @@ function RegisterForm() {
         password: formData.password,
         role: formData.role,
         vehicle_types: formData.role === "driver" ? formData.vehicle_types : undefined,
+        ref: refParam,
       });
 
       if (registeredUser.email === "admin@neurai.dev") {

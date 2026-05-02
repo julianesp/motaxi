@@ -133,7 +133,7 @@ authRoutes.post('/verify-otp', async (c) => {
 authRoutes.post('/register', async (c) => {
   try {
     const body = await c.req.json();
-    const { email, password, phone, full_name, role, vehicle_types } = body;
+    const { email, password, phone, full_name, role, vehicle_types, ref } = body;
 
     // Validación básica — email es opcional, phone es obligatorio
     if (!password || !phone || !full_name || !role) {
@@ -231,6 +231,23 @@ authRoutes.post('/register', async (c) => {
       await c.env.DB.prepare(
         `INSERT INTO subscriptions (id, user_id, status, plan, amount, trial_ends_at) VALUES (?, ?, 'trial', 'monthly', 14900, ?)`
       ).bind(uuidv4(), userId, trialEndsAt).run();
+    }
+
+    // Registrar referido si viene con código de conductor
+    if (ref && role === 'passenger') {
+      try {
+        const driverExists = await c.env.DB.prepare(
+          'SELECT u.id FROM users u JOIN drivers d ON u.id = d.id WHERE u.id = ?'
+        ).bind(ref).first();
+        if (driverExists && ref !== userId) {
+          const refId = uuidv4();
+          await c.env.DB.prepare(
+            'INSERT OR IGNORE INTO driver_referrals (id, driver_id, referred_user_id) VALUES (?, ?, ?)'
+          ).bind(refId, ref, userId).run();
+        }
+      } catch (refErr) {
+        console.error('Referral registration failed (non-fatal):', refErr);
+      }
     }
 
     // Crear sesión

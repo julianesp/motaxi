@@ -11,6 +11,7 @@ import { paymentRoutes } from './routes/payments';
 import { chatRoutes } from './routes/chat';
 import { analyticsRoutes } from './routes/analytics';
 import { telegramRoutes } from './routes/telegram';
+import { referralRoutes } from './routes/referrals';
 
 export interface Env {
   DB: D1Database;
@@ -91,6 +92,7 @@ app.route('/payments', paymentRoutes);
 app.route('/chat', chatRoutes);
 app.route('/analytics', analyticsRoutes);
 app.route('/telegram', telegramRoutes);
+app.route('/referrals', referralRoutes);
 
 // Error handler
 app.onError((err, c) => {

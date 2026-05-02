@@ -45,6 +45,9 @@ export default function HomePage() {
   const [topPickups, setTopPickups] = useState<{ address: string; trip_count: number }[]>([]);
   const [topDropoffs, setTopDropoffs] = useState<{ address: string; trip_count: number }[]>([]);
 
+  interface ReferralWinner { full_name: string; profile_image?: string; referral_count: number; municipality?: string; month: number; year: number; }
+  const [referralWinner, setReferralWinner] = useState<ReferralWinner | null>(null);
+
   interface PublicPhoto { id: string; image_key: string; caption: string | null; created_at: number; driver_name: string; likes: number; }
   const [publicPhotos, setPublicPhotos] = useState<PublicPhoto[]>([]);
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
@@ -76,6 +79,14 @@ export default function HomePage() {
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, [user]);
+
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    fetch(`${API_URL}/referrals/winner`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.winner) setReferralWinner(data.winner); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
@@ -365,6 +376,40 @@ export default function HomePage() {
           </svg>
         </div>
       </section>
+
+      {/* Banner: Ganador del Concurso de Referidos */}
+      {referralWinner && (
+        <section className="py-10 bg-white">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-r from-[#008000]/10 to-[#008000]/5 border border-[#008000]/20 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5 shadow-md">
+              <div className="flex-shrink-0 w-16 h-16 bg-[#008000]/20 rounded-full flex items-center justify-center text-3xl">
+                🏆
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-xs font-bold text-[#008000] uppercase tracking-widest mb-1">
+                  Conductor del Mes — Más Referidos
+                </p>
+                <p className="text-2xl font-bold text-gray-900">{referralWinner.full_name}</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {referralWinner.referral_count} pasajero{referralWinner.referral_count !== 1 ? 's' : ''} registrado{referralWinner.referral_count !== 1 ? 's' : ''} con su enlace
+                  {referralWinner.municipality && ` · ${referralWinner.municipality.charAt(0).toUpperCase() + referralWinner.municipality.slice(1).replace('_', ' ')}`}
+                </p>
+                <p className="text-xs text-[#008000] font-semibold mt-2">
+                  Premio: mes de suscripción gratuito
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <span className="inline-block bg-[#008000] text-white text-xs font-bold px-4 py-2 rounded-full shadow">
+                  Mes gratis ganado
+                </span>
+              </div>
+            </div>
+            <p className="text-center text-xs text-gray-500 mt-3">
+              Cada conductor tiene un enlace de referido en su perfil. El que más pasajeros inscriba durante el mes gana el siguiente mes gratis.
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* Municipios Section */}
       <section className="py-20 bg-white">

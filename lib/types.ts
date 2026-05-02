@@ -110,4 +110,5 @@ export interface RegisterData {
   full_name: string;
   role: UserRole;
   vehicle_types?: string;
+  ref?: string;
 }

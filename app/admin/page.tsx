@@ -318,8 +318,243 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Concurso de Referidos */}
+      <ReferralLeaderboard />
+
+      {/* Solicitudes de QR */}
+      <QrRequestsSection />
+
+      {/* Emails masivos */}
+      <BroadcastEmailSection />
+
       {/* Código QR */}
       <QRSection />
+    </div>
+  );
+}
+
+function ReferralLeaderboard() {
+  const [leaderboard, setLeaderboard] = useState<{ driver_id: string; full_name: string; email: string; phone: string; municipality?: string; referral_count: number }[]>([]);
+  const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(0);
+  const [settingWinner, setSettingWinner] = useState<string | null>(null);
+  const [winnerSet, setWinnerSet] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiClient.get('/admin/referrals/leaderboard')
+      .then(res => {
+        setLeaderboard(res.data.leaderboard || []);
+        setMonth(res.data.month);
+        setYear(res.data.year);
+      })
+      .catch(() => {});
+  }, []);
+
+  const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const handleSetWinner = async (driverId: string) => {
+    setSettingWinner(driverId);
+    try {
+      await apiClient.post('/admin/referrals/set-winner', { driver_id: driverId });
+      setWinnerSet(driverId);
+    } catch {
+      alert('Error al declarar ganador');
+    } finally {
+      setSettingWinner(null);
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        Concurso de referidos — {month ? `${monthNames[month]} ${year}` : ''}
+      </h2>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        {leaderboard.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-8">Ningún conductor ha referido pasajeros este mes</p>
+        ) : (
+          <div className="divide-y divide-gray-800">
+            {leaderboard.map((entry, i) => (
+              <div key={entry.driver_id} className="flex items-center justify-between px-4 py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`text-lg font-bold flex-shrink-0 w-6 text-center ${i === 0 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                    {i === 0 ? '🥇' : `#${i + 1}`}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{entry.full_name}</p>
+                    <p className="text-xs text-gray-400">{entry.phone}{entry.municipality ? ` · ${entry.municipality}` : ''}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="text-[#008000] font-bold text-sm">{entry.referral_count} referidos</span>
+                  {winnerSet === entry.driver_id ? (
+                    <span className="text-xs bg-[#008000]/20 text-[#008000] px-2 py-1 rounded-lg font-semibold">Ganador</span>
+                  ) : (
+                    <button
+                      onClick={() => handleSetWinner(entry.driver_id)}
+                      disabled={settingWinner === entry.driver_id}
+                      className="text-xs bg-[#008000] hover:bg-[#006800] text-white px-2 py-1 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {settingWinner === entry.driver_id ? '...' : 'Declarar ganador'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QrRequestsSection() {
+  interface QrRequest { id: string; driver_id: string; full_name: string; phone: string; email: string; municipality?: string; vehicle_model?: string; vehicle_plate?: string; status: string; created_at: number; }
+  const [requests, setRequests] = useState<QrRequest[]>([]);
+  const [updating, setUpdating] = useState<string | null>(null);
+
+  const fetchRequests = () => {
+    apiClient.get('/admin/qr-requests')
+      .then(res => setRequests(res.data.requests || []))
+      .catch(() => {});
+  };
+
+  useEffect(() => { fetchRequests(); }, []);
+
+  const handleStatusChange = async (driverId: string, status: string) => {
+    setUpdating(driverId);
+    try {
+      await apiClient.put(`/admin/qr-requests/${driverId}/status`, { status });
+      fetchRequests();
+    } catch {
+      alert('Error al actualizar estado');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const statusLabel: Record<string, string> = { pending: 'Pendiente', contacted: 'Contactado', delivered: 'Entregado' };
+  const statusColor: Record<string, string> = { pending: 'text-amber-400', contacted: 'text-blue-400', delivered: 'text-[#008000]' };
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        Solicitudes de código QR ({requests.length})
+      </h2>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        {requests.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-8">Ningún conductor ha solicitado QR aún</p>
+        ) : (
+          <div className="divide-y divide-gray-800">
+            {requests.map(req => (
+              <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white">{req.full_name}</p>
+                  <p className="text-xs text-gray-400">{req.phone}{req.municipality ? ` · ${req.municipality}` : ''}{req.vehicle_plate ? ` · ${req.vehicle_plate}` : ''}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`text-xs font-semibold ${statusColor[req.status]}`}>{statusLabel[req.status]}</span>
+                  <select
+                    value={req.status}
+                    disabled={updating === req.driver_id}
+                    onChange={e => handleStatusChange(req.driver_id, e.target.value)}
+                    className="bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-2 py-1 focus:outline-none"
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="contacted">Contactado</option>
+                    <option value="delivered">Entregado</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BroadcastEmailSection() {
+  const [target, setTarget] = useState<'passengers' | 'drivers' | 'all'>('all');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
+  const [error, setError] = useState('');
+
+  const handleSend = async () => {
+    if (!subject.trim() || !message.trim()) {
+      setError('Completa el asunto y el mensaje');
+      return;
+    }
+    setSending(true);
+    setError('');
+    setResult(null);
+    try {
+      const res = await apiClient.post('/admin/emails/broadcast', { target, subject, message });
+      setResult(res.data);
+      setSubject('');
+      setMessage('');
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Error al enviar emails');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Emails masivos</h2>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Destinatarios</label>
+          <select
+            value={target}
+            onChange={e => setTarget(e.target.value as any)}
+            className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000]"
+          >
+            <option value="all">Todos (conductores + pasajeros)</option>
+            <option value="passengers">Solo pasajeros</option>
+            <option value="drivers">Solo conductores</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Asunto</label>
+          <input
+            type="text"
+            value={subject}
+            onChange={e => setSubject(e.target.value)}
+            placeholder="Ej: ¡MoTaxi tiene novedades para ti!"
+            className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Mensaje</label>
+          <textarea
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            rows={5}
+            placeholder="Escribe aquí el mensaje motivador para tus usuarios..."
+            className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600 resize-none"
+          />
+        </div>
+        {error && <p className="text-red-400 text-xs">{error}</p>}
+        {result && (
+          <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-lg px-4 py-3">
+            <p className="text-[#008000] text-sm font-semibold">Emails enviados: {result.sent} / {result.total}</p>
+            {result.failed > 0 && <p className="text-amber-400 text-xs mt-0.5">Fallidos: {result.failed}</p>}
+          </div>
+        )}
+        <button
+          onClick={handleSend}
+          disabled={sending}
+          className="w-full bg-[#008000] hover:bg-[#006800] text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+        >
+          {sending ? (
+            <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Enviando...</>
+          ) : 'Enviar emails'}
+        </button>
+      </div>
     </div>
   );
 }

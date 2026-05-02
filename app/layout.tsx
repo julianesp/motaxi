@@ -16,18 +16,36 @@ const inter = Inter({ subsets: ["latin"], display: "swap", preload: true });
 
 export const metadata: Metadata = {
   manifest: "/manifest.json",
-  title: "MoTaxi - Transporte Desde la Comodidad de tu Hogar",
+  title: "MoTaxi - Mototaxi en el Valle de Sibundoy, Putumayo",
   description:
-    "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación",
+    "Pide tu mototaxi en Sibundoy, Santiago, Colón y San Francisco (Putumayo, Colombia). Conectamos pasajeros con conductores de moto cerca de ti. Rápido, seguro y económico.",
+  keywords: [
+    "mototaxi Valle de Sibundoy",
+    "mototaxi Sibundoy",
+    "mototaxi Santiago Putumayo",
+    "mototaxi Colón Putumayo",
+    "mototaxi San Francisco Putumayo",
+    "moto taxi Putumayo",
+    "transporte Sibundoy",
+    "taxi moto Putumayo",
+    "mototaxista Valle de Sibundoy",
+    "transporte Valle de Sibundoy",
+    "moto taxi Colombia",
+    "MoTaxi",
+  ],
+  metadataBase: new URL("https://motaxi.dev"),
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
     apple:
       "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
   },
   openGraph: {
-    title: "MoTaxi - Transporte Desde la Comodidad de tu Hogar",
+    title: "MoTaxi - Mototaxi en el Valle de Sibundoy, Putumayo",
     description:
-      "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación",
+      "Pide tu mototaxi en Sibundoy, Santiago, Colón y San Francisco (Putumayo). Conductores cerca de ti, tarifas justas.",
     url: "https://motaxi.dev",
     siteName: "MoTaxi",
     images: [
@@ -35,7 +53,7 @@ export const metadata: Metadata = {
         url: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
         width: 512,
         height: 512,
-        alt: "MoTaxi logo",
+        alt: "MoTaxi - Mototaxi Valle de Sibundoy",
       },
     ],
     locale: "es_CO",
@@ -43,9 +61,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "MoTaxi - Transporte Desde la Comodidad de tu Hogar",
+    title: "MoTaxi - Mototaxi en el Valle de Sibundoy, Putumayo",
     description:
-      "Aplicación de mototaxis para pasajeros y conductores en el Valle de Sibundoy. Servicio de transporte disponible desde tu ubicación",
+      "Pide tu mototaxi en Sibundoy, Santiago, Colón y San Francisco (Putumayo). Rápido y económico.",
     images: [
       "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
     ],
@@ -61,6 +79,43 @@ export default function RootLayout({
     <ClerkProvider localization={esES}>
       <html lang="es">
         <body className={inter.className}>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                name: "MoTaxi",
+                description:
+                  "Servicio de mototaxi en el Valle de Sibundoy, Putumayo, Colombia. Conectamos pasajeros con conductores de moto en Sibundoy, Santiago, Colón y San Francisco.",
+                url: "https://motaxi.dev",
+                logo: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+                image: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+                telephone: "",
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: "Sibundoy",
+                  addressRegion: "Putumayo",
+                  addressCountry: "CO",
+                },
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: 1.1556,
+                  longitude: -77.0625,
+                },
+                areaServed: [
+                  { "@type": "City", name: "Sibundoy", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
+                  { "@type": "City", name: "Santiago", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
+                  { "@type": "City", name: "Colón", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
+                  { "@type": "City", name: "San Francisco", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
+                ],
+                serviceType: "Servicio de mototaxi",
+                priceRange: "$",
+                openingHours: "Mo-Su 00:00-23:59",
+                sameAs: [],
+              }),
+            }}
+          />
           <Analytics />
           <PageViewTracker />
           <OpenInBrowser />

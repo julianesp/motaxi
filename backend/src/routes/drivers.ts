@@ -368,6 +368,13 @@ driverRoutes.get('/nearby', async (c) => {
 
     let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'`;
 
+    // Ocultar conductores nocturnos fuera de su horario (6:00pm–6:00am, UTC-5 Colombia)
+    const horaCol = (new Date().getUTCHours() - 5 + 24) % 24; // hora actual en Colombia
+    const esHoraDia = horaCol >= 6 && horaCol < 18; // 6:01am a 5:59pm
+    if (esHoraDia) {
+      whereClause += ` AND (d.night_only IS NULL OR d.night_only = 0)`;
+    }
+
     // Filtrar por tipo de vehículo si se especifica
     // Los conductores con vehicle_types NULL se tratan como 'moto' (valor por defecto histórico)
     if (vehicleType && ['moto', 'taxi', 'carro', 'piaggio', 'particular'].includes(vehicleType)) {

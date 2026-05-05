@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   keywords: [
     "mototaxi Valle de Sibundoy",
     "mototaxi Sibundoy",
+    "mototaxi Alto Putumayo",
+    "mototaxi alto putumayo",
     "mototaxi Santiago Putumayo",
     "mototaxi Colón Putumayo",
     "mototaxi San Francisco Putumayo",
@@ -90,7 +92,8 @@ export default function RootLayout({
                   "Servicio de mototaxi en el Valle de Sibundoy, Putumayo, Colombia. Conectamos pasajeros con conductores de moto en Sibundoy, Santiago, Colón y San Francisco.",
                 url: "https://motaxi.dev",
                 logo: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
-                image: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+                image:
+                  "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
                 telephone: "",
                 address: {
                   "@type": "PostalAddress",
@@ -104,10 +107,38 @@ export default function RootLayout({
                   longitude: -77.0625,
                 },
                 areaServed: [
-                  { "@type": "City", name: "Sibundoy", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
-                  { "@type": "City", name: "Santiago", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
-                  { "@type": "City", name: "Colón", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
-                  { "@type": "City", name: "San Francisco", containedInPlace: { "@type": "AdministrativeArea", name: "Putumayo" } },
+                  {
+                    "@type": "City",
+                    name: "Sibundoy",
+                    containedInPlace: {
+                      "@type": "AdministrativeArea",
+                      name: "Putumayo",
+                    },
+                  },
+                  {
+                    "@type": "City",
+                    name: "Santiago",
+                    containedInPlace: {
+                      "@type": "AdministrativeArea",
+                      name: "Putumayo",
+                    },
+                  },
+                  {
+                    "@type": "City",
+                    name: "Colón",
+                    containedInPlace: {
+                      "@type": "AdministrativeArea",
+                      name: "Putumayo",
+                    },
+                  },
+                  {
+                    "@type": "City",
+                    name: "San Francisco",
+                    containedInPlace: {
+                      "@type": "AdministrativeArea",
+                      name: "Putumayo",
+                    },
+                  },
                 ],
                 serviceType: "Servicio de mototaxi",
                 priceRange: "$",

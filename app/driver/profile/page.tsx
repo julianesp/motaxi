@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { MUNICIPALITIES } from '@/lib/constants/municipalities';
 import TrialBanner from '@/components/TrialBanner';
 import { useSubscription } from '@/lib/hooks/useSubscription';
 import Swal from 'sweetalert2';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface DriverInfo {
   vehicle_model: string;
@@ -76,9 +77,30 @@ export default function DriverProfilePage() {
   const [referralStats, setReferralStats] = useState<{ total: number; this_month: number; rank: number } | null>(null);
   const [referralLinkCopied, setReferralLinkCopied] = useState(false);
 
-  // QR request
-  const [qrRequestStatus, setQrRequestStatus] = useState<'none' | 'pending' | 'contacted' | 'delivered'>('none');
-  const [qrRequesting, setQrRequesting] = useState(false);
+  // QR
+  const qrContainerRef = useRef<HTMLDivElement>(null);
+  const handleDownloadQr = () => {
+    const svg = qrContainerRef.current?.querySelector('svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const size = 220;
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 20, 20, 180, 180);
+      const a = document.createElement('a');
+      a.download = 'motaxi-qr.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
 
   // Fotos de lugares visitados
   interface DriverPhoto { id: string; image_key: string; caption: string | null; created_at: number; }
@@ -133,7 +155,6 @@ export default function DriverProfilePage() {
       fetchDriverPhotos();
       checkTelegramStatus();
       fetchReferralStats();
-      fetchQrRequestStatus();
     }
   }, [user]);
 
@@ -165,6 +186,7 @@ export default function DriverProfilePage() {
           municipality: driver.municipality || '',
           accepts_intercity_trips: driver.accepts_intercity_trips || 1,
           accepts_rural_trips: driver.accepts_rural_trips || 1,
+          night_only: driver.night_only || 0,
           base_fare: driver.base_fare || 2000,
           intercity_fare: driver.intercity_fare || 5000,
           rural_fare: driver.rural_fare || 4000,
@@ -289,35 +311,6 @@ export default function DriverProfilePage() {
       setReferralStats(res.data);
     } catch {
       // silencioso
-    }
-  };
-
-  const fetchQrRequestStatus = async () => {
-    try {
-      const { apiClient } = await import('@/lib/api-client');
-      const res = await apiClient.get('/referrals/qr-request/status');
-      setQrRequestStatus(res.data.request?.status ?? 'none');
-    } catch {
-      // silencioso
-    }
-  };
-
-  const handleRequestQr = async () => {
-    setQrRequesting(true);
-    try {
-      const { apiClient } = await import('@/lib/api-client');
-      await apiClient.post('/referrals/qr-request', {});
-      setQrRequestStatus('pending');
-      Swal.fire({
-        icon: 'success',
-        title: '¡Solicitud enviada!',
-        html: `<p>Recibirás un mensaje por WhatsApp para coordinar la entrega de tu código QR.<br/><br/>Si no recibes respuesta en 24 horas, contáctanos directamente.</p>`,
-        confirmButtonColor: '#008000',
-      });
-    } catch {
-      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar la solicitud.', confirmButtonColor: '#008000' });
-    } finally {
-      setQrRequesting(false);
     }
   };
 
@@ -1413,7 +1406,7 @@ export default function DriverProfilePage() {
               </div>
             </div>
 
-            {/* Solicitar código QR para la moto */}
+            {/* Código QR para la moto */}
             <div className="mt-3 bg-white rounded-xl shadow-md p-4">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -1423,42 +1416,42 @@ export default function DriverProfilePage() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-800">Código QR para tu moto</p>
-                  <p className="text-xs text-gray-500">Pega el QR en tu moto para que los pasajeros se registren directamente desde ella.</p>
+                  <p className="text-xs text-gray-500">Imprímelo y pégalo en tu moto para que los pasajeros entren al sitio al escanearlo.</p>
                 </div>
               </div>
 
-              {qrRequestStatus === 'none' && (
-                <button
-                  onClick={handleRequestQr}
-                  disabled={qrRequesting}
-                  className="w-full bg-[#008000] text-white font-semibold py-2.5 rounded-lg hover:bg-[#006800] transition-colors disabled:opacity-60 flex items-center justify-center gap-2 text-sm"
-                >
-                  {qrRequesting ? (
-                    <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Enviando...</>
-                  ) : 'Solicitar mi código QR'}
-                </button>
-              )}
-
-              {qrRequestStatus === 'pending' && (
-                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
-                  <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  <p className="text-xs text-amber-700 font-medium">Solicitud pendiente — te contactaremos pronto por WhatsApp para coordinar la entrega.</p>
+              <div className="flex flex-col items-center gap-3">
+                <div className="print-qr p-3 bg-white border-2 border-[#008000]/30 rounded-xl" ref={qrContainerRef}>
+                  <QRCodeSVG
+                    value="https://motaxi.dev"
+                    size={180}
+                    fgColor="#1a1a1a"
+                    bgColor="#ffffff"
+                    level="H"
+                  />
                 </div>
-              )}
-
-              {qrRequestStatus === 'contacted' && (
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2.5">
-                  <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                  <p className="text-xs text-blue-700 font-medium">Ya nos pusimos en contacto contigo — estamos coordinando la entrega.</p>
+                <p className="text-xs text-gray-400 text-center">Apunta a <span className="font-semibold text-gray-600">motaxi.dev</span></p>
+                <div className="flex gap-2 w-full">
+                  <button
+                    onClick={() => window.print()}
+                    className="flex-1 bg-[#008000] text-white font-semibold py-2.5 rounded-lg hover:bg-[#006800] transition-colors flex items-center justify-center gap-2 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Imprimir
+                  </button>
+                  <button
+                    onClick={handleDownloadQr}
+                    className="flex-1 bg-white border border-[#008000] text-[#008000] font-semibold py-2.5 rounded-lg hover:bg-[#008000]/5 transition-colors flex items-center justify-center gap-2 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Descargar
+                  </button>
                 </div>
-              )}
-
-              {qrRequestStatus === 'delivered' && (
-                <div className="flex items-center gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-lg px-3 py-2.5">
-                  <svg className="w-4 h-4 text-[#008000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  <p className="text-xs text-[#008000] font-medium">QR entregado — ya tienes tu codigo pegado en la moto.</p>
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Fotos de lugares visitados */}

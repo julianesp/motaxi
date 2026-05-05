@@ -891,6 +891,23 @@ export default function PassengerHomePage() {
 
             {!isPanelMinimized && (
               <>
+                {/* Acceso a rutas compartidas */}
+                <button
+                  onClick={() => router.push('/passenger/shared-routes')}
+                  className="w-full flex items-center justify-between bg-[#008000]/5 border border-[#008000]/20 rounded-xl px-4 py-2.5 hover:bg-[#008000]/10 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🚕</span>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-[#008000]">Taxis con puestos disponibles</p>
+                      <p className="text-xs text-gray-500">Ver rutas hacia otros pueblos</p>
+                    </div>
+                  </div>
+                  <svg className="w-4 h-4 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
                 {/* Toggle: Viaje normal vs Envío de paquete */}
                 <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
                   <button

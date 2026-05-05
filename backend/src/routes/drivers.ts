@@ -88,6 +88,7 @@ driverRoutes.get('/profile', async (c) => {
         d.accepts_intercity_trips,
         d.accepts_rural_trips,
         d.night_only,
+        d.weekend_daytime,
         d.whatsapp,
         d.base_fare,
         d.intercity_fare,
@@ -113,7 +114,7 @@ driverRoutes.get('/profile', async (c) => {
                 d.is_available, d.verification_status, d.rating, d.total_trips,
                 d.current_latitude, d.current_longitude, d.last_location_update,
                 d.municipality, d.accepts_intercity_trips, d.accepts_rural_trips,
-                d.night_only, d.whatsapp, d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
+                d.night_only, d.weekend_daytime, d.whatsapp, d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
                 d.profile_completed, d.profile_skipped_at
          FROM drivers d WHERE d.id = ?`
       ).bind(user.id).first();
@@ -166,6 +167,7 @@ driverRoutes.put('/profile', async (c) => {
       accepts_intercity_trips,
       accepts_rural_trips,
       night_only,
+      weekend_daytime,
       whatsapp,
       vehicle_model,
       vehicle_color,
@@ -196,6 +198,10 @@ driverRoutes.put('/profile', async (c) => {
     if (night_only !== undefined) {
       updates.push('night_only = ?');
       values.push(night_only ? 1 : 0);
+    }
+    if (weekend_daytime !== undefined) {
+      updates.push('weekend_daytime = ?');
+      values.push(weekend_daytime ? 1 : 0);
     }
     if (whatsapp !== undefined) {
       updates.push('whatsapp = ?');
@@ -369,10 +375,18 @@ driverRoutes.get('/nearby', async (c) => {
     let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'`;
 
     // Ocultar conductores nocturnos fuera de su horario (6:00pm–6:00am, UTC-5 Colombia)
-    const horaCol = (new Date().getUTCHours() - 5 + 24) % 24; // hora actual en Colombia
+    const now = new Date();
+    const horaCol = (now.getUTCHours() - 5 + 24) % 24; // hora actual en Colombia
+    const diaSemana = (now.getUTCDay() - 0 + 7) % 7; // 0=domingo, 6=sábado (en hora Colombia)
+    const esFindeSemana = diaSemana === 0 || diaSemana === 6; // sábado o domingo
     const esHoraDia = horaCol >= 6 && horaCol < 18; // 6:01am a 5:59pm
     if (esHoraDia) {
-      whereClause += ` AND (d.night_only IS NULL OR d.night_only = 0)`;
+      // En horario diurno: mostrar conductores sin restricción nocturna,
+      // o conductores nocturnos que trabajan también de día en fines de semana (si es fin de semana)
+      whereClause += ` AND (
+        d.night_only IS NULL OR d.night_only = 0
+        OR (d.night_only = 1 AND d.weekend_daytime = 1 AND ${esFindeSemana ? '1=1' : '1=0'})
+      )`;
     }
 
     // Filtrar por tipo de vehículo si se especifica
@@ -388,7 +402,7 @@ driverRoutes.get('/nearby', async (c) => {
     const drivers = await c.env.DB.prepare(
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
               d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
-              d.municipality, d.night_only, d.whatsapp,
+              d.municipality, d.night_only, d.weekend_daytime, d.whatsapp,
               d.vehicle_types,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,

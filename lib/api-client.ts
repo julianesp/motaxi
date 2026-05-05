@@ -290,6 +290,33 @@ export const usersAPI = {
   },
 };
 
+// API de rutas compartidas
+export const sharedRoutesAPI = {
+  getAll: async (destination?: string) => {
+    const params = destination ? { destination } : {};
+    const response = await apiClient.get('/shared-routes', { params });
+    return response.data;
+  },
+  getMy: async () => {
+    const response = await apiClient.get('/shared-routes/my');
+    return response.data;
+  },
+  create: async (data: {
+    origin: string;
+    destination: string;
+    departure_time: string;
+    total_seats: number;
+    fare_per_seat: number;
+  }) => {
+    const response = await apiClient.post('/shared-routes', data);
+    return response.data;
+  },
+  updateStatus: async (id: string, status: 'departed' | 'cancelled') => {
+    const response = await apiClient.put(`/shared-routes/${id}/status`, { status });
+    return response.data;
+  },
+};
+
 // API de notificaciones
 export const notificationsAPI = {
   // Obtener todas las notificaciones del usuario

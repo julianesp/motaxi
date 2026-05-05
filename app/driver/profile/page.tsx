@@ -22,6 +22,7 @@ interface DriverInfo {
   accepts_intercity_trips?: number;
   accepts_rural_trips?: number;
   night_only?: number;
+  weekend_daytime?: number;
   whatsapp?: string;
   base_fare?: number;
   intercity_fare?: number;
@@ -120,6 +121,7 @@ export default function DriverProfilePage() {
     accepts_intercity_trips: true,
     accepts_rural_trips: true,
     night_only: false,
+    weekend_daytime: false,
     whatsapp: '',
     vehicle_model: '',
     vehicle_color: '',
@@ -187,6 +189,7 @@ export default function DriverProfilePage() {
           accepts_intercity_trips: driver.accepts_intercity_trips || 1,
           accepts_rural_trips: driver.accepts_rural_trips || 1,
           night_only: driver.night_only || 0,
+          weekend_daytime: driver.weekend_daytime || 0,
           base_fare: driver.base_fare || 2000,
           intercity_fare: driver.intercity_fare || 5000,
           rural_fare: driver.rural_fare || 4000,
@@ -200,6 +203,7 @@ export default function DriverProfilePage() {
           accepts_intercity_trips: driver.accepts_intercity_trips === 1,
           accepts_rural_trips: driver.accepts_rural_trips === 1,
           night_only: driver.night_only === 1,
+          weekend_daytime: driver.weekend_daytime === 1,
           whatsapp: driver.whatsapp || '',
           vehicle_model: driver.vehicle_model || '',
           vehicle_color: driver.vehicle_color || '',
@@ -1010,7 +1014,7 @@ export default function DriverProfilePage() {
                           <input
                             type="checkbox"
                             checked={driverFormData.night_only}
-                            onChange={(e) => setDriverFormData({ ...driverFormData, night_only: e.target.checked })}
+                            onChange={(e) => setDriverFormData({ ...driverFormData, night_only: e.target.checked, weekend_daytime: e.target.checked ? driverFormData.weekend_daytime : false })}
                             className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#008000]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008000]"></div>
@@ -1022,6 +1026,33 @@ export default function DriverProfilePage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Trabaja de día los fines de semana (solo visible si night_only está activo) */}
+                  {(isEditing ? driverFormData.night_only : driverInfo.night_only === 1) && (
+                    <div className="flex items-center justify-between py-3 pl-4 border-l-2 border-[#42CE1D]/40">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">📅 También de día los fines de semana</p>
+                        <p className="text-xs text-gray-500">Sábado y domingo trabajas en cualquier horario</p>
+                      </div>
+                      <div>
+                        {isEditing ? (
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={driverFormData.weekend_daytime}
+                              onChange={(e) => setDriverFormData({ ...driverFormData, weekend_daytime: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#008000]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#42CE1D]"></div>
+                          </label>
+                        ) : (
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${driverInfo.weekend_daytime ? 'bg-[#42CE1D]/10 text-[#42CE1D]' : 'bg-gray-100 text-gray-800'}`}>
+                            {driverInfo.weekend_daytime ? '📅 Sí' : 'No'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Custom Pricing */}
                   <div className="pt-6 border-t border-gray-200">
@@ -1217,6 +1248,17 @@ export default function DriverProfilePage() {
           <div className="mt-6">
             {/* Grid 2 columnas */}
             <div className="grid grid-cols-2 gap-3">
+              {/* Publicar ruta compartida */}
+              <button
+                onClick={() => router.push('/driver/shared-route')}
+                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
+              >
+                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+                <span className="text-sm font-medium text-gray-800">Publicar ruta</span>
+              </button>
+
               {/* Ganancias */}
               <button
                 onClick={() => router.push('/driver/earnings')}

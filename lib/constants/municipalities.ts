@@ -42,6 +42,29 @@ export const MUNICIPALITIES: Municipality[] = [
   },
 ];
 
+// Veredas y corregimientos conocidos del Valle de Sibundoy
+export const VEREDAS: { municipio: string; lugares: string[] }[] = [
+  {
+    municipio: 'Santiago',
+    lugares: ['Vichoy', 'San Andrés'],
+  },
+  {
+    municipio: 'Colón',
+    lugares: ['Michoacán', 'San Pedro'],
+  },
+  {
+    municipio: 'Sibundoy',
+    lugares: ['Machindinoy', 'El Salado'],
+  },
+  {
+    municipio: 'San Francisco',
+    lugares: ['El Poroto'],
+  },
+];
+
+// Destinos fuera del Valle
+export const DESTINOS_EXTERNOS = ['Mocoa', 'Pasto', 'Villagarzón', 'Puerto Asís'];
+
 // Centro del Valle de Sibundoy
 export const VALLE_SIBUNDOY_CENTER = {
   lat: 1.1656,

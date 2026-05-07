@@ -539,7 +539,22 @@ export default function HomePage() {
             const total = novedades.length;
             return (
               <div className="mt-12 mx-auto relative" style={{ maxWidth: "700px" }}>
-                <div className="relative flex items-center justify-center" style={{ height: "140px" }}>
+                <div
+                  className="relative flex items-center justify-center"
+                  style={{ height: "140px" }}
+                  onTouchStart={(e) => {
+                    const x = e.touches[0].clientX;
+                    (e.currentTarget as any)._swipeStartX = x;
+                  }}
+                  onTouchEnd={(e) => {
+                    const startX = (e.currentTarget as any)._swipeStartX;
+                    if (startX == null) return;
+                    const dx = e.changedTouches[0].clientX - startX;
+                    if (Math.abs(dx) < 40) return;
+                    if (dx < 0) setNovedadIndex((i) => (i + 1) % total);
+                    else setNovedadIndex((i) => (i - 1 + total) % total);
+                  }}
+                >
                   {novedades.map((nov, i) => {
                     const offset = i - novedadIndex;
                     let norm = offset;
@@ -595,26 +610,26 @@ export default function HomePage() {
                     );
                   })}
 
-                  {/* Flecha izquierda */}
+                  {/* Flecha izquierda — más pequeña */}
                   <button
                     onClick={() => setNovedadIndex((i) => (i - 1 + total) % total)}
-                    className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
-                    style={{ borderRadius: "0 8px 8px 0", left: "calc(-50vw + 50%)" }}
+                    className="absolute top-1/2 -translate-y-1/2 z-20 w-6 h-10 bg-white/80 hover:bg-white flex items-center justify-center transition-all duration-200 shadow-md"
+                    style={{ borderRadius: "0 6px 6px 0", left: "calc(-50vw + 50%)" }}
                     aria-label="Novedad anterior"
                   >
-                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
 
-                  {/* Flecha derecha */}
+                  {/* Flecha derecha — más pequeña */}
                   <button
                     onClick={() => setNovedadIndex((i) => (i + 1) % total)}
-                    className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
-                    style={{ borderRadius: "8px 0 0 8px", right: "calc(-50vw + 50%)" }}
+                    className="absolute top-1/2 -translate-y-1/2 z-20 w-6 h-10 bg-white/80 hover:bg-white flex items-center justify-center transition-all duration-200 shadow-md"
+                    style={{ borderRadius: "6px 0 0 6px", right: "calc(-50vw + 50%)" }}
                     aria-label="Novedad siguiente"
                   >
-                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>

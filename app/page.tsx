@@ -1337,6 +1337,25 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
+      {/* Aviso de seguridad obligatoria */}
+      <section className="py-10 bg-amber-50 border-y border-amber-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-800 text-base mb-1">Requisito obligatorio de seguridad</h3>
+              <p className="text-sm text-amber-700 leading-relaxed">
+                Todo vehículo registrado en MoTaxi <strong>debe contar con seguro vigente (SOAT)</strong>. Este es un requisito legal en Colombia y una garantía de protección para conductores y pasajeros. Los conductores sin seguro no podrán activarse en la plataforma. Además, placa y número de licencia deben ser datos reales y verificables — cualquier información falsa resultará en la suspensión inmediata de la cuenta.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {!user && (
         <section className="py-20 bg-gradient-to-br from-[#008000] via-[#008000] to-[#008000]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

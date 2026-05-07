@@ -30,7 +30,7 @@ export default function DriverHomePage() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [dismissedPushBanner, setDismissedPushBanner] = useState(false);
 
-  const [isAvailable, setIsAvailable] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(false);\n  const [hasMissingVehicleInfo, setHasMissingVehicleInfo] = useState(false);
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
@@ -192,6 +192,10 @@ export default function DriverHomePage() {
             municipality: response.driver.municipality || '',
             vehicle_types: response.driver.vehicle_types || '',
           });
+
+          // Detectar placa/licencia sin datos reales
+          const isPending = (v: string) => \!v || v.startsWith('PENDING') || v.startsWith('tmp_') || v.startsWith('P-') || v.startsWith('L-');
+          setHasMissingVehicleInfo(isPending(response.driver.vehicle_plate) || isPending(response.driver.license_number));
 
           // Verificar si el perfil está completo
           if (!response.driver.profile_completed) {
@@ -523,6 +527,21 @@ export default function DriverHomePage() {
 
   return (
     <div className="h-screen flex flex-col">
+      {/* Banner: datos de vehículo incompletos */}
+      {hasMissingVehicleInfo && (
+        <div className="fixed top-0 left-0 right-0 z-[61] bg-red-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-2 min-w-0">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <p className="text-xs font-medium leading-tight">
+              <strong>Acción requerida:</strong> Registra tu placa y licencia reales. Sin estos datos no podrás activarte ni ser visible para los pasajeros.
+            </p>
+          </div>
+          <a href="#vehicle-info" onClick={() => setShowProfileModal(true)} className="text-xs font-bold underline whitespace-nowrap shrink-0">Completar</a>
+        </div>
+      )}
+
       {/* Banner para activar notificaciones push */}
       {showPushBanner && (
         <div className="fixed top-0 left-0 right-0 z-[60] bg-[#008000] text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md">
@@ -557,7 +576,7 @@ export default function DriverHomePage() {
       )}
 
       {/* Header */}
-      <header className={`bg-white shadow-sm z-50 fixed left-0 right-0 ${showPushBanner ? 'top-[52px]' : 'top-0'}`}>
+      <header className={`bg-white shadow-sm z-50 fixed left-0 right-0 ${hasMissingVehicleInfo ? (showPushBanner ? 'top-[104px]' : 'top-[52px]') : showPushBanner ? 'top-[52px]' : 'top-0'}`}>
         <div className="container-app py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -714,7 +733,7 @@ export default function DriverHomePage() {
       </header>
 
       {/* Main Content */}
-      <div className={`flex-1 relative ${showPushBanner ? 'pt-28 md:pt-32' : 'pt-16 md:pt-20'}`}>
+      <div className={`flex-1 relative ${hasMissingVehicleInfo ? (showPushBanner ? 'pt-44 md:pt-48' : 'pt-28 md:pt-32') : showPushBanner ? 'pt-28 md:pt-32' : 'pt-16 md:pt-20'}`}>
         {/* Map - ocupa todo el espacio */}
         <div className="absolute inset-0">
           <GoogleMapComponent

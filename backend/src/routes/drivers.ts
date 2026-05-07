@@ -331,13 +331,12 @@ driverRoutes.put('/availability', async (c) => {
     // Verificar si el perfil está completo antes de permitir activarse
     if (isAvailable) {
       const driver = await c.env.DB.prepare(
-        'SELECT profile_completed, verification_status FROM drivers WHERE id = ?'
+        'SELECT profile_completed, verification_status, vehicle_plate, license_number FROM drivers WHERE id = ?'
       )
         .bind(user.id)
-        .first();
+        .first<{ profile_completed: number; verification_status: string; vehicle_plate: string; license_number: string }>();
 
       if (!driver) {
-        // El registro en drivers no existe — crearlo con valores por defecto
         await c.env.DB.prepare(
           `INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, verification_status, is_available, profile_completed)
            VALUES (?, ?, ?, '', '', 'pending', 0, 0)`
@@ -356,7 +355,14 @@ driverRoutes.put('/availability', async (c) => {
         }, 400);
       }
 
-      // Verificación de cuenta deshabilitada temporalmente
+      // Verificar que placa y licencia sean datos reales (no valores PENDING generados automáticamente)
+      const isPending = (val: string) => !val || val.startsWith('PENDING') || val.startsWith('tmp_') || val.startsWith('P-') || val.startsWith('L-');
+      if (isPending(driver.vehicle_plate) || isPending(driver.license_number)) {
+        return c.json({
+          error: 'Debes registrar tu placa y número de licencia reales antes de activarte. Los pasajeros dependen de esta información para su seguridad.',
+          missingVehicleInfo: true
+        }, 400);
+      }
     }
 
     await c.env.DB.prepare('UPDATE drivers SET is_available = ? WHERE id = ?')

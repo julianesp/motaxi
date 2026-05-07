@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const cookies = document.cookie.split(';');
         const authCookie = cookies.find(cookie => cookie.trim().startsWith('authToken='));
 
-        if (authCookie && authCookie.split('=')[1]) {
+        if (authCookie && authCookie.trim().split('=').slice(1).join('=')) {
           try {
             const userData = await authAPI.getCurrentUser();
             setUser(userData);

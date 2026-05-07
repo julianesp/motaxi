@@ -74,7 +74,7 @@ export default function AdminDashboard() {
     try {
       const cookies = document.cookie.split(';');
       const authCookie = cookies.find(c => c.trim().startsWith('authToken='));
-      const token = authCookie?.split('=')[1]?.trim();
+      const token = authCookie ? authCookie.trim().split('=').slice(1).join('=') : undefined;
       if (!token) return;
 
       const res = await fetch('/api/page-views', {
@@ -120,8 +120,9 @@ export default function AdminDashboard() {
       const newLocked = !appLocked;
       await apiClient.put('/admin/app-access', { locked: newLocked });
       setAppLocked(newLocked);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(`Error al cambiar el estado: ${err?.response?.data?.error || err?.message || 'Error desconocido'}`);
     } finally {
       setTogglingLock(false);
     }

@@ -23,7 +23,7 @@ function getAuthToken(): string | null {
   const authCookie = cookies.find(cookie => cookie.trim().startsWith('authToken='));
 
   if (authCookie) {
-    return authCookie.split('=')[1];
+    return authCookie.trim().split('=').slice(1).join('=');
   }
 
   return null;

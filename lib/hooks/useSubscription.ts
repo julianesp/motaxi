@@ -24,7 +24,7 @@ export function useSubscription() {
       // El token se guarda en cookie "authToken"
       const cookies = document.cookie.split(';');
       const authCookie = cookies.find(c => c.trim().startsWith('authToken='));
-      const token = authCookie ? authCookie.split('=')[1]?.trim() : null;
+      const token = authCookie ? authCookie.trim().split('=').slice(1).join('=') : null;
 
       if (!token) { setLoading(false); return; }
 

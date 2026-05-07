@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 function getAuthToken(): string | null {
   const cookies = document.cookie.split(';');
   const authCookie = cookies.find(c => c.trim().startsWith('authToken='));
-  return authCookie ? authCookie.split('=')[1]?.trim() : null;
+  return authCookie ? authCookie.trim().split('=').slice(1).join('=') : null;
 }
 
 function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {

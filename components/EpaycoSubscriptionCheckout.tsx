@@ -127,7 +127,7 @@ export default function EpaycoSubscriptionCheckout({ user, onClose, onSuccess }:
       // El token se guarda en cookie "authToken"
       const cookies = document.cookie.split(';');
       const authCookie = cookies.find(c => c.trim().startsWith('authToken='));
-      const token = authCookie ? authCookie.split('=')[1]?.trim() : null;
+      const token = authCookie ? authCookie.trim().split('=').slice(1).join('=') : null;
 
       const response = await fetch("/api/payments/epayco/create-session", {
         method: "POST",

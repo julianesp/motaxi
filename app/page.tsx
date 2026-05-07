@@ -75,6 +75,7 @@ export default function HomePage() {
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
   const [likingId, setLikingId] = useState<string | null>(null);
   const [expandedPhoto, setExpandedPhoto] = useState<PublicPhoto | null>(null);
+  const [novedadIndex, setNovedadIndex] = useState(0);
 
   // Modal para proponer imagen de municipio
   const [proposeImageMunicipality, setProposeImageMunicipality] = useState<
@@ -495,36 +496,149 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Novedad: ingreso con huella digital */}
-          <div className="mt-10 max-w-2xl mx-auto">
-            <div className="relative flex items-center gap-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-4 shadow-lg">
-              <div className="flex-shrink-0 w-12 h-12 bg-[#42CE1D] rounded-xl flex items-center justify-center shadow-md">
-                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a5 5 0 010 10" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 4a9 9 0 010 16" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#42CE1D]">Novedad</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#42CE1D] animate-pulse" />
+          {/* Carrusel de novedades */}
+          {(() => {
+            const novedades = [
+              {
+                icon: (
+                  <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a5 5 0 010 10" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 4a9 9 0 010 16" />
+                  </svg>
+                ),
+                titulo: "¡Entra con tu huella digital!",
+                descripcion: "Inicia sesión normal → ve a tu perfil → registra tu huella → y la próxima vez entras sin contraseña.",
+                boton: "Probar",
+                accion: () => router.push("/auth/login"),
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                ),
+                titulo: "¡Propón la foto de tu municipio!",
+                descripcion: "¿Tienes una buena foto de tu municipio? Súgierela y si el administrador la aprueba, aparecerá como imagen de fondo en la tarjeta del municipio.",
+                boton: "Ver municipios",
+                accion: () => { const el = document.getElementById('municipios-section'); el?.scrollIntoView({ behavior: 'smooth' }); },
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                ),
+                titulo: "Publica tu negocio en tu municipio",
+                descripcion: "Ingresa a tu municipio y sube la dirección y fotos de tu local. Otros usuarios podrán verte y pedir un mototaxi directamente a tu negocio.",
+                boton: "Explorar",
+                accion: () => router.push("/municipio/santiago"),
+              },
+            ];
+            const total = novedades.length;
+            return (
+              <div className="mt-12 mx-auto relative" style={{ maxWidth: "700px" }}>
+                <div className="relative flex items-center justify-center" style={{ height: "140px" }}>
+                  {novedades.map((nov, i) => {
+                    const offset = i - novedadIndex;
+                    let norm = offset;
+                    if (norm > total / 2) norm -= total;
+                    if (norm < -total / 2) norm += total;
+                    const isActive = norm === 0;
+                    const isVisible = Math.abs(norm) <= 1;
+                    const translateX = norm * 75;
+                    const scale = isActive ? 1 : 0.78;
+                    const zIndex = isActive ? 10 : 5 - Math.abs(norm);
+                    const brightness = isActive ? 1 : 0.45;
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => !isActive && setNovedadIndex(i)}
+                        style={{
+                          position: "absolute",
+                          width: "100%",
+                          maxWidth: "560px",
+                          transform: `translateX(${translateX}%) scale(${scale})`,
+                          transition: "transform 0.45s ease-in-out, filter 0.45s ease-in-out, opacity 0.45s ease-in-out",
+                          filter: `brightness(${brightness})`,
+                          opacity: isVisible ? 1 : 0,
+                          zIndex,
+                          cursor: isActive ? "default" : "pointer",
+                          pointerEvents: isVisible ? "auto" : "none",
+                        }}
+                      >
+                        <div className="rounded-2xl overflow-hidden shadow-2xl">
+                          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm border border-white/20 px-5 py-4">
+                            <div className="flex-shrink-0 w-12 h-12 bg-[#42CE1D] rounded-xl flex items-center justify-center shadow-md">
+                              {nov.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-xs font-bold uppercase tracking-wider text-[#42CE1D]">Novedad</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#42CE1D] animate-pulse" />
+                              </div>
+                              <p className="text-white font-semibold text-sm leading-snug">{nov.titulo}</p>
+                              <p className="text-white/70 text-xs mt-0.5 line-clamp-2">{nov.descripcion}</p>
+                            </div>
+                            {isActive && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); nov.accion(); }}
+                                className="flex-shrink-0 text-xs font-semibold text-white bg-[#42CE1D] hover:bg-[#36b018] transition-colors px-3 py-1.5 rounded-lg"
+                              >
+                                {nov.boton}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Flecha izquierda */}
+                  <button
+                    onClick={() => setNovedadIndex((i) => (i - 1 + total) % total)}
+                    className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
+                    style={{ borderRadius: "0 8px 8px 0", left: "calc(-50vw + 50%)" }}
+                    aria-label="Novedad anterior"
+                  >
+                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Flecha derecha */}
+                  <button
+                    onClick={() => setNovedadIndex((i) => (i + 1) % total)}
+                    className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
+                    style={{ borderRadius: "8px 0 0 8px", right: "calc(-50vw + 50%)" }}
+                    aria-label="Novedad siguiente"
+                  >
+                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
-                <p className="text-white font-semibold text-sm leading-snug">
-                  ¡Ahora puedes entrar con tu huella digital!
-                </p>
-                <p className="text-white/70 text-xs mt-0.5">
-                  Inicia sesión normal → ve a tu perfil → registra tu huella → y la próxima vez entras sin contraseña.
-                </p>
+
+                {/* Dots */}
+                <div className="flex justify-center gap-2 mt-5">
+                  {novedades.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setNovedadIndex(i)}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: i === novedadIndex ? "24px" : "8px",
+                        height: "8px",
+                        background: i === novedadIndex ? "#42CE1D" : "rgba(255,255,255,0.35)",
+                      }}
+                      aria-label={`Novedad ${i + 1}`}
+                    />
+                  ))}
+                </div>
               </div>
-              <button
-                onClick={() => router.push("/auth/login")}
-                className="flex-shrink-0 text-xs font-semibold text-white bg-[#42CE1D] hover:bg-[#36b018] transition-colors px-3 py-1.5 rounded-lg"
-              >
-                Probar
-              </button>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* Wave separator */}
@@ -585,7 +699,7 @@ export default function HomePage() {
       )}
 
       {/* Municipios Section */}
-      <section className="py-20 bg-white">
+      <section id="municipios-section" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">

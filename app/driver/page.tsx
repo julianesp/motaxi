@@ -195,7 +195,7 @@ export default function DriverHomePage() {
           });
 
           // Detectar placa/licencia sin datos reales
-          const isPending = (v: string) => \!v || v.startsWith('PENDING') || v.startsWith('tmp_') || v.startsWith('P-') || v.startsWith('L-');
+          const isPending = (v: string) => !v || v.startsWith('PENDING') || v.startsWith('tmp_') || v.startsWith('P-') || v.startsWith('L-');
           setHasMissingVehicleInfo(isPending(response.driver.vehicle_plate) || isPending(response.driver.license_number));
 
           // Verificar si el perfil está completo

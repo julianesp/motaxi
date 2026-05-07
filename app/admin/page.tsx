@@ -48,17 +48,21 @@ function StatCard({ title, value, subtitle, color, icon }: {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [appLocked, setAppLocked] = useState(false);
+  const [togglingLock, setTogglingLock] = useState(false);
   const [telegramUsers, setTelegramUsers] = useState<TelegramUser[]>([]);
   const [pageViews, setPageViews] = useState<{ date: string; count: number }[]>([]);
 
   const fetchStats = useCallback(async () => {
     try {
-      const [statsRes, telegramRes] = await Promise.all([
+      const [statsRes, telegramRes, accessRes] = await Promise.all([
         apiClient.get('/admin/stats'),
         apiClient.get('/admin/telegram-users'),
+        apiClient.get('/admin/app-access').catch(() => ({ data: { locked: false } })),
       ]);
       setStats(statsRes.data);
       setTelegramUsers(telegramRes.data.users || []);
+      setAppLocked(accessRes.data.locked ?? false);
     } catch (err) {
       console.error(err);
     } finally {
@@ -110,11 +114,62 @@ export default function AdminDashboard() {
   const trips = stats.trips ?? { total: 0, completed: 0, cancelled: 0, active: 0, completed_today: 0, completed_month: 0 };
   const totalRevenue = revenue.platform_commission_month + subscriptions.monthly_revenue;
 
+  const handleToggleLock = async () => {
+    setTogglingLock(true);
+    try {
+      const newLocked = !appLocked;
+      await apiClient.put('/admin/app-access', { locked: newLocked });
+      setAppLocked(newLocked);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTogglingLock(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-gray-400 text-sm mt-1">Resumen general de la plataforma</p>
+      </div>
+
+      {/* Control de acceso a la plataforma */}
+      <div className={`rounded-2xl border p-4 flex items-center justify-between gap-4 ${appLocked ? 'bg-red-950/40 border-red-800/50' : 'bg-green-950/40 border-green-800/50'}`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${appLocked ? 'bg-red-800/40' : 'bg-green-800/40'}`}>
+            {appLocked ? (
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+            )}
+          </div>
+          <div>
+            <p className={`font-semibold text-sm ${appLocked ? 'text-red-300' : 'text-green-300'}`}>
+              Acceso a la plataforma: <strong>{appLocked ? 'BLOQUEADO' : 'ACTIVO'}</strong>
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {appLocked
+                ? 'Los usuarios no pueden iniciar sesión. Solo el admin tiene acceso.'
+                : 'Los usuarios pueden iniciar sesión y pedir carreras con normalidad.'}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleToggleLock}
+          disabled={togglingLock}
+          className={`shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 ${
+            appLocked
+              ? 'bg-green-700 hover:bg-green-600 text-white'
+              : 'bg-red-700 hover:bg-red-600 text-white'
+          }`}
+        >
+          {togglingLock ? '...' : appLocked ? 'Desbloquear' : 'Bloquear acceso'}
+        </button>
       </div>
 
       {/* Ingresos */}

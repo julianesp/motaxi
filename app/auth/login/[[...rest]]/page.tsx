@@ -64,7 +64,9 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error("Login error:", err);
 
-      if (err.response?.status === 401) {
+      if (err.response?.status === 403 && err.response?.data?.error === 'APP_LOCKED') {
+        router.push('/auth/en-tramite');
+      } else if (err.response?.status === 401) {
         setError("Celular/correo o contraseña incorrectos. Por favor, verifica tus credenciales.");
       } else if (err.response?.status === 404) {
         setNotRegistered(true);

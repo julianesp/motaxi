@@ -320,6 +320,14 @@ authRoutes.post('/login', async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
 
+    // Verificar bloqueo de acceso (excepto admin)
+    if ((user as any).email !== 'admin@neurai.dev' && c.env.CACHE) {
+      const locked = await c.env.CACHE.get('app_access_locked');
+      if (locked === '1') {
+        return c.json({ error: 'APP_LOCKED', message: 'El acceso a la plataforma está temporalmente suspendido por trámites legales.' }, 403);
+      }
+    }
+
     // Verificar contraseña
     const isValidPassword = await AuthUtils.verifyPassword(
       password,

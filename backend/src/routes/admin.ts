@@ -1056,3 +1056,36 @@ adminRoutes.post('/referrals/set-winner', async (c) => {
     return c.json({ error: error.message || 'Failed to set winner' }, 500);
   }
 });
+
+/**
+ * GET /admin/app-access
+ * Obtener estado actual del bloqueo de acceso
+ */
+adminRoutes.get('/app-access', async (c) => {
+  try {
+    const locked = c.env.CACHE ? await c.env.CACHE.get('app_access_locked') : null;
+    return c.json({ locked: locked === '1' });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * PUT /admin/app-access
+ * Bloquear o desbloquear el acceso a la plataforma
+ */
+adminRoutes.put('/app-access', async (c) => {
+  try {
+    const { locked } = await c.req.json();
+    if (c.env.CACHE) {
+      if (locked) {
+        await c.env.CACHE.put('app_access_locked', '1');
+      } else {
+        await c.env.CACHE.delete('app_access_locked');
+      }
+    }
+    return c.json({ success: true, locked });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});

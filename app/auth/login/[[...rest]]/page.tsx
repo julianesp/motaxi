@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [loginMode, setLoginMode] = useState<"phone" | "email">("phone");
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [passkeySupported, setPasskeySupported] = useState(false);
+  const [passkeyNotRegistered, setPasskeyNotRegistered] = useState(false);
 
   useEffect(() => {
     setPasskeySupported(isPasskeySupported());
@@ -86,9 +87,20 @@ export default function LoginPage() {
   const handlePasskeyLogin = async () => {
     setPasskeyLoading(true);
     setError("");
+    setPasskeyNotRegistered(false);
     const result = await loginWithPasskey();
     if (!result.success) {
-      setError(result.error || "No se pudo autenticar con huella");
+      // "No passkeys available" o cancelado = huella no registrada aún
+      const noPasskey =
+        result.error?.toLowerCase().includes("no passkey") ||
+        result.error?.toLowerCase().includes("not allowed") ||
+        result.error?.toLowerCase().includes("cancelado") ||
+        result.error?.toLowerCase().includes("no se obtuvo");
+      if (noPasskey) {
+        setPasskeyNotRegistered(true);
+      } else {
+        setError(result.error || "No se pudo autenticar con huella");
+      }
       setPasskeyLoading(false);
       return;
     }
@@ -299,6 +311,7 @@ export default function LoginPage() {
                   <span className="px-3 bg-white text-gray-500">o</span>
                 </div>
               </div>
+
               <button
                 type="button"
                 onClick={handlePasskeyLogin}
@@ -316,6 +329,45 @@ export default function LoginPage() {
                 )}
                 {passkeyLoading ? "Verificando huella..." : "Entrar con huella digital"}
               </button>
+
+              {/* Aviso: huella no registrada en este dispositivo */}
+              {passkeyNotRegistered ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start">
+                  <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm text-amber-800">
+                    <p className="font-semibold mb-1">Tu huella aún no está registrada</p>
+                    <p className="leading-snug">Para usar esta función debes seguir estos pasos:</p>
+                    <ol className="mt-1.5 space-y-1 list-none">
+                      <li className="flex items-start gap-1.5">
+                        <span className="flex-shrink-0 w-5 h-5 bg-amber-200 text-amber-800 rounded-full text-xs font-bold flex items-center justify-center mt-0.5">1</span>
+                        <span>Inicia sesión normalmente con tu celular y contraseña.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="flex-shrink-0 w-5 h-5 bg-amber-200 text-amber-800 rounded-full text-xs font-bold flex items-center justify-center mt-0.5">2</span>
+                        <span>Ve a tu <strong>perfil</strong> y busca la sección <strong>"Huella digital"</strong>.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="flex-shrink-0 w-5 h-5 bg-amber-200 text-amber-800 rounded-full text-xs font-bold flex items-center justify-center mt-0.5">3</span>
+                        <span>Toca <strong>"+ Agregar huella"</strong> y sigue las instrucciones.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="flex-shrink-0 w-5 h-5 bg-amber-200 text-amber-800 rounded-full text-xs font-bold flex items-center justify-center mt-0.5">4</span>
+                        <span>¡Listo! La próxima vez podrás entrar solo con tu huella.</span>
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+              ) : (
+                /* Indicación preventiva (siempre visible cuando no hay error) */
+                <p className="text-center text-xs text-gray-400 leading-snug">
+                  ¿Primera vez?{" "}
+                  <span className="text-gray-500">
+                    Inicia sesión normal → ve a tu perfil → registra tu huella → y la próxima vez entras aquí.
+                  </span>
+                </p>
+              )}
             </>
           )}
 

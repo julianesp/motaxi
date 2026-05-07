@@ -330,58 +330,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Novedad: ingreso con huella digital */}
-          <div className="mt-10 max-w-2xl mx-auto">
-            <div className="relative flex items-center gap-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-4 shadow-lg">
-              <div className="flex-shrink-0 w-12 h-12 bg-[#42CE1D] rounded-xl flex items-center justify-center shadow-md">
-                <svg
-                  className="w-7 h-7 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.8}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 7a5 5 0 010 10"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M18 4a9 9 0 010 16"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#42CE1D]">
-                    Novedad
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#42CE1D] animate-pulse" />
-                </div>
-                <p className="text-white font-semibold text-sm leading-snug">
-                  ¡Ahora puedes entrar con tu huella digital!
-                </p>
-                <p className="text-white/70 text-xs mt-0.5">
-                  Inicia sesión al instante sin contraseña. Actívalo desde tu
-                  perfil.
-                </p>
-              </div>
-              <button
-                onClick={() => router.push("/auth/login")}
-                className="flex-shrink-0 text-xs font-semibold text-white bg-[#42CE1D] hover:bg-[#36b018] transition-colors px-3 py-1.5 rounded-lg"
-              >
-                Probar
-              </button>
-            </div>
-          </div>
-
           {/* Videos de instrucciones — carrusel stack */}
           {videos.length > 0 && (
             <div
@@ -546,6 +494,37 @@ export default function HomePage() {
               )}
             </div>
           )}
+
+          {/* Novedad: ingreso con huella digital */}
+          <div className="mt-10 max-w-2xl mx-auto">
+            <div className="relative flex items-center gap-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-4 shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 bg-[#42CE1D] rounded-xl flex items-center justify-center shadow-md">
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a5 5 0 010 10" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 4a9 9 0 010 16" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#42CE1D]">Novedad</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#42CE1D] animate-pulse" />
+                </div>
+                <p className="text-white font-semibold text-sm leading-snug">
+                  ¡Ahora puedes entrar con tu huella digital!
+                </p>
+                <p className="text-white/70 text-xs mt-0.5">
+                  Inicia sesión normal → ve a tu perfil → registra tu huella → y la próxima vez entras sin contraseña.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push("/auth/login")}
+                className="flex-shrink-0 text-xs font-semibold text-white bg-[#42CE1D] hover:bg-[#36b018] transition-colors px-3 py-1.5 rounded-lg"
+              >
+                Probar
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Wave separator */}

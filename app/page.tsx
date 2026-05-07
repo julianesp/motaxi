@@ -12,7 +12,9 @@ interface InstructionVideo {
 }
 
 function getYoutubeId(url: string): string | null {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  const match = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/,
+  );
   return match ? match[1] : null;
 }
 import dynamic from "next/dynamic";
@@ -42,23 +44,48 @@ export default function HomePage() {
   const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
   const [videos, setVideos] = useState<InstructionVideo[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [topPickups, setTopPickups] = useState<{ address: string; trip_count: number }[]>([]);
-  const [topDropoffs, setTopDropoffs] = useState<{ address: string; trip_count: number }[]>([]);
+  const [topPickups, setTopPickups] = useState<
+    { address: string; trip_count: number }[]
+  >([]);
+  const [topDropoffs, setTopDropoffs] = useState<
+    { address: string; trip_count: number }[]
+  >([]);
 
-  interface ReferralWinner { full_name: string; profile_image?: string; referral_count: number; municipality?: string; month: number; year: number; }
-  const [referralWinner, setReferralWinner] = useState<ReferralWinner | null>(null);
+  interface ReferralWinner {
+    full_name: string;
+    profile_image?: string;
+    referral_count: number;
+    municipality?: string;
+    month: number;
+    year: number;
+  }
+  const [referralWinner, setReferralWinner] = useState<ReferralWinner | null>(
+    null,
+  );
 
-  interface PublicPhoto { id: string; image_key: string; caption: string | null; created_at: number; driver_name: string; likes: number; }
+  interface PublicPhoto {
+    id: string;
+    image_key: string;
+    caption: string | null;
+    created_at: number;
+    driver_name: string;
+    likes: number;
+  }
   const [publicPhotos, setPublicPhotos] = useState<PublicPhoto[]>([]);
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
   const [likingId, setLikingId] = useState<string | null>(null);
   const [expandedPhoto, setExpandedPhoto] = useState<PublicPhoto | null>(null);
 
   // Modal para proponer imagen de municipio
-  const [proposeImageMunicipality, setProposeImageMunicipality] = useState<string | null>(null);
+  const [proposeImageMunicipality, setProposeImageMunicipality] = useState<
+    string | null
+  >(null);
   const [proposeImageUrl, setProposeImageUrl] = useState("");
   const [proposeImageLoading, setProposeImageLoading] = useState(false);
-  const [proposeImageMsg, setProposeImageMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [proposeImageMsg, setProposeImageMsg] = useState<{
+    type: "ok" | "err";
+    text: string;
+  } | null>(null);
 
   async function handleProposeImage(e: React.FormEvent) {
     e.preventDefault();
@@ -70,16 +97,20 @@ export default function HomePage() {
     setProposeImageLoading(true);
     setProposeImageMsg(null);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
       const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
-      const res = await fetch(`${API_URL}/municipalities/${proposeImageMunicipality}/image`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const res = await fetch(
+        `${API_URL}/municipalities/${proposeImageMunicipality}/image`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ image_url: proposeImageUrl }),
         },
-        body: JSON.stringify({ image_url: proposeImageUrl }),
-      });
+      );
       const data = await res.json();
       if (res.ok) {
         setProposeImageMsg({ type: "ok", text: data.message });
@@ -89,7 +120,10 @@ export default function HomePage() {
           setProposeImageMsg(null);
         }, 3000);
       } else {
-        setProposeImageMsg({ type: "err", text: data.error || "Error al enviar." });
+        setProposeImageMsg({
+          type: "err",
+          text: data.error || "Error al enviar.",
+        });
       }
     } catch {
       setProposeImageMsg({ type: "err", text: "Error de conexión." });
@@ -125,21 +159,25 @@ export default function HomePage() {
   }, [user]);
 
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
     fetch(`${API_URL}/referrals/winner`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.winner) setReferralWinner(data.winner); })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.winner) setReferralWinner(data.winner);
+      })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
     fetch(`${API_URL}/drivers/photos/public`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.photos?.length) setPublicPhotos(data.photos); })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.photos?.length) setPublicPhotos(data.photos);
+      })
       .catch(() => {});
     try {
-      const stored = localStorage.getItem('motaxi_liked_photos');
+      const stored = localStorage.getItem("motaxi_liked_photos");
       if (stored) setLikedPhotos(new Set(JSON.parse(stored)));
     } catch {}
   }, []);
@@ -148,24 +186,30 @@ export default function HomePage() {
     if (likedPhotos.has(photoId) || likingId) return;
     setLikingId(photoId);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-      const res = await fetch(`${API_URL}/drivers/photos/${photoId}/like`, { method: 'POST' });
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+      const res = await fetch(`${API_URL}/drivers/photos/${photoId}/like`, {
+        method: "POST",
+      });
       if (!res.ok) return;
       const data = await res.json();
-      setPublicPhotos(prev => prev
-        .map(p => p.id === photoId ? { ...p, likes: data.likes } : p)
-        .sort((a, b) => b.likes - a.likes || b.created_at - a.created_at)
+      setPublicPhotos((prev) =>
+        prev
+          .map((p) => (p.id === photoId ? { ...p, likes: data.likes } : p))
+          .sort((a, b) => b.likes - a.likes || b.created_at - a.created_at),
       );
       const updated = new Set(likedPhotos).add(photoId);
       setLikedPhotos(updated);
-      localStorage.setItem('motaxi_liked_photos', JSON.stringify([...updated]));
-    } catch {}
-    finally { setLikingId(null); }
+      localStorage.setItem("motaxi_liked_photos", JSON.stringify([...updated]));
+    } catch {
+    } finally {
+      setLikingId(null);
+    }
   };
 
   useEffect(() => {
-    fetch('/api/videos')
-      .then(res => res.json())
+    fetch("/api/videos")
+      .then((res) => res.json())
       .then((data: InstructionVideo[]) => {
         setVideos(data.sort((a, b) => a.uploadedAt - b.uploadedAt));
       })
@@ -173,21 +217,27 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
     fetch(`${API_URL}/analytics/heatmap?days=30`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
         if (!data) return;
-        const pickups = (data.pickup_hotspots || []).slice(0, 5).map((h: any) => ({
-          address: h.pickup_address,
-          trip_count: h.trip_count,
-        }));
-        const dropoffs = (data.dropoff_hotspots || []).slice(0, 5).map((h: any) => ({
-          address: h.dropoff_address,
-          trip_count: h.trip_count,
-        }));
-        const totalTrips =
-          pickups.reduce((sum: number, h: any) => sum + h.trip_count, 0);
+        const pickups = (data.pickup_hotspots || [])
+          .slice(0, 5)
+          .map((h: any) => ({
+            address: h.pickup_address,
+            trip_count: h.trip_count,
+          }));
+        const dropoffs = (data.dropoff_hotspots || [])
+          .slice(0, 5)
+          .map((h: any) => ({
+            address: h.dropoff_address,
+            trip_count: h.trip_count,
+          }));
+        const totalTrips = pickups.reduce(
+          (sum: number, h: any) => sum + h.trip_count,
+          0,
+        );
         if (totalTrips >= 10) {
           setTopPickups(pickups);
           setTopDropoffs(dropoffs);
@@ -204,7 +254,6 @@ export default function HomePage() {
           <p className="mt-4 text-white text-lg font-medium">
             Cargando MoTaxi...
           </p>
-
         </div>
       </div>
     );
@@ -231,19 +280,18 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           {/* Contenido hero */}
           <div className="text-white space-y-8 text-center max-w-3xl mx-auto">
-            <div className="inline-block">
+            {/* <div className="inline-block">
               <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
                 Disponible donde estés
               </span>
-            </div>
+            </div> */}
             <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
               Tu transporte,
               <br />a un toque
             </h1>
             <p className="text-xl lg:text-2xl text-white max-w-xl mx-auto">
-              Pide tu moto desde donde estés. Conductores cercanos te
-              muestran su distancia y tarifa para que elijas el que más
-              te convenga.
+              Pide tu moto desde donde estés. Conductores cercanos te muestran
+              su distancia y tarifa para que elijas el que más te convenga.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {user ? (
@@ -282,11 +330,68 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Novedad: ingreso con huella digital */}
+          <div className="mt-10 max-w-2xl mx-auto">
+            <div className="relative flex items-center gap-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-4 shadow-lg">
+              <div className="flex-shrink-0 w-12 h-12 bg-[#42CE1D] rounded-xl flex items-center justify-center shadow-md">
+                <svg
+                  className="w-7 h-7 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 7a5 5 0 010 10"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18 4a9 9 0 010 16"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#42CE1D]">
+                    Novedad
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#42CE1D] animate-pulse" />
+                </div>
+                <p className="text-white font-semibold text-sm leading-snug">
+                  ¡Ahora puedes entrar con tu huella digital!
+                </p>
+                <p className="text-white/70 text-xs mt-0.5">
+                  Inicia sesión al instante sin contraseña. Actívalo desde tu
+                  perfil.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push("/auth/login")}
+                className="flex-shrink-0 text-xs font-semibold text-white bg-[#42CE1D] hover:bg-[#36b018] transition-colors px-3 py-1.5 rounded-lg"
+              >
+                Probar
+              </button>
+            </div>
+          </div>
+
           {/* Videos de instrucciones — carrusel stack */}
           {videos.length > 0 && (
-            <div className="mt-12 mx-auto relative" style={{ maxWidth: '700px' }}>
-              <div className="relative flex items-center justify-center" style={{ height: '320px' }}>
-
+            <div
+              className="mt-12 mx-auto relative"
+              style={{ maxWidth: "700px" }}
+            >
+              <div
+                className="relative flex items-center justify-center"
+                style={{ height: "320px" }}
+              >
                 {videos.map((video, i) => {
                   const ytId = getYoutubeId(video.youtubeUrl);
                   const offset = i - currentVideoIndex;
@@ -309,16 +414,17 @@ export default function HomePage() {
                       key={video.id}
                       onClick={() => !isActive && setCurrentVideoIndex(i)}
                       style={{
-                        position: 'absolute',
-                        width: '100%',
-                        maxWidth: '560px',
+                        position: "absolute",
+                        width: "100%",
+                        maxWidth: "560px",
                         transform: `translateX(${translateX}%) scale(${scale})`,
-                        transition: 'transform 0.45s ease-in-out, filter 0.45s ease-in-out, opacity 0.45s ease-in-out',
+                        transition:
+                          "transform 0.45s ease-in-out, filter 0.45s ease-in-out, opacity 0.45s ease-in-out",
                         filter: `brightness(${brightness})`,
                         opacity: isVisible ? 1 : 0,
                         zIndex,
-                        cursor: isActive ? 'default' : 'pointer',
-                        pointerEvents: isVisible ? 'auto' : 'none',
+                        cursor: isActive ? "default" : "pointer",
+                        pointerEvents: isVisible ? "auto" : "none",
                       }}
                     >
                       <div className="rounded-2xl overflow-hidden shadow-2xl">
@@ -342,7 +448,9 @@ export default function HomePage() {
                           </div>
                         )}
                         <div className="px-4 py-3 bg-black/60 backdrop-blur-sm flex items-center justify-between">
-                          <p className="text-white font-semibold text-sm truncate">{video.title}</p>
+                          <p className="text-white font-semibold text-sm truncate">
+                            {video.title}
+                          </p>
                           {isActive && (
                             <span className="text-white/50 text-xs ml-3 flex-shrink-0">
                               {currentVideoIndex + 1} / {videos.length}
@@ -357,13 +465,30 @@ export default function HomePage() {
                 {/* Flecha izquierda — extremo izquierdo de la pantalla */}
                 {videos.length > 1 && (
                   <button
-                    onClick={() => setCurrentVideoIndex((i) => (i - 1 + videos.length) % videos.length)}
+                    onClick={() =>
+                      setCurrentVideoIndex(
+                        (i) => (i - 1 + videos.length) % videos.length,
+                      )
+                    }
                     className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
-                    style={{ borderRadius: '0 8px 8px 0', left: 'calc(-50vw + 50%)' }}
+                    style={{
+                      borderRadius: "0 8px 8px 0",
+                      left: "calc(-50vw + 50%)",
+                    }}
                     aria-label="Video anterior"
                   >
-                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    <svg
+                      className="w-5 h-5 text-black"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
                   </button>
                 )}
@@ -371,13 +496,28 @@ export default function HomePage() {
                 {/* Flecha derecha — extremo derecho de la pantalla */}
                 {videos.length > 1 && (
                   <button
-                    onClick={() => setCurrentVideoIndex((i) => (i + 1) % videos.length)}
+                    onClick={() =>
+                      setCurrentVideoIndex((i) => (i + 1) % videos.length)
+                    }
                     className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-16 bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-lg"
-                    style={{ borderRadius: '8px 0 0 8px', right: 'calc(-50vw + 50%)' }}
+                    style={{
+                      borderRadius: "8px 0 0 8px",
+                      right: "calc(-50vw + 50%)",
+                    }}
                     aria-label="Video siguiente"
                   >
-                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    <svg
+                      className="w-5 h-5 text-black"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </button>
                 )}
@@ -392,9 +532,12 @@ export default function HomePage() {
                       onClick={() => setCurrentVideoIndex(i)}
                       className="rounded-full transition-all duration-300"
                       style={{
-                        width: i === currentVideoIndex ? '24px' : '8px',
-                        height: '8px',
-                        background: i === currentVideoIndex ? '#008000' : 'rgba(255,255,255,0.35)',
+                        width: i === currentVideoIndex ? "24px" : "8px",
+                        height: "8px",
+                        background:
+                          i === currentVideoIndex
+                            ? "#008000"
+                            : "rgba(255,255,255,0.35)",
                       }}
                       aria-label={`Ir al video ${i + 1}`}
                     />
@@ -433,10 +576,15 @@ export default function HomePage() {
                 <p className="text-xs font-bold text-[#008000] uppercase tracking-widest mb-1">
                   Conductor del Mes — Más Referidos
                 </p>
-                <p className="text-2xl font-bold text-gray-900">{referralWinner.full_name}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {referralWinner.full_name}
+                </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  {referralWinner.referral_count} pasajero{referralWinner.referral_count !== 1 ? 's' : ''} registrado{referralWinner.referral_count !== 1 ? 's' : ''} con su enlace
-                  {referralWinner.municipality && ` · ${referralWinner.municipality.charAt(0).toUpperCase() + referralWinner.municipality.slice(1).replace('_', ' ')}`}
+                  {referralWinner.referral_count} pasajero
+                  {referralWinner.referral_count !== 1 ? "s" : ""} registrado
+                  {referralWinner.referral_count !== 1 ? "s" : ""} con su enlace
+                  {referralWinner.municipality &&
+                    ` · ${referralWinner.municipality.charAt(0).toUpperCase() + referralWinner.municipality.slice(1).replace("_", " ")}`}
                 </p>
                 <p className="text-xs text-[#008000] font-semibold mt-2">
                   Premio: mes de suscripción gratuito
@@ -449,7 +597,9 @@ export default function HomePage() {
               </div>
             </div>
             <p className="text-center text-xs text-gray-500 mt-3">
-              Cada conductor tiene un enlace de referido en su perfil. El que más pasajeros inscriba durante el mes gana el siguiente mes gratis.
+              Cada conductor tiene un enlace de referido en su perfil. El que
+              más pasajeros inscriba durante el mes gana el siguiente mes
+              gratis.
             </p>
           </div>
         </section>
@@ -473,20 +623,34 @@ export default function HomePage() {
               <div
                 key={municipality.id}
                 className="rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#42CE1D] relative overflow-hidden flex flex-col"
-                style={municipality.id === 'santiago' ? {
-                  backgroundImage: 'url(https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/municipios/santiago_1.jpeg)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                } : { backgroundColor: 'white' }}
+                style={
+                  municipality.id === "santiago"
+                    ? {
+                        backgroundImage:
+                          "url(https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/municipios/santiago_1.jpeg)",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : { backgroundColor: "white" }
+                }
               >
-                {municipality.id === 'santiago' && (
+                {municipality.id === "santiago" && (
                   <div className="absolute inset-0 bg-white/60" />
                 )}
                 <div className="relative z-10 p-8 flex-1">
-                  <h3 className="text-2xl font-extrabold mb-1" style={{ color: 'white', WebkitTextStroke: '1.5px #008000', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}>
+                  <h3
+                    className="text-2xl font-extrabold mb-1"
+                    style={{
+                      color: "white",
+                      WebkitTextStroke: "1.5px #008000",
+                      textShadow: "0 1px 4px rgba(0,0,0,0.18)",
+                    }}
+                  >
                     {municipality.name}
                   </h3>
-                  <p className="text-sm text-gray-600">{municipality.description}</p>
+                  <p className="text-sm text-gray-600">
+                    {municipality.description}
+                  </p>
                 </div>
                 <div className="relative z-10 px-5 pb-5 flex gap-2">
                   <button
@@ -497,16 +661,29 @@ export default function HomePage() {
                   </button>
                   <button
                     onClick={() => {
-                      if (!user) { router.push('/auth/login'); return; }
+                      if (!user) {
+                        router.push("/auth/login");
+                        return;
+                      }
                       setProposeImageMunicipality(municipality.id);
                       setProposeImageMsg(null);
-                      setProposeImageUrl('');
+                      setProposeImageUrl("");
                     }}
                     title="Proponer imagen de fondo"
                     className="p-2 bg-white border border-[#42CE1D] text-[#42CE1D] rounded-xl hover:bg-green-50 transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -519,13 +696,20 @@ export default function HomePage() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-1">
-                  Proponer imagen para {MUNICIPALITIES.find(m => m.id === proposeImageMunicipality)?.name}
+                  Proponer imagen para{" "}
+                  {
+                    MUNICIPALITIES.find(
+                      (m) => m.id === proposeImageMunicipality,
+                    )?.name
+                  }
                 </h3>
                 <p className="text-sm text-gray-500 mb-4">
                   El administrador revisará tu propuesta antes de publicarla.
                 </p>
                 <form onSubmit={handleProposeImage}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">URL de la imagen</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    URL de la imagen
+                  </label>
                   <input
                     type="url"
                     value={proposeImageUrl}
@@ -534,7 +718,9 @@ export default function HomePage() {
                     className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#42CE1D] mb-3"
                   />
                   {proposeImageMsg && (
-                    <p className={`text-sm mb-3 font-medium ${proposeImageMsg.type === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+                    <p
+                      className={`text-sm mb-3 font-medium ${proposeImageMsg.type === "ok" ? "text-green-600" : "text-red-500"}`}
+                    >
                       {proposeImageMsg.text}
                     </p>
                   )}
@@ -544,11 +730,14 @@ export default function HomePage() {
                       disabled={proposeImageLoading}
                       className="flex-1 py-2 bg-[#42CE1D] text-white font-semibold rounded-xl text-sm hover:bg-[#36b018] transition-colors disabled:opacity-60"
                     >
-                      {proposeImageLoading ? 'Enviando...' : 'Enviar propuesta'}
+                      {proposeImageLoading ? "Enviando..." : "Enviar propuesta"}
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setProposeImageMunicipality(null); setProposeImageMsg(null); }}
+                      onClick={() => {
+                        setProposeImageMunicipality(null);
+                        setProposeImageMsg(null);
+                      }}
                       className="flex-1 py-2 border border-gray-300 text-gray-600 font-semibold rounded-xl text-sm hover:bg-gray-50 transition-colors"
                     >
                       Cancelar
@@ -562,14 +751,16 @@ export default function HomePage() {
       </section>
 
       {/* Lugares más frecuentados — solo si hay datos */}
-      {(topPickups.length > 0 || topDropoffs.length > 0) && <section className="py-20 bg-white">
+      {(topPickups.length > 0 || topDropoffs.length > 0) && (
+        <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
                 Lugares más frecuentados
               </h2>
               <p className="text-xl text-black max-w-2xl mx-auto">
-                Los destinos y puntos de recogida con más actividad en los últimos 30 días
+                Los destinos y puntos de recogida con más actividad en los
+                últimos 30 días
               </p>
             </div>
 
@@ -579,24 +770,47 @@ export default function HomePage() {
                 <div>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-5 h-5 text-[#008000]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">Puntos de recogida</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      Puntos de recogida
+                    </h3>
                   </div>
                   <div className="space-y-3">
                     {topPickups.map((place, i) => (
-                      <div key={i} className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors">
+                      <div
+                        key={i}
+                        className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors"
+                      >
                         <span className="text-2xl font-bold text-[#008000] w-7 text-center flex-shrink-0">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 font-medium truncate">{place.address}</p>
+                          <p className="text-gray-900 font-medium truncate">
+                            {place.address}
+                          </p>
                         </div>
                         <span className="flex-shrink-0 text-sm font-semibold text-[#008000] bg-[#008000]/10 px-3 py-1 rounded-full">
-                          {place.trip_count} {place.trip_count === 1 ? 'viaje' : 'viajes'}
+                          {place.trip_count}{" "}
+                          {place.trip_count === 1 ? "viaje" : "viajes"}
                         </span>
                       </div>
                     ))}
@@ -609,23 +823,41 @@ export default function HomePage() {
                 <div>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                      <svg
+                        className="w-5 h-5 text-[#008000]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                        />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">Destinos populares</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      Destinos populares
+                    </h3>
                   </div>
                   <div className="space-y-3">
                     {topDropoffs.map((place, i) => (
-                      <div key={i} className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors">
+                      <div
+                        key={i}
+                        className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors"
+                      >
                         <span className="text-2xl font-bold text-[#008000] w-7 text-center flex-shrink-0">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 font-medium truncate">{place.address}</p>
+                          <p className="text-gray-900 font-medium truncate">
+                            {place.address}
+                          </p>
                         </div>
                         <span className="flex-shrink-0 text-sm font-semibold text-[#008000] bg-[#008000]/10 px-3 py-1 rounded-full">
-                          {place.trip_count} {place.trip_count === 1 ? 'viaje' : 'viajes'}
+                          {place.trip_count}{" "}
+                          {place.trip_count === 1 ? "viaje" : "viajes"}
                         </span>
                       </div>
                     ))}
@@ -634,7 +866,8 @@ export default function HomePage() {
               )}
             </div>
           </div>
-        </section>}
+        </section>
+      )}
 
       {/* Galería de fotos de conductores */}
       {publicPhotos.length > 0 && (
@@ -645,27 +878,47 @@ export default function HomePage() {
                 Destinos compartidos por conductores
               </h2>
               <p className="text-xl text-black max-w-2xl mx-auto">
-                Fotos reales de los lugares a donde nuestros conductores llevan a sus pasajeros
+                Fotos reales de los lugares a donde nuestros conductores llevan
+                a sus pasajeros
               </p>
             </div>
 
             {/* Aviso votación anónima */}
             <div className="max-w-2xl mx-auto mb-10 flex items-start gap-3 bg-white border border-[#008000]/20 rounded-2xl px-5 py-4 shadow-sm">
-              <svg className="w-5 h-5 text-[#008000] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              <svg
+                className="w-5 h-5 text-[#008000] flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
               </svg>
               <p className="text-sm text-gray-600 leading-relaxed">
-                <strong className="text-gray-800">Vota por tus fotos favoritas de forma anónima</strong> — no necesitas crear una cuenta ni iniciar sesión. Dale like a las fotos que más te gusten y las mejores subirán automáticamente al inicio de la galería.
+                <strong className="text-gray-800">
+                  Vota por tus fotos favoritas de forma anónima
+                </strong>{" "}
+                — no necesitas crear una cuenta ni iniciar sesión. Dale like a
+                las fotos que más te gusten y las mejores subirán
+                automáticamente al inicio de la galería.
               </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {publicPhotos.map(photo => {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+              {publicPhotos.map((photo) => {
+                const API_URL =
+                  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
                 const liked = likedPhotos.has(photo.id);
                 const isLiking = likingId === photo.id;
                 return (
-                  <div key={photo.id} className="rounded-2xl overflow-hidden shadow-md relative group h-56 sm:h-64 cursor-pointer">
+                  <div
+                    key={photo.id}
+                    className="rounded-2xl overflow-hidden shadow-md relative group h-56 sm:h-64 cursor-pointer"
+                  >
                     <img
                       src={`${API_URL}/images/${photo.image_key}`}
                       alt={photo.caption || `Foto de ${photo.driver_name}`}
@@ -676,22 +929,40 @@ export default function HomePage() {
                     {/* Info siempre visible en la parte inferior */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-3">
                       {photo.caption && (
-                        <p className="text-white text-xs font-medium leading-snug line-clamp-2">{photo.caption}</p>
+                        <p className="text-white text-xs font-medium leading-snug line-clamp-2">
+                          {photo.caption}
+                        </p>
                       )}
-                      <p className="text-white/70 text-xs mt-0.5">{photo.driver_name}</p>
+                      <p className="text-white/70 text-xs mt-0.5">
+                        {photo.driver_name}
+                      </p>
                     </div>
                     {/* Botón de like */}
                     <button
-                      onClick={e => { e.stopPropagation(); handleLikePhoto(photo.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLikePhoto(photo.id);
+                      }}
                       disabled={liked || isLiking}
                       className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold shadow transition-all
-                        ${liked
-                          ? 'bg-red-500 text-white cursor-default'
-                          : 'bg-white/90 text-gray-700 hover:bg-red-500 hover:text-white'
+                        ${
+                          liked
+                            ? "bg-red-500 text-white cursor-default"
+                            : "bg-white/90 text-gray-700 hover:bg-red-500 hover:text-white"
                         }`}
                     >
-                      <svg className="w-3.5 h-3.5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill={liked ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
                       </svg>
                       {photo.likes > 0 && <span>{photo.likes}</span>}
                     </button>
@@ -700,8 +971,18 @@ export default function HomePage() {
                       onClick={() => setExpandedPhoto(photo)}
                       className="absolute top-2 left-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -710,54 +991,85 @@ export default function HomePage() {
             </div>
 
             {/* Modal para expandir foto */}
-            {expandedPhoto && (() => {
-              const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-              const liked = likedPhotos.has(expandedPhoto.id);
-              return (
-                <div
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-                  onClick={() => setExpandedPhoto(null)}
-                >
+            {expandedPhoto &&
+              (() => {
+                const API_URL =
+                  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+                const liked = likedPhotos.has(expandedPhoto.id);
+                return (
                   <div
-                    className="relative max-w-2xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl"
-                    onClick={e => e.stopPropagation()}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                    onClick={() => setExpandedPhoto(null)}
                   >
-                    <img
-                      src={`${API_URL}/images/${expandedPhoto.image_key}`}
-                      alt={expandedPhoto.caption || `Foto de ${expandedPhoto.driver_name}`}
-                      className="w-full max-h-[75vh] object-contain bg-black"
-                    />
-                    <div className="bg-white px-4 py-3 flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        {expandedPhoto.caption && (
-                          <p className="text-gray-800 text-sm font-medium truncate">{expandedPhoto.caption}</p>
-                        )}
-                        <p className="text-gray-500 text-xs">{expandedPhoto.driver_name}</p>
+                    <div
+                      className="relative max-w-2xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <img
+                        src={`${API_URL}/images/${expandedPhoto.image_key}`}
+                        alt={
+                          expandedPhoto.caption ||
+                          `Foto de ${expandedPhoto.driver_name}`
+                        }
+                        className="w-full max-h-[75vh] object-contain bg-black"
+                      />
+                      <div className="bg-white px-4 py-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          {expandedPhoto.caption && (
+                            <p className="text-gray-800 text-sm font-medium truncate">
+                              {expandedPhoto.caption}
+                            </p>
+                          )}
+                          <p className="text-gray-500 text-xs">
+                            {expandedPhoto.driver_name}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleLikePhoto(expandedPhoto.id)}
+                          disabled={liked || likingId === expandedPhoto.id}
+                          className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-all
+                          ${liked ? "bg-red-500 text-white cursor-default" : "bg-gray-100 text-gray-700 hover:bg-red-500 hover:text-white"}`}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill={liked ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                          </svg>
+                          {expandedPhoto.likes > 0
+                            ? expandedPhoto.likes
+                            : "Me gusta"}
+                        </button>
                       </div>
                       <button
-                        onClick={() => handleLikePhoto(expandedPhoto.id)}
-                        disabled={liked || likingId === expandedPhoto.id}
-                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-all
-                          ${liked ? 'bg-red-500 text-white cursor-default' : 'bg-gray-100 text-gray-700 hover:bg-red-500 hover:text-white'}`}
+                        onClick={() => setExpandedPhoto(null)}
+                        className="absolute top-3 right-3 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
                       >
-                        <svg className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
-                        {expandedPhoto.likes > 0 ? expandedPhoto.likes : 'Me gusta'}
                       </button>
                     </div>
-                    <button
-                      onClick={() => setExpandedPhoto(null)}
-                      className="absolute top-3 right-3 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
-                    >
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
           </div>
         </section>
       )}

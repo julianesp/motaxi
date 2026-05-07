@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 // import { useSignIn, useClerk } from "@clerk/nextjs"; // Google OAuth desactivado
 import Navbar from "@/components/Navbar/page";
+import { loginWithPasskey, isPasskeySupported } from "@/lib/hooks/usePasskey";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,6 +20,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loginMode, setLoginMode] = useState<"phone" | "email">("phone");
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeySupported, setPasskeySupported] = useState(false);
+
+  useEffect(() => {
+    setPasskeySupported(isPasskeySupported());
+  }, []);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("motaxi_remembered_email");
@@ -74,6 +81,24 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePasskeyLogin = async () => {
+    setPasskeyLoading(true);
+    setError("");
+    const result = await loginWithPasskey();
+    if (!result.success) {
+      setError(result.error || "No se pudo autenticar con huella");
+      setPasskeyLoading(false);
+      return;
+    }
+    // Guardar token en cookie (igual que el login normal)
+    document.cookie = `authToken=${result.token}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+    const u = result.user;
+    if (u.email === "admin@neurai.dev") router.push("/admin");
+    else if (u.role === "passenger") router.push("/passenger");
+    else if (u.role === "driver") router.push("/driver");
+    else router.push("/");
   };
 
   return (
@@ -262,6 +287,37 @@ export default function LoginPage() {
               {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </button>
           </form>
+
+          {/* Botón de huella digital */}
+          {passkeySupported && (
+            <>
+              <div className="relative my-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-3 bg-white text-gray-500">o</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handlePasskeyLogin}
+                disabled={passkeyLoading}
+                className="w-full flex items-center justify-center gap-3 py-3 border-2 border-[#42CE1D] text-[#008000] font-semibold rounded-xl hover:bg-green-50 transition-colors disabled:opacity-60"
+              >
+                {passkeyLoading ? (
+                  <div className="w-5 h-5 border-2 border-[#42CE1D] border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a5 5 0 010 10" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 4a9 9 0 010 16" />
+                  </svg>
+                )}
+                {passkeyLoading ? "Verificando huella..." : "Entrar con huella digital"}
+              </button>
+            </>
+          )}
 
           <div className="text-center">
             <p className="text-black">

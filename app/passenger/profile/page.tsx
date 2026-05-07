@@ -1,13 +1,56 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Swal from "sweetalert2";
+import { registerPasskey, isPasskeySupported } from "@/lib/hooks/usePasskey";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 export default function PassengerProfilePage() {
   const router = useRouter();
   const { user, loading, logout, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+
+  // Passkeys (huella digital)
+  const [passkeysList, setPasskeysList] = useState<{ id: string; device_name: string; created_at: number; last_used_at: number | null }[]>([]);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeyMsg, setPasskeyMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [passkeySupported, setPasskeySupported] = useState(false);
+
+  useEffect(() => { setPasskeySupported(isPasskeySupported()); }, []);
+
+  const fetchPasskeys = useCallback(async () => {
+    const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
+    if (!token) return;
+    const res = await fetch(`${API_URL}/passkeys`, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) { const data = await res.json() as any; setPasskeysList(data.passkeys || []); }
+  }, []);
+
+  useEffect(() => { if (user) fetchPasskeys(); }, [user, fetchPasskeys]);
+
+  const handleRegisterPasskey = async () => {
+    setPasskeyLoading(true);
+    setPasskeyMsg(null);
+    const result = await registerPasskey();
+    if (result.success) {
+      setPasskeyMsg({ type: "ok", text: "¡Huella registrada! Ya puedes entrar con tu huella." });
+      fetchPasskeys();
+    } else {
+      setPasskeyMsg({ type: "err", text: result.error || "No se pudo registrar la huella" });
+    }
+    setPasskeyLoading(false);
+  };
+
+  const handleDeletePasskey = async (credId: string) => {
+    const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
+    if (!token) return;
+    await fetch(`${API_URL}/passkeys/${encodeURIComponent(credId)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    fetchPasskeys();
+  };
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
@@ -502,6 +545,62 @@ export default function PassengerProfilePage() {
                 <span className="text-sm font-medium text-[#008000]">Compartir</span>
               </button>
             </div>
+
+            {/* Huella digital / Passkeys */}
+            {passkeySupported && (
+              <div className="mt-3 bg-white rounded-xl shadow-md p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-6 h-6 text-[#42CE1D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a5 5 0 010 10" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 4a9 9 0 010 16" />
+                    </svg>
+                    <span className="font-semibold text-gray-800">Huella digital</span>
+                  </div>
+                  <button
+                    onClick={handleRegisterPasskey}
+                    disabled={passkeyLoading}
+                    className="text-xs font-semibold px-3 py-1.5 bg-[#42CE1D] text-white rounded-lg hover:bg-[#36b018] transition-colors disabled:opacity-60"
+                  >
+                    {passkeyLoading ? "Registrando..." : "+ Agregar huella"}
+                  </button>
+                </div>
+
+                {passkeyMsg && (
+                  <p className={`text-xs mb-2 font-medium ${passkeyMsg.type === "ok" ? "text-green-600" : "text-red-500"}`}>
+                    {passkeyMsg.text}
+                  </p>
+                )}
+
+                {passkeysList.length === 0 ? (
+                  <p className="text-xs text-gray-400">No tienes huellas registradas. Agrega una para entrar sin contraseña.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {passkeysList.map((pk) => (
+                      <li key={pk.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">{pk.device_name}</p>
+                          <p className="text-xs text-gray-400">
+                            Registrada: {new Date(pk.created_at * 1000).toLocaleDateString("es-CO")}
+                            {pk.last_used_at && ` · Último uso: ${new Date(pk.last_used_at * 1000).toLocaleDateString("es-CO")}`}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeletePasskey(pk.id)}
+                          className="text-red-400 hover:text-red-600 transition-colors ml-2"
+                          title="Eliminar huella"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             {/* Cerrar sesión */}
             <button

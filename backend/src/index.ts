@@ -14,6 +14,7 @@ import { telegramRoutes } from './routes/telegram';
 import { referralRoutes } from './routes/referrals';
 import { sharedRouteRoutes } from './routes/shared_routes';
 import { municipalityRoutes } from './routes/municipalities';
+import { passkeyRoutes } from './routes/passkeys';
 
 export interface Env {
   DB: D1Database;
@@ -97,6 +98,7 @@ app.route('/telegram', telegramRoutes);
 app.route('/referrals', referralRoutes);
 app.route('/shared-routes', sharedRouteRoutes);
 app.route('/municipalities', municipalityRoutes);
+app.route('/passkeys', passkeyRoutes);
 
 // Error handler
 app.onError((err, c) => {

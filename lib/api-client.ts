@@ -76,7 +76,8 @@ apiClient.interceptors.response.use(
           '/auth/register',
           '/auth/role-selection',
           '/auth/forgot-password',
-          '/auth/reset-password'
+          '/auth/reset-password',
+          '/auth/en-tramite'
         ];
 
         const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));

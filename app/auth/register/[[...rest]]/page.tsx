@@ -97,10 +97,8 @@ function RegisterForm() {
 
       if (registeredUser.email === "admin@neurai.dev") {
         router.push("/admin");
-      } else if (registeredUser.role === "passenger") {
-        router.push("/passenger");
       } else {
-        router.push("/driver");
+        router.push("/auth/en-tramite");
       }
     } catch (err: any) {
       console.error("Register error:", err);

@@ -58,12 +58,8 @@ export default function LoginPage() {
       const { user: loggedUser } = await login(identifier, password);
       if (loggedUser.email === "admin@neurai.dev") {
         router.push("/admin");
-      } else if (loggedUser.role === "passenger") {
-        router.push("/passenger");
-      } else if (loggedUser.role === "driver") {
-        router.push("/driver");
       } else {
-        router.push("/");
+        router.push("/auth/en-tramite");
       }
     } catch (err: any) {
       console.error("Login error:", err);

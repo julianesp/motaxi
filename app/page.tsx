@@ -428,12 +428,20 @@ export default function HomePage() {
             {MUNICIPALITIES.map((municipality, index) => (
               <div
                 key={municipality.id}
-                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#008000]"
+                className="rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#008000] relative overflow-hidden"
+                style={municipality.id === 'santiago' ? {
+                  backgroundImage: 'url(https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/municipios/santiago_1.jpeg)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                } : { backgroundColor: 'white' }}
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-[#008000] to-[#008000] rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
+                {municipality.id === 'santiago' && (
+                  <div className="absolute inset-0 bg-white/60" />
+                )}
+                <div className="relative z-10 w-16 h-16 bg-gradient-to-br from-[#008000] to-[#008000] rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
                   {municipality.name[0]}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                <h3 className="relative z-10 text-2xl font-bold text-gray-900 mb-2">
                   {municipality.name}
                 </h3>
                 {/* <p className="text-black mb-4">{municipality.description}</p> */}

@@ -82,6 +82,13 @@ sharedRouteRoutes.post('/', authMiddleware, async (c) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(id, user.id, origin, destination, '', total_seats, total_seats, fare_per_seat || 0, faresJson).run();
 
+    // Guardar precios como predeterminados para futuras rutas
+    if (faresJson || fare_per_seat) {
+      await c.env.DB.prepare(
+        `UPDATE drivers SET default_route_fares = ? WHERE id = ?`
+      ).bind(faresJson, user.id).run();
+    }
+
     return c.json({ success: true, id });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to create route' }, 500);
@@ -100,7 +107,15 @@ sharedRouteRoutes.get('/my', authMiddleware, async (c) => {
       `SELECT * FROM shared_routes WHERE driver_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1`
     ).bind(user.id).first();
 
-    return c.json({ route: route || null });
+    // Incluir precios predeterminados guardados del conductor
+    const driverFares = await c.env.DB.prepare(
+      `SELECT default_route_fares FROM drivers WHERE id = ?`
+    ).bind(user.id).first<{ default_route_fares: string | null }>();
+
+    return c.json({
+      route: route || null,
+      default_route_fares: driverFares?.default_route_fares || null,
+    });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to get route' }, 500);
   }

@@ -89,6 +89,12 @@ export default function DriverSharedRoutePage() {
     try {
       const data = await sharedRoutesAPI.getMy();
       setMyRoute(data.route);
+      // Precargar precios guardados si no hay ruta activa
+      if (!data.route && data.default_route_fares) {
+        try {
+          setIntermediateFares(JSON.parse(data.default_route_fares));
+        } catch {}
+      }
       if (data.route) {
         const reqData = await sharedRoutesAPI.getRequests(data.route.id);
         setRequests(reqData.requests || []);

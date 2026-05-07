@@ -94,6 +94,7 @@ driverRoutes.get('/profile', async (c) => {
         d.intercity_fare,
         d.rural_fare,
         d.per_km_fare,
+        d.default_route_fares,
         d.profile_completed,
         d.profile_skipped_at
       FROM drivers d
@@ -177,7 +178,8 @@ driverRoutes.put('/profile', async (c) => {
       intercity_fare,
       rural_fare,
       per_km_fare,
-      vehicle_types
+      vehicle_types,
+      default_route_fares,
     } = body;
 
     const updates: string[] = [];
@@ -245,6 +247,10 @@ driverRoutes.put('/profile', async (c) => {
       }
       updates.push('vehicle_types = ?');
       values.push(vehicle_types);
+    }
+    if (default_route_fares !== undefined) {
+      updates.push('default_route_fares = ?');
+      values.push(default_route_fares ? JSON.stringify(default_route_fares) : null);
     }
 
     if (updates.length === 0) {

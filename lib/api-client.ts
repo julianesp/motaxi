@@ -274,6 +274,20 @@ export const driversAPI = {
     const response = await apiClient.post('/drivers/skip-profile', {});
     return response.data;
   },
+
+  uploadNequiQR: async (file: File) => {
+    const formData = new FormData();
+    formData.append('qr', file);
+    const response = await apiClient.post('/drivers/nequi-qr', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  deleteNequiQR: async () => {
+    const response = await apiClient.delete('/drivers/nequi-qr');
+    return response.data;
+  },
 };
 
 // API de usuarios
@@ -311,7 +325,7 @@ export const sharedRoutesAPI = {
     const response = await apiClient.post('/shared-routes', data);
     return response.data;
   },
-  requestSeat: async (routeId: string, data: { destination: string; phone: string }) => {
+  requestSeat: async (routeId: string, data: { destination: string; phone: string; pickup_latitude?: number; pickup_longitude?: number; pickup_address?: string }) => {
     const response = await apiClient.post(`/shared-routes/${routeId}/request`, data);
     return response.data;
   },

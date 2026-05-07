@@ -42,6 +42,7 @@ interface SharedRoute {
   vehicle_types: string;
   rating: number;
   total_trips: number;
+  nequi_qr_key: string | null;
 }
 
 const VEHICLE_LABELS: Record<string, string> = {
@@ -58,6 +59,10 @@ interface RequestModal {
   phone: string;
   saving: boolean;
   done: boolean;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  pickup_address?: string;
+  locating?: boolean;
 }
 
 export default function SharedRoutesPage() {
@@ -102,6 +107,26 @@ export default function SharedRoutesPage() {
     });
   };
 
+  const handleLocate = () => {
+    if (!navigator.geolocation) return;
+    setModal((m) => m ? { ...m, locating: true } : m);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        // Intentar obtener dirección aproximada con nominatim
+        let address = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=es`);
+          const json = await res.json();
+          address = json.display_name?.split(',').slice(0, 3).join(',') || address;
+        } catch {}
+        setModal((m) => m ? { ...m, pickup_latitude: latitude, pickup_longitude: longitude, pickup_address: address, locating: false } : m);
+      },
+      () => setModal((m) => m ? { ...m, locating: false } : m),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const handleRequestSeat = async () => {
     if (!modal) return;
     if (!modal.phone.trim()) return;
@@ -110,9 +135,12 @@ export default function SharedRoutesPage() {
       await sharedRoutesAPI.requestSeat(modal.route.id, {
         destination: modal.destination,
         phone: modal.phone.trim(),
+        pickup_latitude: modal.pickup_latitude,
+        pickup_longitude: modal.pickup_longitude,
+        pickup_address: modal.pickup_address,
       });
       setModal((m) => m ? { ...m, saving: false, done: true } : m);
-      fetchRoutes(); // refrescar puestos disponibles
+      fetchRoutes();
     } catch (e: any) {
       alert(e?.response?.data?.error || 'No se pudo reservar el puesto');
       setModal((m) => m ? { ...m, saving: false } : m);
@@ -281,6 +309,18 @@ export default function SharedRoutesPage() {
                 <p className="text-sm text-gray-500">
                   El conductor <strong>{modal.route.full_name}</strong> ya sabe que vas hasta <strong>{modal.destination}</strong> y te contactará al <strong>{modal.phone}</strong>.
                 </p>
+                {modal.route.nequi_qr_key && (
+                  <div className="w-full bg-[#7B2D8B]/5 border border-[#7B2D8B]/20 rounded-xl p-3 space-y-2">
+                    <p className="text-xs font-semibold text-[#7B2D8B] text-center">Paga con Nequi para asegurar tu puesto</p>
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_API_URL}/images/${modal.route.nequi_qr_key}`}
+                      alt="QR Nequi del conductor"
+                      className="w-48 h-48 object-contain rounded-xl mx-auto border border-[#7B2D8B]/10"
+                    />
+                    <p className="text-xs text-gray-500 text-center">Escanea el QR con la app de Nequi o Bancolombia</p>
+                  </div>
+                )}
+
                 {(modal.route.whatsapp || modal.route.phone) && (
                   <div className="w-full bg-gray-50 rounded-xl p-3 text-left space-y-2">
                     <p className="text-xs font-medium text-gray-500">Envíale el comprobante de pago al conductor:</p>
@@ -369,6 +409,43 @@ export default function SharedRoutesPage() {
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#008000]/30"
                   />
                   <p className="text-xs text-gray-400 mt-1">El conductor te contactará a este número para recogerte.</p>
+                </div>
+
+                {/* Ubicación de recogida */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Tu ubicación de recogida</label>
+                  {modal.pickup_latitude ? (
+                    <div className="flex items-start gap-2 bg-[#008000]/5 border border-[#008000]/20 rounded-xl px-3 py-2.5">
+                      <svg className="w-4 h-4 text-[#008000] mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-700 truncate">{modal.pickup_address}</p>
+                        <button onClick={handleLocate} className="text-xs text-[#008000] font-medium mt-0.5">
+                          Actualizar ubicación
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleLocate}
+                      disabled={modal.locating}
+                      className="w-full flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-xl px-3 py-2.5 text-sm text-gray-500 hover:border-[#008000]/40 hover:text-[#008000] hover:bg-[#008000]/5 transition-colors"
+                    >
+                      {modal.locating ? (
+                        <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      )}
+                      {modal.locating ? 'Obteniendo ubicación...' : 'Compartir mi ubicación'}
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">Opcional. El conductor verá dónde recogerte.</p>
                 </div>
 
                 <button

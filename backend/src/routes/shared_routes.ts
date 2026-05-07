@@ -19,7 +19,7 @@ sharedRouteRoutes.get('/', async (c) => {
              sr.status, sr.created_at,
              u.full_name, u.phone,
              d.vehicle_model, d.vehicle_color, d.vehicle_plate,
-             d.vehicle_types, d.rating, d.total_trips, d.whatsapp
+             d.vehicle_types, d.rating, d.total_trips, d.whatsapp, d.nequi_qr_key
       FROM shared_routes sr
       JOIN users u ON sr.driver_id = u.id
       JOIN drivers d ON sr.driver_id = d.id
@@ -129,7 +129,7 @@ sharedRouteRoutes.post('/:id/request', authMiddleware, async (c) => {
   try {
     const routeId = c.req.param('id');
     const user = c.get('user');
-    const { destination, phone } = await c.req.json();
+    const { destination, phone, pickup_latitude, pickup_longitude, pickup_address } = await c.req.json();
 
     if (!destination || !phone) {
       return c.json({ error: 'Faltan destino o teléfono' }, 400);
@@ -151,8 +151,8 @@ sharedRouteRoutes.post('/:id/request', authMiddleware, async (c) => {
 
     const id = uuidv4();
     await c.env.DB.prepare(
-      `INSERT INTO route_requests (id, route_id, passenger_name, passenger_phone, destination) VALUES (?, ?, ?, ?, ?)`
-    ).bind(id, routeId, user.full_name, phone, destination).run();
+      `INSERT INTO route_requests (id, route_id, passenger_name, passenger_phone, destination, pickup_latitude, pickup_longitude, pickup_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(id, routeId, user.full_name, phone, destination, pickup_latitude || null, pickup_longitude || null, pickup_address || null).run();
 
     await c.env.DB.prepare(
       `UPDATE shared_routes SET available_seats = available_seats - 1, updated_at = unixepoch() WHERE id = ?`
@@ -180,7 +180,8 @@ sharedRouteRoutes.get('/:id/requests', authMiddleware, async (c) => {
     if (!route) return c.json({ error: 'Ruta no encontrada' }, 404);
 
     const result = await c.env.DB.prepare(
-      `SELECT id, passenger_name, passenger_phone, destination, status, created_at
+      `SELECT id, passenger_name, passenger_phone, destination, status, created_at,
+              pickup_latitude, pickup_longitude, pickup_address
        FROM route_requests WHERE route_id = ? ORDER BY created_at ASC`
     ).bind(routeId).all();
 

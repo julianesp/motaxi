@@ -95,6 +95,7 @@ driverRoutes.get('/profile', async (c) => {
         d.rural_fare,
         d.per_km_fare,
         d.default_route_fares,
+        d.nequi_qr_key,
         d.profile_completed,
         d.profile_skipped_at
       FROM drivers d
@@ -521,6 +522,69 @@ driverRoutes.get('/of-the-month', async (c) => {
     return c.json({ winner: { ...top, month, year, reward_type: 'free_month' } });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to get driver of the month' }, 500);
+  }
+});
+
+/**
+ * POST /drivers/nequi-qr
+ * Subir o reemplazar el QR de Nequi del conductor
+ */
+driverRoutes.post('/nequi-qr', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') return c.json({ error: 'Solo conductores' }, 403);
+
+    const formData = await c.req.formData();
+    const file = formData.get('qr') as File | null;
+    if (!file) return c.json({ error: 'No se recibió imagen' }, 400);
+    if (!file.type.startsWith('image/')) return c.json({ error: 'Debe ser una imagen' }, 400);
+    if (file.size > 3 * 1024 * 1024) return c.json({ error: 'Imagen máximo 3MB' }, 400);
+
+    if (!c.env.IMAGES) return c.json({ error: 'Storage no configurado' }, 500);
+
+    // Eliminar QR anterior si existe
+    const existing = await c.env.DB.prepare(
+      'SELECT nequi_qr_key FROM drivers WHERE id = ?'
+    ).bind(user.id).first<{ nequi_qr_key: string | null }>();
+    if (existing?.nequi_qr_key) {
+      await c.env.IMAGES.delete(existing.nequi_qr_key).catch(() => {});
+    }
+
+    const ext = file.type.split('/')[1] || 'jpg';
+    const key = `nequi-qr/${user.id}.${ext}`;
+    const buffer = await file.arrayBuffer();
+    await c.env.IMAGES.put(key, buffer, { httpMetadata: { contentType: file.type } });
+
+    await c.env.DB.prepare('UPDATE drivers SET nequi_qr_key = ? WHERE id = ?').bind(key, user.id).run();
+
+    return c.json({ success: true, nequi_qr_key: key });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error al subir QR' }, 500);
+  }
+});
+
+/**
+ * DELETE /drivers/nequi-qr
+ * Eliminar el QR de Nequi del conductor
+ */
+driverRoutes.delete('/nequi-qr', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') return c.json({ error: 'Solo conductores' }, 403);
+
+    const existing = await c.env.DB.prepare(
+      'SELECT nequi_qr_key FROM drivers WHERE id = ?'
+    ).bind(user.id).first<{ nequi_qr_key: string | null }>();
+
+    if (existing?.nequi_qr_key && c.env.IMAGES) {
+      await c.env.IMAGES.delete(existing.nequi_qr_key).catch(() => {});
+    }
+
+    await c.env.DB.prepare('UPDATE drivers SET nequi_qr_key = NULL WHERE id = ?').bind(user.id).run();
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error al eliminar QR' }, 500);
   }
 });
 

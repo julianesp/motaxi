@@ -59,19 +59,20 @@ export default function DriverSharedRoutePage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
-      fetchMyRoute();
-      const interval = setInterval(async () => {
-        if (myRoute) {
-          try {
-            const reqData = await sharedRoutesAPI.getRequests(myRoute.id);
-            setRequests(reqData.requests || []);
-          } catch {}
-        }
-      }, 15000);
-      return () => clearInterval(interval);
-    }
-  }, [user, myRoute?.id]);
+    if (user) fetchMyRoute();
+  }, [user]);
+
+  const myRouteId = myRoute?.id;
+  useEffect(() => {
+    if (!myRouteId) return;
+    const interval = setInterval(async () => {
+      try {
+        const reqData = await sharedRoutesAPI.getRequests(myRouteId);
+        setRequests(reqData.requests || []);
+      } catch {}
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [myRouteId]);
 
   const fetchMyRoute = async () => {
     setFetching(true);

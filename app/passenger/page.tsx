@@ -221,6 +221,7 @@ export default function PassengerHomePage() {
     useState<NearbyDriver | null>(null);
   const [photoExpanded, setPhotoExpanded] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [hasSharedRoutes, setHasSharedRoutes] = useState(false);
   const [passengerCustomPrice, setPassengerCustomPrice] = useState<
     number | null
   >(null);
@@ -230,6 +231,22 @@ export default function PassengerHomePage() {
   // Cargar historial al montar
   useEffect(() => {
     setRecentPlaces(loadRecentPlaces());
+  }, []);
+
+  // Verificar si hay rutas compartidas activas
+  useEffect(() => {
+    const checkSharedRoutes = async () => {
+      try {
+        const { sharedRoutesAPI } = await import("@/lib/api-client");
+        const data = await sharedRoutesAPI.getAll();
+        setHasSharedRoutes((data.routes || []).length > 0);
+      } catch {
+        setHasSharedRoutes(false);
+      }
+    };
+    checkSharedRoutes();
+    const interval = setInterval(checkSharedRoutes, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   // Mostrar historial cuando el destino está vacío
@@ -894,16 +911,29 @@ export default function PassengerHomePage() {
                 {/* Acceso a rutas compartidas */}
                 <button
                   onClick={() => router.push('/passenger/shared-routes')}
-                  className="w-full flex items-center justify-between bg-[#008000]/5 border border-[#008000]/20 rounded-xl px-4 py-2.5 hover:bg-[#008000]/10 transition-colors"
+                  className={`w-full flex items-center justify-between rounded-xl px-4 py-2.5 transition-colors border ${
+                    hasSharedRoutes
+                      ? 'bg-[#008000]/8 border-[#008000]/30 hover:bg-[#008000]/15'
+                      : 'bg-red-50 border-red-200 hover:bg-red-100'
+                  }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">🚕</span>
+                    <div className="relative">
+                      <span className="text-lg">🚕</span>
+                      {hasSharedRoutes && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#008000] animate-ping" />
+                      )}
+                    </div>
                     <div className="text-left">
-                      <p className="text-sm font-semibold text-[#008000]">Taxis con puestos disponibles</p>
-                      <p className="text-xs text-gray-500">Ver rutas hacia otros pueblos</p>
+                      <p className={`text-sm font-semibold ${hasSharedRoutes ? 'text-[#008000]' : 'text-red-600'}`}>
+                        Taxis con puestos disponibles
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {hasSharedRoutes ? 'Hay rutas disponibles ahora' : 'Sin rutas disponibles ahora'}
+                      </p>
                     </div>
                   </div>
-                  <svg className="w-4 h-4 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 ${hasSharedRoutes ? 'text-[#008000]' : 'text-red-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>

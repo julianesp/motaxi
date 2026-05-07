@@ -14,8 +14,8 @@ sharedRouteRoutes.get('/', async (c) => {
     const destination = c.req.query('destination'); // filtro opcional por destino
 
     let query = `
-      SELECT sr.id, sr.origin, sr.destination, sr.departure_time,
-             sr.total_seats, sr.available_seats, sr.fare_per_seat,
+      SELECT sr.id, sr.origin, sr.destination,
+             sr.total_seats, sr.available_seats, sr.fare_per_seat, sr.intermediate_fares,
              sr.status, sr.created_at,
              u.full_name, u.profile_image, u.phone,
              d.vehicle_model, d.vehicle_color, d.vehicle_plate,
@@ -55,9 +55,9 @@ sharedRouteRoutes.post('/', authMiddleware, async (c) => {
     }
 
     const body = await c.req.json();
-    const { origin, destination, departure_time, total_seats, fare_per_seat } = body;
+    const { origin, destination, total_seats, fare_per_seat, intermediate_fares } = body;
 
-    if (!origin || !destination || !departure_time || !total_seats) {
+    if (!origin || !destination || !total_seats) {
       return c.json({ error: 'Faltan campos requeridos' }, 400);
     }
 
@@ -76,10 +76,11 @@ sharedRouteRoutes.post('/', authMiddleware, async (c) => {
     ).bind(user.id).run();
 
     const id = uuidv4();
+    const faresJson = intermediate_fares ? JSON.stringify(intermediate_fares) : null;
     await c.env.DB.prepare(
-      `INSERT INTO shared_routes (id, driver_id, origin, destination, departure_time, total_seats, available_seats, fare_per_seat)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(id, user.id, origin, destination, departure_time, total_seats, total_seats, fare_per_seat || 0).run();
+      `INSERT INTO shared_routes (id, driver_id, origin, destination, departure_time, total_seats, available_seats, fare_per_seat, intermediate_fares)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(id, user.id, origin, destination, '', total_seats, total_seats, fare_per_seat || 0, faresJson).run();
 
     return c.json({ success: true, id });
   } catch (error: any) {

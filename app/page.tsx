@@ -278,56 +278,64 @@ export default function HomePage() {
         }}
       >
         <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-          {/* Contenido hero */}
-          <div className="text-white space-y-8 text-center max-w-3xl mx-auto">
-            {/* <div className="inline-block">
-              <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
-                Disponible donde estés
-              </span>
-            </div> */}
-            <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-              Tu transporte,
-              <br />a un toque
-            </h1>
-            <p className="text-xl lg:text-2xl text-white max-w-xl mx-auto">
-              Pide tu moto desde donde estés. Conductores cercanos te muestran
-              su distancia y tarifa para que elijas el que más te convenga.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {user ? (
-                <button
-                  onClick={() =>
-                    router.push(
-                      user.email === "admin@neurai.dev"
-                        ? "/admin"
-                        : user.role === "passenger"
-                          ? "/passenger"
-                          : "/driver",
-                    )
-                  }
-                  className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
-                >
-                  {user.email === "admin@neurai.dev"
-                    ? "Panel Admin"
-                    : "Ir a mi cuenta"}
-                </button>
-              ) : (
-                <>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20 lg:pt-36 lg:pb-28">
+          {/* Contenido hero — dos columnas en desktop */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Columna izquierda: texto */}
+            <div className="text-white flex flex-col gap-7">
+              <div>
+                <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
+                  Disponible donde estés
+                </span>
+              </div>
+              <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
+                Tu transporte,
+                <br />a un toque
+              </h1>
+              <p className="text-xl text-white max-w-lg">
+                Pide tu moto desde donde estés. Conductores cercanos te muestran
+                su distancia y tarifa para que elijas el que más te convenga.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {user ? (
                   <button
-                    onClick={() => router.push("/auth/register")}
+                    onClick={() =>
+                      router.push(
+                        user.email === "admin@neurai.dev"
+                          ? "/admin"
+                          : user.role === "passenger"
+                            ? "/passenger"
+                            : "/driver",
+                      )
+                    }
                     className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
                   >
-                    Registrarse
+                    {user.email === "admin@neurai.dev"
+                      ? "Panel Admin"
+                      : "Ir a mi cuenta"}
                   </button>
-                  <button
-                    onClick={() => router.push("/auth/login")}
-                    className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-green-500 hover:border-green-500 transition-all duration-200"
-                  >
-                    Iniciar sesión
-                  </button>
-                </>
-              )}
+                ) : (
+                  <>
+                    <button
+                      onClick={() => router.push("/auth/register")}
+                      className="px-8 py-4 bg-green-500 text-white font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 hover:bg-green-600 transform transition-all duration-200"
+                    >
+                      Registrarse
+                    </button>
+                    <button
+                      onClick={() => router.push("/auth/login")}
+                      className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-green-500 hover:border-green-500 transition-all duration-200"
+                    >
+                      Iniciar sesión
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Columna derecha: mapa */}
+            <div className="hidden lg:block h-[420px] rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+              <LandingMap />
             </div>
           </div>
 
@@ -730,7 +738,7 @@ export default function HomePage() {
             {MUNICIPALITIES.map((municipality) => (
               <div
                 key={municipality.id}
-                className="rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#42CE1D] relative overflow-hidden flex flex-col"
+                className="rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#008000] relative overflow-hidden flex flex-col"
                 style={
                   municipality.id === "santiago"
                     ? {
@@ -746,14 +754,11 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-white/60" />
                 )}
                 <div className="relative z-10 p-8 flex-1">
-                  <h3
-                    className="text-2xl font-extrabold mb-1"
-                    style={{
-                      color: "white",
-                      WebkitTextStroke: "1.5px #008000",
-                      textShadow: "0 1px 4px rgba(0,0,0,0.18)",
-                    }}
-                  >
+                  {/* Chip circular con inicial — patrón del Design System */}
+                  <div className="w-16 h-16 rounded-full bg-[#008000] flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-md">
+                    {municipality.name[0]}
+                  </div>
+                  <h3 className="text-2xl font-extrabold mb-1 text-gray-900">
                     {municipality.name}
                   </h3>
                   <p className="text-sm text-gray-600">
@@ -1194,10 +1199,10 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid md:grid-cols-2 gap-12 max-w-3xl mx-auto">
             {/* Feature 1 */}
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <div className="text-center group transition-all duration-300 hover:-translate-y-2">
+              <div className="w-20 h-20 bg-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="none"
@@ -1246,8 +1251,8 @@ export default function HomePage() {
             </div> */}
 
             {/* Feature 3 */}
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <div className="text-center group transition-all duration-300 hover:-translate-y-2">
+              <div className="w-20 h-20 bg-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
                 <svg
                   className="w-10 h-10 text-white"
                   fill="none"

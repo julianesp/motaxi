@@ -18,3 +18,8 @@ CREATE TABLE IF NOT EXISTS shared_routes (
 CREATE INDEX IF NOT EXISTS idx_shared_routes_driver ON shared_routes(driver_id);
 CREATE INDEX IF NOT EXISTS idx_shared_routes_status ON shared_routes(status);
 CREATE INDEX IF NOT EXISTS idx_shared_routes_destination ON shared_routes(destination);
+
+-- Migración v2: precios por tramo intermedios
+-- Ejecutar por separado si la tabla ya existe:
+-- wrangler d1 execute motaxi-db --command="ALTER TABLE shared_routes ADD COLUMN intermediate_fares TEXT DEFAULT NULL" --remote
+-- wrangler d1 execute motaxi-db --command="ALTER TABLE shared_routes ADD COLUMN notes TEXT DEFAULT NULL" --remote

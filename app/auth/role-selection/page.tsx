@@ -39,7 +39,7 @@ export default function RoleSelectionPage() {
               onClick={() => setSelectedRole("passenger")}
               className={`rounded-xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 selectedRole === "passenger"
-                  ? "border-[#008000] bg-green-50 shadow-md"
+                  ? "border-[#42CE1D] bg-green-50 shadow-md"
                   : "border-gray-200 hover:border-green-300"
               }`}
             >
@@ -56,7 +56,7 @@ export default function RoleSelectionPage() {
                 <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Día y noche</li>
               </ul>
               {selectedRole === "passenger" && (
-                <span className="text-xs font-semibold text-[#008000]">Seleccionado ✓</span>
+                <span className="text-xs font-semibold text-[#42CE1D]">Seleccionado ✓</span>
               )}
             </button>
 
@@ -65,7 +65,7 @@ export default function RoleSelectionPage() {
               onClick={() => setSelectedRole("driver")}
               className={`rounded-xl border-2 p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 selectedRole === "driver"
-                  ? "border-[#008000] bg-green-50 shadow-md"
+                  ? "border-[#42CE1D] bg-green-50 shadow-md"
                   : "border-gray-200 hover:border-green-300"
               }`}
             >
@@ -82,7 +82,7 @@ export default function RoleSelectionPage() {
                 <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Moto o carro</li>
               </ul>
               {selectedRole === "driver" && (
-                <span className="text-xs font-semibold text-[#008000]">Seleccionado ✓</span>
+                <span className="text-xs font-semibold text-[#42CE1D]">Seleccionado ✓</span>
               )}
             </button>
           </div>

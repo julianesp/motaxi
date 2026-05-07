@@ -6,14 +6,24 @@ import { useAuth } from '@/lib/auth-context';
 import { sharedRoutesAPI } from '@/lib/api-client';
 import { MUNICIPALITIES, VEREDAS, DESTINOS_EXTERNOS } from '@/lib/constants/municipalities';
 
+// Orden de municipios en la ruta principal del Valle de Sibundoy
+const ROUTE_ORDER = ['Colón', 'Sibundoy', 'Santiago', 'San Francisco', 'Mocoa'];
+
+function getIntermediateStops(origin: string, destination: string): string[] {
+  const oIdx = ROUTE_ORDER.indexOf(origin);
+  const dIdx = ROUTE_ORDER.indexOf(destination);
+  if (oIdx === -1 || dIdx === -1 || oIdx >= dIdx) return [];
+  return ROUTE_ORDER.slice(oIdx + 1, dIdx + 1);
+}
+
 interface SharedRoute {
   id: string;
   origin: string;
   destination: string;
-  departure_time: string;
   total_seats: number;
   available_seats: number;
   fare_per_seat: number;
+  intermediate_fares: string | null;
   full_name: string;
   profile_image: string | null;
   phone: string;
@@ -46,6 +56,8 @@ export default function SharedRoutesPage() {
 
   useEffect(() => {
     fetchRoutes();
+    const interval = setInterval(fetchRoutes, 5000);
+    return () => clearInterval(interval);
   }, [filterDestination]);
 
   const fetchRoutes = async () => {
@@ -63,7 +75,7 @@ export default function SharedRoutesPage() {
   const handleContact = (route: SharedRoute) => {
     const number = route.whatsapp || route.phone;
     const msg = encodeURIComponent(
-      `Hola ${route.full_name}, vi en MoTaxi que tienes un puesto disponible hacia ${route.destination} a las ${route.departure_time}. ¿Sigue disponible?`
+      `Hola ${route.full_name}, vi en MoTaxi que tienes un puesto disponible hacia ${route.destination} . ¿Sigue disponible?`
     );
     window.open(`https://wa.me/57${number.replace(/\D/g, '')}?text=${msg}`, '_blank');
   };
@@ -166,24 +178,44 @@ export default function SharedRoutesPage() {
                     <p className="text-sm font-medium text-gray-800">{route.origin}</p>
                     <p className="text-sm font-medium text-gray-800">{route.destination}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-400">Salida</p>
-                    <p className="font-bold text-[#008000] text-base">{route.departure_time}</p>
-                  </div>
                 </div>
 
-                {/* Puestos y precio */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-center">
+                {/* Puestos y precios por tramo */}
+                <div className="mb-3 space-y-2">
+                  <div className="bg-gray-50 rounded-xl px-3 py-2 flex items-center justify-between">
                     <p className="text-xs text-gray-400">Puestos libres</p>
                     <p className="font-bold text-gray-900 text-lg">{route.available_seats} <span className="text-sm font-normal text-gray-400">/ {route.total_seats}</span></p>
                   </div>
-                  <div className="flex-1 bg-[#008000]/5 rounded-xl px-3 py-2 text-center">
-                    <p className="text-xs text-gray-400">Por puesto</p>
-                    <p className="font-bold text-[#008000] text-lg">
-                      {route.fare_per_seat > 0 ? `$${route.fare_per_seat.toLocaleString()}` : 'A convenir'}
-                    </p>
-                  </div>
+                  {(() => {
+                    const fares: Record<string, number> = route.intermediate_fares
+                      ? JSON.parse(route.intermediate_fares)
+                      : {};
+                    const stops = getIntermediateStops(route.origin, route.destination);
+                    const hasFares = Object.keys(fares).length > 0;
+                    return (
+                      <div className="bg-[#008000]/5 rounded-xl px-3 py-2 space-y-1">
+                        <p className="text-xs text-gray-400 mb-1">Precio según tu destino</p>
+                        {hasFares ? stops.map((stop) => {
+                          const key = `${route.origin}-${stop}`;
+                          const price = fares[key];
+                          if (!price) return null;
+                          return (
+                            <div key={key} className="flex items-center justify-between">
+                              <span className="text-xs text-gray-600">Hasta {stop}</span>
+                              <span className="text-sm font-bold text-[#008000]">${price.toLocaleString()}</span>
+                            </div>
+                          );
+                        }) : (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600">Hasta {route.destination}</span>
+                            <span className="text-sm font-bold text-[#008000]">
+                              {route.fare_per_seat > 0 ? `$${route.fare_per_seat.toLocaleString()}` : 'A convenir'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Botón contactar */}

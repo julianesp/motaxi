@@ -304,9 +304,9 @@ export const sharedRoutesAPI = {
   create: async (data: {
     origin: string;
     destination: string;
-    departure_time: string;
     total_seats: number;
     fare_per_seat: number;
+    intermediate_fares?: Record<string, number>;
   }) => {
     const response = await apiClient.post('/shared-routes', data);
     return response.data;

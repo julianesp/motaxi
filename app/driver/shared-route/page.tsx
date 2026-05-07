@@ -7,14 +7,25 @@ import { sharedRoutesAPI } from '@/lib/api-client';
 import { MUNICIPALITIES, VEREDAS, DESTINOS_EXTERNOS } from '@/lib/constants/municipalities';
 import Swal from 'sweetalert2';
 
+// Orden de municipios en la ruta principal del Valle de Sibundoy
+const ROUTE_ORDER = ['Colón', 'Sibundoy', 'Santiago', 'San Francisco', 'Mocoa'];
+
+function getIntermediateStops(origin: string, destination: string): string[] {
+  const oIdx = ROUTE_ORDER.indexOf(origin);
+  const dIdx = ROUTE_ORDER.indexOf(destination);
+  if (oIdx === -1 || dIdx === -1 || oIdx >= dIdx) return [];
+  // Devuelve todos los destinos posibles desde origin hasta destination
+  return ROUTE_ORDER.slice(oIdx + 1, dIdx + 1);
+}
+
 interface MyRoute {
   id: string;
   origin: string;
   destination: string;
-  departure_time: string;
   total_seats: number;
   available_seats: number;
   fare_per_seat: number;
+  intermediate_fares: string | null;
   status: string;
 }
 
@@ -27,10 +38,11 @@ export default function DriverSharedRoutePage() {
   const [form, setForm] = useState({
     origin: '',
     destination: '',
-    departure_time: '',
     total_seats: 4,
     fare_per_seat: 0,
   });
+  // Precios por tramo: clave = "Origen-Destino", valor = precio en COP
+  const [intermediateFares, setIntermediateFares] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!loading && !user) router.replace('/auth/login');
@@ -53,8 +65,8 @@ export default function DriverSharedRoutePage() {
   };
 
   const handlePublish = async () => {
-    if (!form.origin || !form.destination || !form.departure_time) {
-      Swal.fire({ icon: 'warning', title: 'Campos incompletos', text: 'Completa origen, destino y hora de salida.', confirmButtonColor: '#008000' });
+    if (!form.origin || !form.destination) {
+      Swal.fire({ icon: 'warning', title: 'Campos incompletos', text: 'Completa el origen y el destino.', confirmButtonColor: '#008000' });
       return;
     }
     if (form.origin === form.destination) {
@@ -63,7 +75,7 @@ export default function DriverSharedRoutePage() {
     }
     setSaving(true);
     try {
-      await sharedRoutesAPI.create(form);
+      await sharedRoutesAPI.create({ ...form, intermediate_fares: Object.keys(intermediateFares).length > 0 ? intermediateFares : undefined });
       await fetchMyRoute();
       Swal.fire({ icon: 'success', title: '¡Ruta publicada!', text: 'Los pasajeros ya pueden ver tus puestos disponibles.', confirmButtonColor: '#008000' });
     } catch (e: any) {
@@ -141,24 +153,42 @@ export default function DriverSharedRoutePage() {
                 <p className="text-sm font-medium text-gray-800">{myRoute.origin}</p>
                 <p className="text-sm font-medium text-gray-800">{myRoute.destination}</p>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-400">Salida</p>
-                <p className="font-bold text-[#008000] text-xl">{myRoute.departure_time}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <div className="bg-gray-50 rounded-xl px-3 py-2 text-center">
                 <p className="text-xs text-gray-400">Puestos libres</p>
                 <p className="font-bold text-gray-900 text-2xl">{myRoute.available_seats}<span className="text-sm font-normal text-gray-400"> / {myRoute.total_seats}</span></p>
               </div>
-              <div className="bg-[#008000]/5 rounded-xl p-3 text-center">
-                <p className="text-xs text-gray-400">Por puesto</p>
-                <p className="font-bold text-[#008000] text-2xl">
-                  {myRoute.fare_per_seat > 0 ? `$${myRoute.fare_per_seat.toLocaleString()}` : 'Libre'}
-                </p>
-              </div>
             </div>
+
+            {/* Precios por tramo */}
+            {(() => {
+              const fares: Record<string, number> = myRoute.intermediate_fares
+                ? JSON.parse(myRoute.intermediate_fares)
+                : {};
+              const stops = getIntermediateStops(myRoute.origin, myRoute.destination);
+              const hasFares = Object.keys(fares).length > 0;
+              if (!hasFares && myRoute.fare_per_seat === 0) return null;
+              return (
+                <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">
+                  <p className="text-xs font-medium text-gray-500 mb-2">Precios por tramo</p>
+                  {hasFares ? stops.map((stop) => {
+                    const key = `${myRoute.origin}-${stop}`;
+                    const price = fares[key];
+                    if (!price) return null;
+                    return (
+                      <div key={key} className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">{myRoute.origin} → {stop}</span>
+                        <span className="text-sm font-bold text-[#008000]">${price.toLocaleString()}</span>
+                      </div>
+                    );
+                  }) : (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600">{myRoute.origin} → {myRoute.destination}</span>
+                      <span className="text-sm font-bold text-[#008000]">${myRoute.fare_per_seat.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -233,17 +263,6 @@ export default function DriverSharedRoutePage() {
               </select>
             </div>
 
-            {/* Hora de salida */}
-            <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Hora de salida</label>
-              <input
-                type="time"
-                value={form.departure_time}
-                onChange={(e) => setForm({ ...form, departure_time: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#008000]/30"
-              />
-            </div>
-
             {/* Puestos */}
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Puestos disponibles</label>
@@ -260,17 +279,66 @@ export default function DriverSharedRoutePage() {
               </div>
             </div>
 
-            {/* Precio por puesto */}
-            <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Precio por puesto (COP) — opcional</label>
-              <input
-                type="number"
-                value={form.fare_per_seat || ''}
-                onChange={(e) => setForm({ ...form, fare_per_seat: parseInt(e.target.value) || 0 })}
-                placeholder="Ej: 15000 — dejar vacío si es a convenir"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#008000]/30"
-              />
-            </div>
+            {/* Precios por tramo */}
+            {(() => {
+              const stops = getIntermediateStops(form.origin, form.destination);
+              if (!form.origin || !form.destination) return null;
+              return (
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-2 block">
+                    Precio por tramo (COP)
+                    <span className="text-gray-400 font-normal ml-1">— pon el precio según hasta dónde va el pasajero</span>
+                  </label>
+                  <div className="space-y-2">
+                    {stops.map((stop) => {
+                      const key = `${form.origin}-${stop}`;
+                      return (
+                        <div key={key} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500">{form.origin}</p>
+                            <p className="text-sm font-semibold text-gray-900">→ {stop}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-400">$</span>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              value={intermediateFares[key] || ''}
+                              onChange={(e) => setIntermediateFares((prev) => ({
+                                ...prev,
+                                [key]: parseInt(e.target.value) || 0,
+                              }))}
+                              placeholder="0"
+                              className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-right text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#008000]/30"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {stops.length === 0 && (
+                      /* Ruta fuera del Valle o sin tramos intermedios — precio único */
+                      <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500">{form.origin}</p>
+                          <p className="text-sm font-semibold text-gray-900">→ {form.destination}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-gray-400">$</span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={form.fare_per_seat || ''}
+                            onChange={(e) => setForm({ ...form, fare_per_seat: parseInt(e.target.value) || 0 })}
+                            placeholder="0"
+                            className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-right text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#008000]/30"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             <button
               onClick={handlePublish}

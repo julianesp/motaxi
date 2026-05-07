@@ -134,7 +134,12 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 backdrop-blur-sm z-50 ${isHomePage ? "bg-transparent" : "bg-white shadow-md"} border rounded-e-lg ${styles.navbar}`}
+        className={`fixed top-0 left-0 right-0 backdrop-blur-sm z-50 ${isHomePage ? "bg-transparent" : "bg-white shadow-md"} border border-white/10 ${styles.navbar}`}
+        style={{
+          borderBottomLeftRadius: 30,
+          borderBottomRightRadius: 30,
+          boxShadow: isHomePage ? "var(--mt-shadow-navbar)" : "0 4px 6px rgba(0,0,0,0.1)",
+        }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">

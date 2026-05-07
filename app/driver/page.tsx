@@ -30,7 +30,8 @@ export default function DriverHomePage() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [dismissedPushBanner, setDismissedPushBanner] = useState(false);
 
-  const [isAvailable, setIsAvailable] = useState(false);\n  const [hasMissingVehicleInfo, setHasMissingVehicleInfo] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(false);
+  const [hasMissingVehicleInfo, setHasMissingVehicleInfo] = useState(false);
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);

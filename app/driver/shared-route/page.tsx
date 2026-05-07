@@ -7,8 +7,18 @@ import { sharedRoutesAPI } from '@/lib/api-client';
 import { MUNICIPALITIES, VEREDAS, DESTINOS_EXTERNOS } from '@/lib/constants/municipalities';
 import Swal from 'sweetalert2';
 
-// Orden de municipios en la ruta principal del Valle de Sibundoy
-const ROUTE_ORDER = ['Colón', 'Sibundoy', 'Santiago', 'San Francisco', 'Mocoa'];
+// Orden de lugares en la ruta principal del Valle de Sibundoy (incluye veredas)
+const ROUTE_ORDER = [
+  'Colón',
+  'Michoacán', 'San Pedro',          // veredas de Colón
+  'Sibundoy',
+  'Vichoy',                          // vereda de Santiago, antes de Santiago
+  'Santiago',
+  'San Andrés',                      // vereda de Santiago, cerca al municipio
+  'San Francisco',
+  'El Poroto',                       // vereda de San Francisco
+  'Mocoa',
+];
 
 function getIntermediateStops(origin: string, destination: string): string[] {
   const oIdx = ROUTE_ORDER.indexOf(origin);

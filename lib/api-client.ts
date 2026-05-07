@@ -311,6 +311,14 @@ export const sharedRoutesAPI = {
     const response = await apiClient.post('/shared-routes', data);
     return response.data;
   },
+  requestSeat: async (routeId: string, data: { destination: string; phone: string }) => {
+    const response = await apiClient.post(`/shared-routes/${routeId}/request`, data);
+    return response.data;
+  },
+  getRequests: async (routeId: string) => {
+    const response = await apiClient.get(`/shared-routes/${routeId}/requests`);
+    return response.data;
+  },
   updateStatus: async (id: string, status: 'departed' | 'cancelled') => {
     const response = await apiClient.put(`/shared-routes/${id}/status`, { status });
     return response.data;

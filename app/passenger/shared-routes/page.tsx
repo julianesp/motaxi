@@ -25,7 +25,6 @@ interface SharedRoute {
   fare_per_seat: number;
   intermediate_fares: string | null;
   full_name: string;
-  profile_image: string | null;
   phone: string;
   whatsapp: string | null;
   vehicle_model: string;
@@ -43,12 +42,21 @@ const VEHICLE_LABELS: Record<string, string> = {
   particular: '🚗 Particular',
 };
 
+interface RequestModal {
+  route: SharedRoute;
+  destination: string;
+  phone: string;
+  saving: boolean;
+  done: boolean;
+}
+
 export default function SharedRoutesPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [routes, setRoutes] = useState<SharedRoute[]>([]);
   const [fetching, setFetching] = useState(true);
   const [filterDestination, setFilterDestination] = useState('');
+  const [modal, setModal] = useState<RequestModal | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/auth/login');
@@ -56,7 +64,7 @@ export default function SharedRoutesPage() {
 
   useEffect(() => {
     fetchRoutes();
-    const interval = setInterval(fetchRoutes, 5000);
+    const interval = setInterval(fetchRoutes, 15000);
     return () => clearInterval(interval);
   }, [filterDestination]);
 
@@ -72,12 +80,33 @@ export default function SharedRoutesPage() {
     }
   };
 
-  const handleContact = (route: SharedRoute) => {
-    const number = route.whatsapp || route.phone;
-    const msg = encodeURIComponent(
-      `Hola ${route.full_name}, vi en MoTaxi que tienes un puesto disponible hacia ${route.destination} . ¿Sigue disponible?`
-    );
-    window.open(`https://wa.me/57${number.replace(/\D/g, '')}?text=${msg}`, '_blank');
+  const openRequestModal = (route: SharedRoute) => {
+    const stops = getIntermediateStops(route.origin, route.destination);
+    const defaultDest = stops.length > 0 ? stops[stops.length - 1] : route.destination;
+    setModal({
+      route,
+      destination: defaultDest,
+      phone: user?.phone || '',
+      saving: false,
+      done: false,
+    });
+  };
+
+  const handleRequestSeat = async () => {
+    if (!modal) return;
+    if (!modal.phone.trim()) return;
+    setModal((m) => m ? { ...m, saving: true } : m);
+    try {
+      await sharedRoutesAPI.requestSeat(modal.route.id, {
+        destination: modal.destination,
+        phone: modal.phone.trim(),
+      });
+      setModal((m) => m ? { ...m, saving: false, done: true } : m);
+      fetchRoutes(); // refrescar puestos disponibles
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'No se pudo reservar el puesto');
+      setModal((m) => m ? { ...m, saving: false } : m);
+    }
   };
 
   if (loading) return null;
@@ -145,14 +174,8 @@ export default function SharedRoutesPage() {
               <div key={route.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 {/* Conductor */}
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
-                    {route.profile_image ? (
-                      <img src={route.profile_image} alt={route.full_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">
-                        {route.full_name.charAt(0)}
-                      </div>
-                    )}
+                  <div className="w-10 h-10 rounded-full bg-[#008000]/10 flex-shrink-0 flex items-center justify-center text-[#008000] font-bold text-lg">
+                    {route.full_name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 text-sm truncate">{route.full_name}</p>
@@ -218,22 +241,119 @@ export default function SharedRoutesPage() {
                   })()}
                 </div>
 
-                {/* Botón contactar */}
+                {/* Botones acción */}
                 <button
-                  onClick={() => handleContact(route)}
-                  className="w-full bg-[#008000] text-white font-semibold py-2.5 rounded-xl hover:bg-[#006800] transition-colors flex items-center justify-center gap-2 text-sm"
+                  onClick={() => openRequestModal(route)}
+                  disabled={route.available_seats === 0}
+                  className="w-full bg-[#008000] text-white font-semibold py-2.5 rounded-xl hover:bg-[#006800] transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.859L.057 23.428a.75.75 0 00.916.916l5.569-1.475A11.943 11.943 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.183-1.432l-.372-.22-3.304.875.875-3.304-.22-.372A9.956 9.956 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                  </svg>
-                  Contactar por WhatsApp
+                  {route.available_seats === 0 ? 'Sin puestos disponibles' : 'Pedir puesto'}
                 </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Modal: pedir puesto */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
+          <div className="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 space-y-4">
+            {modal.done ? (
+              /* Estado: reserva confirmada */
+              <div className="flex flex-col items-center gap-3 py-4 text-center">
+                <div className="w-14 h-14 bg-[#008000]/10 rounded-full flex items-center justify-center">
+                  <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="font-bold text-gray-900 text-lg">¡Puesto reservado!</p>
+                <p className="text-sm text-gray-500">
+                  El conductor <strong>{modal.route.full_name}</strong> ya sabe que vas hasta <strong>{modal.destination}</strong> y te contactará al <strong>{modal.phone}</strong>.
+                </p>
+                <button
+                  onClick={() => setModal(null)}
+                  className="w-full bg-[#008000] text-white font-semibold py-2.5 rounded-xl mt-2"
+                >
+                  Entendido
+                </button>
+              </div>
+            ) : (
+              /* Formulario */
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-gray-900">Pedir puesto</p>
+                  <button onClick={() => setModal(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <p className="text-xs text-gray-500">
+                  Taxi de <strong>{modal.route.full_name}</strong> · {modal.route.origin} → {modal.route.destination}
+                </p>
+
+                {/* Destino del pasajero */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">¿Hasta dónde vas?</label>
+                  <select
+                    value={modal.destination}
+                    onChange={(e) => setModal((m) => m ? { ...m, destination: e.target.value } : m)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#008000]/30"
+                  >
+                    {getIntermediateStops(modal.route.origin, modal.route.destination).map((stop) => (
+                      <option key={stop} value={stop}>{stop}</option>
+                    ))}
+                    {getIntermediateStops(modal.route.origin, modal.route.destination).length === 0 && (
+                      <option value={modal.route.destination}>{modal.route.destination}</option>
+                    )}
+                  </select>
+                </div>
+
+                {/* Precio del tramo seleccionado */}
+                {(() => {
+                  const fares: Record<string, number> = modal.route.intermediate_fares
+                    ? JSON.parse(modal.route.intermediate_fares) : {};
+                  const key = `${modal.route.origin}-${modal.destination}`;
+                  const price = fares[key] || modal.route.fare_per_seat;
+                  if (!price) return null;
+                  return (
+                    <div className="bg-[#008000]/5 rounded-xl px-4 py-2 flex items-center justify-between">
+                      <span className="text-xs text-gray-500">Precio del tramo</span>
+                      <span className="font-bold text-[#008000]">${price.toLocaleString()}</span>
+                    </div>
+                  );
+                })()}
+
+                {/* Celular del pasajero */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Tu número de celular</label>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    value={modal.phone}
+                    onChange={(e) => setModal((m) => m ? { ...m, phone: e.target.value } : m)}
+                    placeholder="3001234567"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#008000]/30"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">El conductor te contactará a este número para recogerte.</p>
+                </div>
+
+                <button
+                  onClick={handleRequestSeat}
+                  disabled={modal.saving || !modal.phone.trim()}
+                  className="w-full bg-[#008000] text-white font-semibold py-3 rounded-xl hover:bg-[#006800] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {modal.saving ? (
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                  ) : 'Confirmar puesto'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -54,6 +54,50 @@ export default function HomePage() {
   const [likingId, setLikingId] = useState<string | null>(null);
   const [expandedPhoto, setExpandedPhoto] = useState<PublicPhoto | null>(null);
 
+  // Modal para proponer imagen de municipio
+  const [proposeImageMunicipality, setProposeImageMunicipality] = useState<string | null>(null);
+  const [proposeImageUrl, setProposeImageUrl] = useState("");
+  const [proposeImageLoading, setProposeImageLoading] = useState(false);
+  const [proposeImageMsg, setProposeImageMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  async function handleProposeImage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!proposeImageMunicipality) return;
+    if (!proposeImageUrl.trim()) {
+      setProposeImageMsg({ type: "err", text: "Ingresa la URL de la imagen." });
+      return;
+    }
+    setProposeImageLoading(true);
+    setProposeImageMsg(null);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+      const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
+      const res = await fetch(`${API_URL}/municipalities/${proposeImageMunicipality}/image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ image_url: proposeImageUrl }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProposeImageMsg({ type: "ok", text: data.message });
+        setProposeImageUrl("");
+        setTimeout(() => {
+          setProposeImageMunicipality(null);
+          setProposeImageMsg(null);
+        }, 3000);
+      } else {
+        setProposeImageMsg({ type: "err", text: data.error || "Error al enviar." });
+      }
+    } catch {
+      setProposeImageMsg({ type: "err", text: "Error de conexión." });
+    } finally {
+      setProposeImageLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
@@ -425,10 +469,10 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {MUNICIPALITIES.map((municipality, index) => (
+            {MUNICIPALITIES.map((municipality) => (
               <div
                 key={municipality.id}
-                className="rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#008000] relative overflow-hidden"
+                className="rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#42CE1D] relative overflow-hidden flex flex-col"
                 style={municipality.id === 'santiago' ? {
                   backgroundImage: 'url(https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/municipios/santiago_1.jpeg)',
                   backgroundSize: 'cover',
@@ -438,34 +482,82 @@ export default function HomePage() {
                 {municipality.id === 'santiago' && (
                   <div className="absolute inset-0 bg-white/60" />
                 )}
-                <div className="relative z-10 w-16 h-16 bg-gradient-to-br from-[#008000] to-[#008000] rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
-                  {municipality.name[0]}
+                <div className="relative z-10 p-8 flex-1">
+                  <h3 className="text-2xl font-extrabold mb-1" style={{ color: 'white', WebkitTextStroke: '1.5px #008000', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}>
+                    {municipality.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">{municipality.description}</p>
                 </div>
-                <h3 className="relative z-10 text-2xl font-bold text-gray-900 mb-2">
-                  {municipality.name}
-                </h3>
-                {/* <p className="text-black mb-4">{municipality.description}</p> */}
-                {/* {municipality.population && (
-                  <div className="flex items-center text-sm text-black">
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
+                <div className="relative z-10 px-5 pb-5 flex gap-2">
+                  <button
+                    onClick={() => router.push(`/municipio/${municipality.id}`)}
+                    className="flex-1 py-2 bg-[#42CE1D] text-white text-sm font-semibold rounded-xl hover:bg-[#36b018] transition-colors"
+                  >
+                    Ingresar
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!user) { router.push('/auth/login'); return; }
+                      setProposeImageMunicipality(municipality.id);
+                      setProposeImageMsg(null);
+                      setProposeImageUrl('');
+                    }}
+                    title="Proponer imagen de fondo"
+                    className="p-2 bg-white border border-[#42CE1D] text-[#42CE1D] rounded-xl hover:bg-green-50 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {municipality.population.toLocaleString()} habitantes
-                  </div>
-                )} */}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
+
+          {/* Modal: proponer imagen de municipio */}
+          {proposeImageMunicipality && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  Proponer imagen para {MUNICIPALITIES.find(m => m.id === proposeImageMunicipality)?.name}
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  El administrador revisará tu propuesta antes de publicarla.
+                </p>
+                <form onSubmit={handleProposeImage}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL de la imagen</label>
+                  <input
+                    type="url"
+                    value={proposeImageUrl}
+                    onChange={(e) => setProposeImageUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#42CE1D] mb-3"
+                  />
+                  {proposeImageMsg && (
+                    <p className={`text-sm mb-3 font-medium ${proposeImageMsg.type === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+                      {proposeImageMsg.text}
+                    </p>
+                  )}
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={proposeImageLoading}
+                      className="flex-1 py-2 bg-[#42CE1D] text-white font-semibold rounded-xl text-sm hover:bg-[#36b018] transition-colors disabled:opacity-60"
+                    >
+                      {proposeImageLoading ? 'Enviando...' : 'Enviar propuesta'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setProposeImageMunicipality(null); setProposeImageMsg(null); }}
+                      className="flex-1 py-2 border border-gray-300 text-gray-600 font-semibold rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

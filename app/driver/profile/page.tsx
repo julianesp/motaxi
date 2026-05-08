@@ -24,6 +24,7 @@ interface DriverInfo {
   night_only?: number;
   weekend_daytime?: number;
   whatsapp?: string;
+  nequi_phone?: string;
   base_fare?: number;
   intercity_fare?: number;
   rural_fare?: number;
@@ -123,6 +124,7 @@ export default function DriverProfilePage() {
     night_only: false,
     weekend_daytime: false,
     whatsapp: '',
+    nequi_phone: '',
     vehicle_model: '',
     vehicle_color: '',
     vehicle_plate: '',
@@ -205,6 +207,7 @@ export default function DriverProfilePage() {
           night_only: driver.night_only === 1,
           weekend_daytime: driver.weekend_daytime === 1,
           whatsapp: driver.whatsapp || '',
+          nequi_phone: driver.nequi_phone || '',
           vehicle_model: driver.vehicle_model || '',
           vehicle_color: driver.vehicle_color || '',
           vehicle_plate: driver.vehicle_plate || '',
@@ -392,6 +395,50 @@ export default function DriverProfilePage() {
       await fetchDriverPhotos();
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar la foto.', confirmButtonColor: '#008000' });
+    }
+  };
+
+  const handleChangePassword = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Cambiar contraseña',
+      html: `
+        <input id="swal-current" type="password" placeholder="Contraseña actual" class="swal2-input" />
+        <input id="swal-new" type="password" placeholder="Nueva contraseña (mín. 6 caracteres)" class="swal2-input" />
+        <input id="swal-confirm" type="password" placeholder="Confirmar nueva contraseña" class="swal2-input" />
+      `,
+      confirmButtonText: 'Cambiar',
+      confirmButtonColor: '#008000',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#6b7280',
+      focusConfirm: false,
+      preConfirm: () => {
+        const current = (document.getElementById('swal-current') as HTMLInputElement).value;
+        const newPwd = (document.getElementById('swal-new') as HTMLInputElement).value;
+        const confirm = (document.getElementById('swal-confirm') as HTMLInputElement).value;
+        if (!current || !newPwd || !confirm) {
+          Swal.showValidationMessage('Completa todos los campos');
+          return false;
+        }
+        if (newPwd.length < 6) {
+          Swal.showValidationMessage('La nueva contraseña debe tener al menos 6 caracteres');
+          return false;
+        }
+        if (newPwd !== confirm) {
+          Swal.showValidationMessage('Las contraseñas no coinciden');
+          return false;
+        }
+        return { current, newPwd };
+      },
+    });
+    if (!formValues) return;
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient.post('/auth/change-password', { currentPassword: formValues.current, newPassword: formValues.newPwd });
+      Swal.fire({ icon: 'success', title: '¡Contraseña actualizada!', confirmButtonColor: '#008000', timer: 2500, timerProgressBar: true });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'No se pudo cambiar la contraseña';
+      Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#008000' });
     }
   };
 
@@ -716,6 +763,30 @@ export default function DriverProfilePage() {
                     <span className="text-gray-900">{driverInfo?.whatsapp || <span className="text-gray-400">No configurado</span>}</span>
                   )}
                 </div>
+              </div>
+
+              {/* Nequi */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Número Nequi <span className="text-gray-400 font-normal">(opcional — para recibir pagos de pasajeros)</span>
+                </label>
+                <div className="flex items-center">
+                  <span className="mr-3 text-xl">💜</span>
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      value={driverFormData.nequi_phone}
+                      onChange={(e) => setDriverFormData({ ...driverFormData, nequi_phone: e.target.value })}
+                      placeholder="Ej: 3001234567"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7B2D8B] text-black"
+                    />
+                  ) : (
+                    <span className="text-gray-900">{driverInfo?.nequi_phone || <span className="text-gray-400">No configurado</span>}</span>
+                  )}
+                </div>
+                {!isEditing && !driverInfo?.nequi_phone && (
+                  <p className="text-xs text-[#7B2D8B] mt-1 ml-8">Agrega tu número para que los pasajeros puedan pagarte por Nequi.</p>
+                )}
               </div>
 
               {/* Phone */}
@@ -1593,6 +1664,22 @@ export default function DriverProfilePage() {
                 <p className="text-center text-xs text-gray-400 mt-3">Aún no tienes fotos publicadas</p>
               )}
             </div>
+
+            {/* Cambiar contraseña */}
+            <button
+              onClick={handleChangePassword}
+              className="mt-3 w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span className="font-medium text-gray-800">Cambiar contraseña</span>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
 
             {/* Cerrar sesión */}
             <button

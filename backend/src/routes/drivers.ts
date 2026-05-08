@@ -96,6 +96,7 @@ driverRoutes.get('/profile', async (c) => {
         d.per_km_fare,
         d.default_route_fares,
         d.nequi_qr_key,
+        d.nequi_phone,
         d.profile_completed,
         d.profile_skipped_at
       FROM drivers d
@@ -171,6 +172,7 @@ driverRoutes.put('/profile', async (c) => {
       night_only,
       weekend_daytime,
       whatsapp,
+      nequi_phone,
       vehicle_model,
       vehicle_color,
       vehicle_plate,
@@ -209,6 +211,10 @@ driverRoutes.put('/profile', async (c) => {
     if (whatsapp !== undefined) {
       updates.push('whatsapp = ?');
       values.push(whatsapp || null);
+    }
+    if (nequi_phone !== undefined) {
+      updates.push('nequi_phone = ?');
+      values.push(nequi_phone || null);
     }
     if (vehicle_model !== undefined) {
       updates.push('vehicle_model = ?');
@@ -415,7 +421,7 @@ driverRoutes.get('/nearby', async (c) => {
     const drivers = await c.env.DB.prepare(
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
               d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
-              d.municipality, d.night_only, d.weekend_daytime, d.whatsapp,
+              d.municipality, d.night_only, d.weekend_daytime, d.whatsapp, d.nequi_phone,
               d.vehicle_types,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,

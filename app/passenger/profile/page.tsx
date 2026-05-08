@@ -124,6 +124,50 @@ export default function PassengerProfilePage() {
     }
   };
 
+  const handleChangePassword = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Cambiar contraseña',
+      html: `
+        <input id="swal-current" type="password" placeholder="Contraseña actual" class="swal2-input" />
+        <input id="swal-new" type="password" placeholder="Nueva contraseña (mín. 6 caracteres)" class="swal2-input" />
+        <input id="swal-confirm" type="password" placeholder="Confirmar nueva contraseña" class="swal2-input" />
+      `,
+      confirmButtonText: 'Cambiar',
+      confirmButtonColor: '#008000',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#6b7280',
+      focusConfirm: false,
+      preConfirm: () => {
+        const current = (document.getElementById('swal-current') as HTMLInputElement).value;
+        const newPwd = (document.getElementById('swal-new') as HTMLInputElement).value;
+        const confirm = (document.getElementById('swal-confirm') as HTMLInputElement).value;
+        if (!current || !newPwd || !confirm) {
+          Swal.showValidationMessage('Completa todos los campos');
+          return false;
+        }
+        if (newPwd.length < 6) {
+          Swal.showValidationMessage('La nueva contraseña debe tener al menos 6 caracteres');
+          return false;
+        }
+        if (newPwd !== confirm) {
+          Swal.showValidationMessage('Las contraseñas no coinciden');
+          return false;
+        }
+        return { current, newPwd };
+      },
+    });
+    if (!formValues) return;
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient.post('/auth/change-password', { currentPassword: formValues.current, newPassword: formValues.newPwd });
+      Swal.fire({ icon: 'success', title: '¡Contraseña actualizada!', confirmButtonColor: '#008000', timer: 2500, timerProgressBar: true });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'No se pudo cambiar la contraseña';
+      Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#008000' });
+    }
+  };
+
   const handleDeleteAccount = async () => {
     const result = await Swal.fire({
       title: '¿Estás seguro?',
@@ -545,6 +589,22 @@ export default function PassengerProfilePage() {
                 <span className="text-sm font-medium text-[#008000]">Compartir</span>
               </button>
             </div>
+
+            {/* Cambiar contraseña */}
+            <button
+              onClick={handleChangePassword}
+              className="mt-3 w-full bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-[#008000] mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span className="font-medium text-gray-800">Cambiar contraseña</span>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
 
             {/* Huella digital / Passkeys */}
             {passkeySupported && (

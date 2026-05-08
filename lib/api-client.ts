@@ -149,7 +149,7 @@ export const tripsAPI = {
     distance_km: number;
     estimated_fare: number;
     preferred_driver_id?: string;
-    trip_type?: 'ride' | 'delivery';
+    trip_type?: 'ride' | 'delivery' | 'cargo';
     delivery_note?: string;
   }) => {
     const response = await apiClient.post('/trips', tripData);

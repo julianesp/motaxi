@@ -58,6 +58,7 @@ interface NearbyDriver {
   municipality?: string;
   night_only?: number;
   whatsapp?: string | null;
+  nequi_phone?: string | null;
   profile_image?: string | null;
 }
 
@@ -192,7 +193,7 @@ export default function PassengerHomePage() {
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
-  const [tripMode, setTripMode] = useState<"ride" | "delivery">("ride");
+  const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">("ride");
   const [deliveryNote, setDeliveryNote] = useState("");
 
   // Estado para conductores disponibles y favoritos
@@ -518,7 +519,7 @@ export default function PassengerHomePage() {
       Swal.fire({
         icon: "info",
         title: "Elige tu vehículo",
-        text: "Selecciona si quieres viajar en mototaxi o en carro antes de solicitar.",
+        text: "Selecciona el tipo de vehículo antes de solicitar.",
         confirmButtonColor: "#008000",
       });
       return;
@@ -569,12 +570,14 @@ export default function PassengerHomePage() {
       // Éxito: solicitud creada
       await Swal.fire({
         icon: "success",
-        title: tripMode === "delivery" ? "¡Envío solicitado!" : "¡Solicitud enviada!",
+        title: tripMode === "delivery" ? "¡Envío solicitado!" : tripMode === "cargo" ? "¡Trasteo solicitado!" : "¡Solicitud enviada!",
         text: tripMode === "delivery"
-          ? "Tu solicitud de envío está visible en el tablero de conductores. Un conductor irá a recoger el paquete."
+          ? "Tu solicitud de envío está visible en el tablero de conductores. Un conductor irá a recoger el objeto."
+          : tripMode === "cargo"
+          ? "Tu solicitud de carga está visible en el tablero de conductores. Un conductor con vehículo de carga aceptará tu trasteo."
           : "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
         confirmButtonColor: "#008000",
-        confirmButtonText: tripMode === "delivery" ? "Seguir envío" : "Seguir viaje",
+        confirmButtonText: tripMode === "delivery" ? "Seguir envío" : tripMode === "cargo" ? "Seguir trasteo" : "Seguir viaje",
         timer: 3000,
         timerProgressBar: true,
       });
@@ -938,24 +941,24 @@ export default function PassengerHomePage() {
                   </svg>
                 </button>
 
-                {/* Toggle: Viaje normal vs Envío de paquete */}
+                {/* Toggle: Viaje / Envío / Cargas y Trasteos */}
                 <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
                   <button
                     type="button"
-                    onClick={() => setTripMode("ride")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    onClick={() => { setTripMode("ride"); setVehicleType("taxi"); setVehicleCarouselIndex(0); }}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                       tripMode === "ride"
                         ? "bg-white text-[#008000] shadow-sm"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    <span>🏍️</span>
+                    <span>🧍</span>
                     <span>Viaje</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTripMode("delivery")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    onClick={() => { setTripMode("delivery"); setVehicleType("moto"); setVehicleCarouselIndex(0); }}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                       tripMode === "delivery"
                         ? "bg-white text-[#008000] shadow-sm"
                         : "text-gray-500 hover:text-gray-700"
@@ -964,20 +967,40 @@ export default function PassengerHomePage() {
                     <span>📦</span>
                     <span>Envío</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTripMode("cargo"); setVehicleType("piaggio"); setVehicleCarouselIndex(0); }}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                      tripMode === "cargo"
+                        ? "bg-white text-[#008000] shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <span>🚛</span>
+                    <span>Trasteos y cargas</span>
+                  </button>
                 </div>
 
-                {/* Explicación del modo envío */}
+                {/* Explicación del modo */}
                 {tripMode === "delivery" && (
                   <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
                     <span className="shrink-0 mt-0.5">ℹ️</span>
                     <span>
-                      El conductor <strong>no lleva pasajero</strong>. Irá a recoger tu paquete y lo entregará en el destino indicado.
+                      El conductor <strong>no transporta personas</strong>. Solo irá a recoger tu objeto y lo entregará en el destino indicado.
+                    </span>
+                  </div>
+                )}
+                {tripMode === "cargo" && (
+                  <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
+                    <span className="shrink-0 mt-0.5">ℹ️</span>
+                    <span>
+                      Servicio de <strong>cargas y trasteos</strong>. Disponible con Piaggio o Van para mudanzas y carga voluminosa.
                     </span>
                   </div>
                 )}
 
                 <h2 className="text-lg font-bold text-gray-800 mb-1">
-                  {tripMode === "delivery" ? "¿A dónde va el paquete?" : "¿A dónde vas?"}
+                  {tripMode === "delivery" ? "¿A dónde va el paquete?" : tripMode === "cargo" ? "¿A dónde va la carga?" : "¿A dónde vas?"}
                 </h2>
 
                 {/* Selector de tipo de vehículo */}
@@ -986,13 +1009,19 @@ export default function PassengerHomePage() {
                     ¿Cuál vehículo necesitas?
                   </p>
                   {(() => {
-                    const vehicleOpts = [
-                      { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Rápido · económico" },
-                      { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
-                      { value: "particular" as const, icon: "🚗", label: "Particular", sub: "Carro personal" },
-                      { value: "carro" as const, icon: "🚐", label: "Carro / Van", sub: "Cómodo · espacioso" },
-                      { value: "piaggio" as const, icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
-                    ];
+                    const vehicleOptsMap = {
+                      ride: [
+                        { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
+                      ],
+                      delivery: [
+                        { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Solo objetos · rápido" },
+                      ],
+                      cargo: [
+                        { value: "piaggio" as const, icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
+                        { value: "carro" as const, icon: "🚐", label: "Van", sub: "Carga voluminosa" },
+                      ],
+                    };
+                    const vehicleOpts = vehicleOptsMap[tripMode];
                     return (
                       <div className="space-y-1">
                       <div className="relative flex items-center" style={{ height: '90px' }}>
@@ -1520,16 +1549,10 @@ export default function PassengerHomePage() {
                     </span>
                   ) : tripMode === "delivery" ? (
                     "📦 Solicitar envío"
-                  ) : vehicleType === "moto" ? (
-                    "🏍️ Solicitar mototaxi"
+                  ) : tripMode === "cargo" ? (
+                    vehicleType === "carro" ? "🚐 Solicitar Van" : "🛻 Solicitar Piaggio"
                   ) : vehicleType === "taxi" ? (
                     "🚕 Solicitar taxi"
-                  ) : vehicleType === "particular" ? (
-                    "🚗 Solicitar particular"
-                  ) : vehicleType === "carro" ? (
-                    "🚐 Solicitar carro / van"
-                  ) : vehicleType === "piaggio" ? (
-                    "🛻 Solicitar piaggio"
                   ) : (
                     "Solicitar viaje"
                   )}
@@ -1656,6 +1679,29 @@ export default function PassengerHomePage() {
                 </div>
               )}
             </div>
+
+            {/* Pagar por Nequi — solo si el conductor tiene número Nequi registrado */}
+            {driverDetailDriver.nequi_phone && (
+              <div className="mx-5 mb-4 bg-[#7B2D8B]/10 border border-[#7B2D8B]/25 rounded-2xl p-3">
+                <p className="text-xs font-semibold text-[#7B2D8B] mb-1">¿Conoces al conductor? Paga por Nequi</p>
+                <p className="text-[11px] text-[#7B2D8B]/70 mb-2">Solo si ya acordaron el precio directamente con el conductor.</p>
+                <div className="flex items-center gap-2 bg-white border border-[#7B2D8B]/30 rounded-xl px-3 py-2.5">
+                  <span className="text-lg">💜</span>
+                  <span className="flex-1 text-sm font-semibold text-gray-800 tracking-wide">{driverDetailDriver.nequi_phone}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(driverDetailDriver.nequi_phone!);
+                      const btn = document.getElementById('nequi-copy-btn');
+                      if (btn) { btn.textContent = '¡Copiado!'; setTimeout(() => { btn.textContent = 'Copiar'; }, 2000); }
+                    }}
+                    id="nequi-copy-btn"
+                    className="text-xs font-semibold px-3 py-1 bg-[#7B2D8B] text-white rounded-lg hover:bg-[#6a2578] transition-colors"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Acciones */}
             <div className="flex gap-3 px-5 pb-6">

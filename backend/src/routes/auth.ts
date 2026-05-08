@@ -678,6 +678,58 @@ authRoutes.post('/reset-password', async (c) => {
 });
 
 /**
+ * POST /auth/change-password
+ * Cambiar contraseña (requiere autenticación y contraseña actual)
+ */
+authRoutes.post('/change-password', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: 'No token provided' }, 401);
+    }
+    const token = authHeader.substring(7);
+    const user = await AuthUtils.verifyToken(c.env.DB, token);
+    if (!user) {
+      return c.json({ error: 'Invalid or expired token' }, 401);
+    }
+
+    const body = await c.req.json();
+    const { currentPassword, newPassword } = body;
+
+    if (!currentPassword || !newPassword) {
+      return c.json({ error: 'Missing required fields' }, 400);
+    }
+    if (newPassword.length < 6) {
+      return c.json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' }, 400);
+    }
+
+    // Obtener hash actual
+    const dbUser = await c.env.DB.prepare('SELECT password_hash FROM users WHERE id = ?')
+      .bind(user.id)
+      .first<{ password_hash: string }>();
+
+    if (!dbUser?.password_hash) {
+      return c.json({ error: 'Este usuario no tiene contraseña (acceso por Google/Passkey)' }, 400);
+    }
+
+    const isValid = await AuthUtils.verifyPassword(currentPassword, dbUser.password_hash);
+    if (!isValid) {
+      return c.json({ error: 'La contraseña actual es incorrecta' }, 400);
+    }
+
+    const newHash = await AuthUtils.hashPassword(newPassword);
+    await c.env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+      .bind(newHash, user.id)
+      .run();
+
+    return c.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error: any) {
+    console.error('Change password error:', error);
+    return c.json({ error: error.message || 'Error al cambiar contraseña' }, 500);
+  }
+});
+
+/**
  * POST /auth/logout
  * Cerrar sesión
  */

@@ -1063,8 +1063,10 @@ adminRoutes.post('/referrals/set-winner', async (c) => {
  */
 adminRoutes.get('/app-access', async (c) => {
   try {
-    const locked = c.env.CACHE ? await c.env.CACHE.get('app_access_locked') : null;
-    return c.json({ locked: locked === '1' });
+    const row = await c.env.DB.prepare(
+      "SELECT value FROM app_settings WHERE key = 'app_access_locked'"
+    ).first<{ value: string }>();
+    return c.json({ locked: row?.value === '1' });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
@@ -1077,13 +1079,12 @@ adminRoutes.get('/app-access', async (c) => {
 adminRoutes.put('/app-access', async (c) => {
   try {
     const { locked } = await c.req.json();
-    if (c.env.CACHE) {
-      if (locked) {
-        await c.env.CACHE.put('app_access_locked', '1');
-      } else {
-        await c.env.CACHE.delete('app_access_locked');
-      }
-    }
+    const value = locked ? '1' : '0';
+    await c.env.DB.prepare(
+      `INSERT INTO app_settings (key, value, updated_at)
+       VALUES ('app_access_locked', ?, strftime('%s', 'now'))
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+    ).bind(value).run();
     return c.json({ success: true, locked });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);

@@ -58,15 +58,15 @@ export default function LoginPage() {
       const { user: loggedUser } = await login(identifier, password);
       if (loggedUser.email === "admin@neurai.dev") {
         router.push("/admin");
+      } else if (loggedUser.role === "driver") {
+        router.push("/driver");
       } else {
-        router.push("/auth/en-tramite");
+        router.push("/passenger");
       }
     } catch (err: any) {
       console.error("Login error:", err);
 
-      if (err.response?.status === 403 && err.response?.data?.error === 'APP_LOCKED') {
-        router.push('/auth/en-tramite');
-      } else if (err.response?.status === 401) {
+      if (err.response?.status === 401) {
         setError("Celular/correo o contraseña incorrectos. Por favor, verifica tus credenciales.");
       } else if (err.response?.status === 404) {
         setNotRegistered(true);

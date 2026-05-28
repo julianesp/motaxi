@@ -98,7 +98,10 @@ driverRoutes.get('/profile', async (c) => {
         d.nequi_qr_key,
         d.nequi_phone,
         d.profile_completed,
-        d.profile_skipped_at
+        d.profile_skipped_at,
+        d.usual_hours,
+        d.usual_origin,
+        d.usual_destination
       FROM drivers d
       WHERE d.id = ?`
     )
@@ -259,6 +262,19 @@ driverRoutes.put('/profile', async (c) => {
       updates.push('default_route_fares = ?');
       values.push(default_route_fares ? JSON.stringify(default_route_fares) : null);
     }
+    const { usual_hours, usual_origin, usual_destination } = body;
+    if (usual_hours !== undefined) {
+      updates.push('usual_hours = ?');
+      values.push(usual_hours || null);
+    }
+    if (usual_origin !== undefined) {
+      updates.push('usual_origin = ?');
+      values.push(usual_origin || null);
+    }
+    if (usual_destination !== undefined) {
+      updates.push('usual_destination = ?');
+      values.push(usual_destination || null);
+    }
 
     if (updates.length === 0) {
       return c.json({ error: 'No fields to update' }, 400);
@@ -380,6 +396,156 @@ driverRoutes.put('/availability', async (c) => {
     return c.json({ message: 'Availability updated' });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to update availability' }, 500);
+  }
+});
+
+/**
+ * GET /drivers/stats
+ * Estadísticas y beneficios del perfil del conductor
+ */
+driverRoutes.get('/stats', async (c) => {
+  try {
+    const user = c.get('user');
+
+    // Historial de últimas 20 rutas compartidas
+    const routeHistory = await c.env.DB.prepare(`
+      SELECT sr.id, sr.origin, sr.destination, sr.created_at,
+             sr.total_seats, sr.fare_per_seat, sr.intermediate_fares, sr.status,
+             COUNT(rr.id) as passenger_count,
+             COALESCE(SUM(
+               CASE
+                 WHEN sr.intermediate_fares IS NOT NULL THEN (
+                   SELECT CAST(json_extract(sr.intermediate_fares, '$.' || REPLACE(rr.destination, ' ', '_')) AS REAL)
+                 )
+                 ELSE sr.fare_per_seat
+               END
+             ), 0) as estimated_earnings
+      FROM shared_routes sr
+      LEFT JOIN route_requests rr ON rr.route_id = sr.id AND rr.status IN ('pending','confirmed','on_the_way')
+      WHERE sr.driver_id = ?
+      GROUP BY sr.id
+      ORDER BY sr.created_at DESC
+      LIMIT 20
+    `).bind(user.id).all();
+
+    // Ganancias totales estimadas por rutas compartidas
+    const earningsResult = await c.env.DB.prepare(`
+      SELECT
+        COUNT(DISTINCT sr.id) as total_routes,
+        COALESCE(SUM(rr_count.cnt * sr.fare_per_seat), 0) as total_earnings
+      FROM shared_routes sr
+      LEFT JOIN (
+        SELECT route_id, COUNT(*) as cnt
+        FROM route_requests
+        WHERE status IN ('pending','confirmed','on_the_way')
+        GROUP BY route_id
+      ) rr_count ON rr_count.route_id = sr.id
+      WHERE sr.driver_id = ? AND sr.status IN ('departed','active')
+    `).bind(user.id).first<{ total_routes: number; total_earnings: number }>();
+
+    // Pasajeros frecuentes (teléfonos que han viajado 2+ veces)
+    const frequentPassengers = await c.env.DB.prepare(`
+      SELECT rr.passenger_name, rr.passenger_phone, COUNT(*) as trip_count
+      FROM route_requests rr
+      JOIN shared_routes sr ON sr.id = rr.route_id
+      WHERE sr.driver_id = ? AND rr.status IN ('pending','confirmed','on_the_way')
+      GROUP BY rr.passenger_phone
+      HAVING trip_count >= 2
+      ORDER BY trip_count DESC
+      LIMIT 10
+    `).bind(user.id).all();
+
+    // Insignias
+    const totalRoutes = earningsResult?.total_routes || 0;
+    const driverRating = await c.env.DB.prepare(
+      'SELECT rating, total_trips FROM drivers WHERE id = ?'
+    ).bind(user.id).first<{ rating: number; total_trips: number }>();
+
+    const cancelledRoutes = await c.env.DB.prepare(
+      `SELECT COUNT(*) as cnt FROM shared_routes WHERE driver_id = ? AND status = 'cancelled'`
+    ).bind(user.id).first<{ cnt: number }>();
+
+    const badges: { id: string; label: string; icon: string; earned: boolean }[] = [
+      { id: 'first_route', label: 'Primera ruta', icon: '🚀', earned: totalRoutes >= 1 },
+      { id: 'routes_10', label: '10 rutas', icon: '🛣️', earned: totalRoutes >= 10 },
+      { id: 'routes_50', label: '50 rutas', icon: '🏆', earned: totalRoutes >= 50 },
+      { id: 'routes_100', label: '100 rutas', icon: '💯', earned: totalRoutes >= 100 },
+      { id: 'five_stars', label: '5 estrellas', icon: '⭐', earned: (driverRating?.rating || 0) >= 4.8 },
+      { id: 'no_cancellations', label: 'Sin cancelaciones', icon: '✅', earned: (cancelledRoutes?.cnt || 0) === 0 && totalRoutes >= 5 },
+      { id: 'frequent_passenger', label: 'Pasajero fiel', icon: '🤝', earned: (frequentPassengers.results?.length || 0) >= 1 },
+    ];
+
+    return c.json({
+      route_history: routeHistory.results || [],
+      total_routes: totalRoutes,
+      total_earnings: earningsResult?.total_earnings || 0,
+      frequent_passengers: frequentPassengers.results || [],
+      badges,
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get stats' }, 500);
+  }
+});
+
+/**
+ * POST /drivers/notify-passengers
+ * Notifica a pasajeros frecuentes cuando el conductor publica una ruta
+ */
+driverRoutes.post('/notify-passengers', async (c) => {
+  try {
+    const user = c.get('user');
+    const { route_id } = await c.req.json();
+
+    // Obtener la ruta recién publicada
+    const route = await c.env.DB.prepare(
+      `SELECT origin, destination FROM shared_routes WHERE id = ? AND driver_id = ? AND status = 'active'`
+    ).bind(route_id, user.id).first<{ origin: string; destination: string }>();
+    if (!route) return c.json({ error: 'Ruta no encontrada' }, 404);
+
+    // Obtener pasajeros frecuentes con suscripción push
+    const frequent = await c.env.DB.prepare(`
+      SELECT DISTINCT u.id, u.full_name
+      FROM route_requests rr
+      JOIN shared_routes sr ON sr.id = rr.route_id
+      JOIN users u ON u.phone = rr.passenger_phone
+      JOIN web_push_subscriptions wps ON wps.user_id = u.id
+      WHERE sr.driver_id = ? AND rr.status IN ('pending','confirmed','on_the_way')
+      GROUP BY u.id
+      HAVING COUNT(*) >= 1
+    `).bind(user.id).all();
+
+    const subs = await c.env.DB.prepare(`
+      SELECT wps.endpoint, wps.p256dh, wps.auth, wps.user_id
+      FROM web_push_subscriptions wps
+      WHERE wps.user_id IN (${(frequent.results || []).map(() => '?').join(',') || "''"})
+    `).bind(...(frequent.results || []).map((r: any) => r.id)).all();
+
+    if (!c.env.VAPID_PUBLIC_KEY || !c.env.VAPID_PRIVATE_KEY || !(subs.results?.length)) {
+      return c.json({ notified: 0 });
+    }
+
+    const { sendWebPush } = await import('../services/web-push');
+    const payload = {
+      title: `🚕 ${user.full_name} publicó una ruta`,
+      body: `${route.origin} → ${route.destination}. ¡Reserva tu puesto!`,
+      data: { type: 'new_shared_route', route_id },
+      icon: '/logo.png',
+      tag: `shared-route-${route_id}`,
+    };
+
+    const sends = (subs.results || []).map((sub: any) =>
+      sendWebPush(
+        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+        payload,
+        c.env.VAPID_PUBLIC_KEY!,
+        c.env.VAPID_PRIVATE_KEY!
+      ).catch(() => {})
+    );
+    c.executionCtx?.waitUntil(Promise.all(sends));
+
+    return c.json({ notified: subs.results?.length || 0 });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to notify passengers' }, 500);
   }
 });
 

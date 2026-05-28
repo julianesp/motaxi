@@ -137,8 +137,12 @@ export default function DriverSharedRoutePage() {
     }
     setSaving(true);
     try {
-      await sharedRoutesAPI.create({ ...form, intermediate_fares: Object.keys(intermediateFares).length > 0 ? intermediateFares : undefined });
+      const created = await sharedRoutesAPI.create({ ...form, intermediate_fares: Object.keys(intermediateFares).length > 0 ? intermediateFares : undefined });
       await fetchMyRoute();
+      // Notificar a pasajeros frecuentes en segundo plano
+      if (created?.id) {
+        driversAPI.notifyFrequentPassengers(created.id).catch(() => {});
+      }
       Swal.fire({ icon: 'success', title: '¡Ruta publicada!', text: 'Los pasajeros ya pueden ver tus puestos disponibles.', confirmButtonColor: '#008000' });
     } catch (e: any) {
       Swal.fire({ icon: 'error', title: 'Error', text: e?.response?.data?.error || 'No se pudo publicar la ruta.', confirmButtonColor: '#008000' });

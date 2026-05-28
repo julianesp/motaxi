@@ -46,6 +46,9 @@ interface SharedRoute {
   request_id: string | null;
   request_destination: string | null;
   request_status: string | null;
+  usual_hours: string | null;
+  usual_origin: string | null;
+  usual_destination: string | null;
 }
 
 const VEHICLE_LABELS: Record<string, string> = {
@@ -245,6 +248,9 @@ export default function SharedRoutesPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 text-sm truncate">{route.full_name}</p>
                     <p className="text-xs text-gray-400">{VEHICLE_LABELS[route.vehicle_types] ?? route.vehicle_types} · {route.vehicle_color} {route.vehicle_model}</p>
+                    {route.usual_hours && (
+                      <p className="text-xs text-[#008000] mt-0.5">🕐 {route.usual_hours}</p>
+                    )}
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className="flex items-center gap-1 justify-end">

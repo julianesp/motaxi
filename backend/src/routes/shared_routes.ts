@@ -30,7 +30,8 @@ sharedRouteRoutes.get('/', async (c) => {
              sr.status, sr.created_at,
              u.full_name, u.phone,
              d.vehicle_model, d.vehicle_color, d.vehicle_plate,
-             d.vehicle_types, d.rating, d.total_trips, d.whatsapp, d.nequi_qr_key
+             d.vehicle_types, d.rating, d.total_trips, d.whatsapp, d.nequi_qr_key,
+             d.usual_hours, d.usual_origin, d.usual_destination
       FROM shared_routes sr
       JOIN users u ON sr.driver_id = u.id
       JOIN drivers d ON sr.driver_id = d.id

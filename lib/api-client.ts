@@ -244,8 +244,21 @@ export const driversAPI = {
     intercity_fare?: number;
     rural_fare?: number;
     per_km_fare?: number;
+    usual_hours?: string;
+    usual_origin?: string;
+    usual_destination?: string;
   }) => {
     const response = await apiClient.put('/drivers/profile', data);
+    return response.data;
+  },
+
+  getStats: async () => {
+    const response = await apiClient.get('/drivers/stats');
+    return response.data;
+  },
+
+  notifyFrequentPassengers: async (route_id: string) => {
+    const response = await apiClient.post('/drivers/notify-passengers', { route_id });
     return response.data;
   },
 

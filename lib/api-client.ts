@@ -334,6 +334,10 @@ export const sharedRoutesAPI = {
     const response = await apiClient.get(`/shared-routes/${routeId}/requests`);
     return response.data;
   },
+  cancelRequest: async (routeId: string, requestId: string) => {
+    const response = await apiClient.delete(`/shared-routes/${routeId}/request/${requestId}`);
+    return response.data;
+  },
   updateStatus: async (id: string, status: 'departed' | 'cancelled') => {
     const response = await apiClient.put(`/shared-routes/${id}/status`, { status });
     return response.data;

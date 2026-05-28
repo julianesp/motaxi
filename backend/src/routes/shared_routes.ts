@@ -165,6 +165,38 @@ sharedRouteRoutes.post('/:id/request', authMiddleware, async (c) => {
 });
 
 /**
+ * DELETE /shared-routes/:id/request/:requestId
+ * Pasajero cancela su reserva en una ruta
+ */
+sharedRouteRoutes.delete('/:id/request/:requestId', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user');
+    const routeId = c.req.param('id');
+    const requestId = c.req.param('requestId');
+
+    const request = await c.env.DB.prepare(
+      `SELECT id, route_id FROM route_requests WHERE id = ? AND passenger_phone = (SELECT phone FROM users WHERE id = ?) AND status = 'pending'`
+    ).bind(requestId, user.id).first<{ id: string; route_id: string }>();
+
+    if (!request || request.route_id !== routeId) {
+      return c.json({ error: 'Reserva no encontrada' }, 404);
+    }
+
+    await c.env.DB.prepare(
+      `UPDATE route_requests SET status = 'cancelled' WHERE id = ?`
+    ).bind(requestId).run();
+
+    await c.env.DB.prepare(
+      `UPDATE shared_routes SET available_seats = available_seats + 1, updated_at = unixepoch() WHERE id = ?`
+    ).bind(routeId).run();
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error al cancelar reserva' }, 500);
+  }
+});
+
+/**
  * GET /shared-routes/:id/requests
  * Conductor ve los pasajeros que pidieron puesto en su ruta activa
  */

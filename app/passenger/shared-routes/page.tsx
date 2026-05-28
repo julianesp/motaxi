@@ -59,6 +59,7 @@ interface RequestModal {
   phone: string;
   saving: boolean;
   done: boolean;
+  requestId?: string;
   pickup_latitude?: number;
   pickup_longitude?: number;
   pickup_address?: string;
@@ -127,19 +128,30 @@ export default function SharedRoutesPage() {
     );
   };
 
+  const handleCancelRequest = async () => {
+    if (!modal?.requestId) return;
+    try {
+      await sharedRoutesAPI.cancelRequest(modal.route.id, modal.requestId);
+      setModal(null);
+      fetchRoutes();
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'No se pudo cancelar la reserva');
+    }
+  };
+
   const handleRequestSeat = async () => {
     if (!modal) return;
     if (!modal.phone.trim()) return;
     setModal((m) => m ? { ...m, saving: true } : m);
     try {
-      await sharedRoutesAPI.requestSeat(modal.route.id, {
+      const result = await sharedRoutesAPI.requestSeat(modal.route.id, {
         destination: modal.destination,
         phone: modal.phone.trim(),
         pickup_latitude: modal.pickup_latitude,
         pickup_longitude: modal.pickup_longitude,
         pickup_address: modal.pickup_address,
       });
-      setModal((m) => m ? { ...m, saving: false, done: true } : m);
+      setModal((m) => m ? { ...m, saving: false, done: true, requestId: result.id } : m);
       fetchRoutes();
     } catch (e: any) {
       alert(e?.response?.data?.error || 'No se pudo reservar el puesto');
@@ -360,6 +372,14 @@ export default function SharedRoutesPage() {
                 >
                   Entendido
                 </button>
+                {modal.requestId && (
+                  <button
+                    onClick={handleCancelRequest}
+                    className="w-full border border-red-300 text-red-500 font-semibold py-2.5 rounded-xl"
+                  >
+                    Cancelar reserva
+                  </button>
+                )}
               </div>
             ) : (
               /* Formulario */

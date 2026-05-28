@@ -49,6 +49,9 @@ interface RouteRequest {
   pickup_latitude?: number;
   pickup_longitude?: number;
   pickup_address?: string;
+  passenger_rating: number | null;
+  route_cancel_count: number | null;
+  already_rated: string | null;
 }
 
 export default function DriverSharedRoutePage() {
@@ -167,6 +170,27 @@ export default function DriverSharedRoutePage() {
       Swal.fire({ icon: 'success', title: status === 'departed' ? '¡Buen viaje!' : 'Ruta cancelada', confirmButtonColor: '#008000', timer: 2000, showConfirmButton: false });
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar la ruta.', confirmButtonColor: '#008000' });
+    }
+  };
+
+  const handleUpdateSeatStatus = async (req: RouteRequest, status: 'confirmed' | 'on_the_way') => {
+    if (!myRoute) return;
+    try {
+      await sharedRoutesAPI.updateSeatStatus(myRoute.id, req.id, status);
+      setRequests((prev) => prev.map((r) => r.id === req.id ? { ...r, status } : r));
+    } catch (e: any) {
+      Swal.fire({ icon: 'error', title: 'Error', text: e?.response?.data?.error || 'No se pudo actualizar.', confirmButtonColor: '#008000' });
+    }
+  };
+
+  const handleRatePassenger = async (req: RouteRequest, rating: number) => {
+    if (!myRoute) return;
+    try {
+      await sharedRoutesAPI.ratePassenger(myRoute.id, req.id, rating);
+      setRequests((prev) => prev.map((r) => r.id === req.id ? { ...r, already_rated: 'yes' } : r));
+      Swal.fire({ icon: 'success', title: '¡Gracias!', text: 'Calificación guardada.', confirmButtonColor: '#008000', timer: 1500, showConfirmButton: false });
+    } catch (e: any) {
+      Swal.fire({ icon: 'error', title: 'Error', text: e?.response?.data?.error || 'No se pudo calificar.', confirmButtonColor: '#008000' });
     }
   };
 
@@ -305,7 +329,19 @@ export default function DriverSharedRoutePage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{req.passenger_name}</p>
-                          <p className="text-xs text-gray-500">→ {req.destination}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-xs text-gray-500">→ {req.destination}</p>
+                            {req.passenger_rating !== null && (
+                              <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded-full">
+                                ★ {req.passenger_rating.toFixed(1)}
+                              </span>
+                            )}
+                            {(req.route_cancel_count ?? 0) >= 2 && (
+                              <span className="text-xs font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">
+                                {req.route_cancel_count} cancelaciones
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <a
                           href={`https://wa.me/57${req.passenger_phone.replace(/\D/g, '')}`}
@@ -332,6 +368,62 @@ export default function DriverSharedRoutePage() {
                           </svg>
                           <span className="truncate">{req.pickup_address || 'Ver ubicación en Maps'}</span>
                         </a>
+                      )}
+                      {/* Botones de estado del puesto */}
+                      {req.status === 'pending' && (
+                        <button
+                          onClick={() => handleUpdateSeatStatus(req, 'confirmed')}
+                          className="w-full flex items-center justify-center gap-2 bg-[#008000]/10 text-[#008000] text-xs font-semibold py-2 rounded-lg hover:bg-[#008000]/20 transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Confirmar puesto
+                        </button>
+                      )}
+                      {req.status === 'confirmed' && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-center gap-1.5 bg-[#008000]/10 text-[#008000] text-xs font-semibold py-1.5 rounded-lg">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Puesto confirmado
+                          </div>
+                          <button
+                            onClick={() => handleUpdateSeatStatus(req, 'on_the_way')}
+                            className="w-full flex items-center justify-center gap-2 bg-orange-50 text-orange-600 text-xs font-semibold py-2 rounded-lg hover:bg-orange-100 transition-colors border border-orange-200"
+                          >
+                            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            Ya voy en camino
+                          </button>
+                        </div>
+                      )}
+                      {req.status === 'on_the_way' && (
+                        <div className="flex items-center justify-center gap-1.5 bg-orange-50 text-orange-600 text-xs font-semibold py-1.5 rounded-lg border border-orange-200">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                          En camino
+                        </div>
+                      )}
+
+                      {req.already_rated ? (
+                        <p className="text-xs text-gray-400 italic text-center">Ya calificaste a este pasajero</p>
+                      ) : (
+                        <div className="flex items-center gap-1 pt-1">
+                          <span className="text-xs text-gray-500 mr-1">Calificar:</span>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => handleRatePassenger(req, star)}
+                              className="text-lg leading-none text-gray-300 hover:text-yellow-400 transition-colors"
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ))}

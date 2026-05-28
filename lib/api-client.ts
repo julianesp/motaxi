@@ -338,6 +338,14 @@ export const sharedRoutesAPI = {
     const response = await apiClient.delete(`/shared-routes/${routeId}/request/${requestId}`);
     return response.data;
   },
+  updateSeatStatus: async (routeId: string, requestId: string, status: 'confirmed' | 'on_the_way') => {
+    const response = await apiClient.patch(`/shared-routes/${routeId}/request/${requestId}/seat-status`, { status });
+    return response.data;
+  },
+  ratePassenger: async (routeId: string, requestId: string, rating: number) => {
+    const response = await apiClient.post(`/shared-routes/${routeId}/request/${requestId}/rate`, { rating });
+    return response.data;
+  },
   updateStatus: async (id: string, status: 'departed' | 'cancelled') => {
     const response = await apiClient.put(`/shared-routes/${id}/status`, { status });
     return response.data;

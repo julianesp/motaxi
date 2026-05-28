@@ -45,6 +45,7 @@ interface SharedRoute {
   nequi_qr_key: string | null;
   request_id: string | null;
   request_destination: string | null;
+  request_status: string | null;
 }
 
 const VEHICLE_LABELS: Record<string, string> = {
@@ -308,15 +309,33 @@ export default function SharedRoutesPage() {
                 {/* Botones acción */}
                 {route.request_id ? (
                   <div className="space-y-2">
-                    <div className="w-full bg-[#008000]/10 text-[#008000] font-semibold py-2.5 rounded-xl text-sm text-center">
-                      ✓ Puesto reservado → {route.request_destination}
-                    </div>
-                    <button
-                      onClick={() => handleCancelFromList(route)}
-                      className="w-full border border-red-300 text-red-500 font-semibold py-2 rounded-xl text-sm hover:bg-red-50 transition-colors"
-                    >
-                      Cancelar reserva
-                    </button>
+                    {route.request_status === 'on_the_way' ? (
+                      <div className="w-full bg-orange-50 border border-orange-200 text-orange-600 font-semibold py-2.5 rounded-xl text-sm text-center flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                        El conductor ya va en camino
+                      </div>
+                    ) : route.request_status === 'confirmed' ? (
+                      <div className="w-full bg-[#008000]/10 text-[#008000] font-semibold py-2.5 rounded-xl text-sm text-center flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Puesto confirmado → {route.request_destination}
+                      </div>
+                    ) : (
+                      <div className="w-full bg-gray-100 text-gray-500 font-semibold py-2.5 rounded-xl text-sm text-center">
+                        ⏳ Esperando confirmación → {route.request_destination}
+                      </div>
+                    )}
+                    {route.request_status !== 'on_the_way' && (
+                      <button
+                        onClick={() => handleCancelFromList(route)}
+                        className="w-full border border-red-300 text-red-500 font-semibold py-2 rounded-xl text-sm hover:bg-red-50 transition-colors"
+                      >
+                        Cancelar reserva
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <button

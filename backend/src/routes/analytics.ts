@@ -2,15 +2,76 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../utils/auth';
 import { Env } from '../index';
 
+const PAGE_VIEWS_PREFIX = 'page-views:';
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
 export const analyticsRoutes = new Hono<{ Bindings: Env }>();
 
 // Rutas públicas (sin autenticación)
 // /heatmap es público para mostrarse en la página principal
+// /page-views POST es público (registra visita)
 
 // El resto de rutas requieren autenticación
 analyticsRoutes.use('/dashboard', authMiddleware);
 analyticsRoutes.use('/driver-earnings', authMiddleware);
 analyticsRoutes.use('/trip-trends', authMiddleware);
+analyticsRoutes.use('/page-views', async (c, next) => {
+  if (c.req.method === 'POST') return next();
+  return authMiddleware(c, next);
+});
+
+/**
+ * POST /analytics/page-views — registra una visita para hoy
+ */
+analyticsRoutes.post('/page-views', async (c) => {
+  try {
+    const today = todayKey();
+    const kvKey = `${PAGE_VIEWS_PREFIX}${today}`;
+
+    const existing = await c.env.CACHE.get(kvKey, 'json') as { date: string; count: number } | null;
+    const count = (existing?.count ?? 0) + 1;
+
+    await c.env.CACHE.put(kvKey, JSON.stringify({ date: today, count }), {
+      expirationTtl: 60 * 60 * 24 * 35, // 35 días
+    });
+
+    return c.json({ ok: true, count });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to record page view' }, 500);
+  }
+});
+
+/**
+ * GET /analytics/page-views — devuelve los últimos 30 días (solo admin)
+ */
+analyticsRoutes.get('/page-views', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user?.email !== 'admin@neurai.dev') {
+      return c.json({ error: 'Forbidden' }, 403);
+    }
+
+    const listed = await c.env.CACHE.list({ prefix: PAGE_VIEWS_PREFIX });
+    const days = await Promise.all(
+      listed.keys.map(async ({ name }) => {
+        const val = await c.env.CACHE.get(name, 'json') as { date: string; count: number } | null;
+        return val;
+      })
+    );
+
+    const sorted = days
+      .filter(Boolean)
+      .sort((a, b) => (a!.date > b!.date ? -1 : 1))
+      .slice(0, 30);
+
+    return c.json({ views: sorted });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get page views' }, 500);
+  }
+});
 
 /**
  * GET /analytics/dashboard

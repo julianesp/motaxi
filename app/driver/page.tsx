@@ -194,9 +194,11 @@ export default function DriverHomePage() {
             vehicle_types: response.driver.vehicle_types || '',
           });
 
+          // TODO: Reactivar cuando haya suficientes conductores y pasajeros registrados.
           // Detectar placa/licencia sin datos reales
-          const isPending = (v: string) => !v || v.startsWith('PENDING') || v.startsWith('tmp_') || v.startsWith('P-') || v.startsWith('L-');
-          setHasMissingVehicleInfo(isPending(response.driver.vehicle_plate) || isPending(response.driver.license_number));
+          // const isPending = (v: string) => !v || v.startsWith('PENDING') || v.startsWith('tmp_') || v.startsWith('P-') || v.startsWith('L-');
+          // setHasMissingVehicleInfo(isPending(response.driver.vehicle_plate) || isPending(response.driver.license_number));
+          setHasMissingVehicleInfo(false);
 
           // Verificar si el perfil está completo
           if (!response.driver.profile_completed) {
@@ -528,8 +530,9 @@ export default function DriverHomePage() {
 
   return (
     <div className="h-screen flex flex-col">
+      {/* TODO: Reactivar cuando haya suficientes conductores y pasajeros registrados. */}
       {/* Banner: datos de vehículo incompletos */}
-      {hasMissingVehicleInfo && (
+      {/* {hasMissingVehicleInfo && (
         <div className="fixed top-0 left-0 right-0 z-[61] bg-red-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-md">
           <div className="flex items-center gap-2 min-w-0">
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -541,7 +544,7 @@ export default function DriverHomePage() {
           </div>
           <a href="#vehicle-info" onClick={() => setShowProfileModal(true)} className="text-xs font-bold underline whitespace-nowrap shrink-0">Completar</a>
         </div>
-      )}
+      )} */}
 
       {/* Banner para activar notificaciones push */}
       {showPushBanner && (

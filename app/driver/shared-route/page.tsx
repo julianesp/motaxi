@@ -83,8 +83,12 @@ export default function DriverSharedRoutePage() {
     if (!myRouteId) return;
     const interval = setInterval(async () => {
       try {
-        const reqData = await sharedRoutesAPI.getRequests(myRouteId);
+        const [reqData, routeData] = await Promise.all([
+          sharedRoutesAPI.getRequests(myRouteId),
+          sharedRoutesAPI.getMy(),
+        ]);
         setRequests(reqData.requests || []);
+        if (routeData.route) setMyRoute(routeData.route);
       } catch {}
     }, 15000);
     return () => clearInterval(interval);

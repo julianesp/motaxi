@@ -473,7 +473,7 @@ export default function SharedRoutesPage() {
 
                 {/* Ubicación de recogida */}
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Tu ubicación de recogida</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Tu ubicación de recogida <span className="text-red-500">*</span></label>
                   {modal.pickup_latitude ? (
                     <div className="flex items-start gap-2 bg-[#008000]/5 border border-[#008000]/20 rounded-xl px-3 py-2.5">
                       <svg className="w-4 h-4 text-[#008000] mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -505,12 +505,12 @@ export default function SharedRoutesPage() {
                       {modal.locating ? 'Obteniendo ubicación...' : 'Compartir mi ubicación'}
                     </button>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">Opcional. El conductor verá dónde recogerte.</p>
+                  <p className="text-xs text-red-500 mt-1 font-medium">* Obligatorio. El conductor necesita saber dónde recogerte.</p>
                 </div>
 
                 <button
                   onClick={handleRequestSeat}
-                  disabled={modal.saving || !modal.phone.trim()}
+                  disabled={modal.saving || !modal.phone.trim() || !modal.pickup_latitude}
                   className="w-full bg-[#008000] text-white font-semibold py-3 rounded-xl hover:bg-[#006800] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {modal.saving ? (

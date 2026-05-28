@@ -40,9 +40,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+    icon: "https://motaxi.dev/logo.png",
     apple:
-      "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+      "https://motaxi.dev/logo.png",
   },
   openGraph: {
     title: "MoTaxi - Mototaxi en el Valle de Sibundoy, Putumayo",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     siteName: "MoTaxi",
     images: [
       {
-        url: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+        url: "https://motaxi.dev/logo.png",
         width: 512,
         height: 512,
         alt: "MoTaxi - Mototaxi Valle de Sibundoy",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     description:
       "Pide tu mototaxi en Sibundoy, Santiago, Colón y San Francisco (Putumayo). Rápido y económico.",
     images: [
-      "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+      "https://motaxi.dev/logo.png",
     ],
   },
 };
@@ -91,9 +91,9 @@ export default function RootLayout({
                 description:
                   "Servicio de mototaxi en el Valle de Sibundoy, Putumayo, Colombia. Conectamos pasajeros con conductores de moto en Sibundoy, Santiago, Colón y San Francisco.",
                 url: "https://motaxi.dev",
-                logo: "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+                logo: "https://motaxi.dev/logo.png",
                 image:
-                  "https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png",
+                  "https://motaxi.dev/logo.png",
                 telephone: "",
                 address: {
                   "@type": "PostalAddress",

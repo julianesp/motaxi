@@ -152,7 +152,7 @@ export default function Navbar() {
                 >
                   <Image
                     ref={logoRef}
-                    src="https://0dwas2ied3dcs14f.public.blob.vercel-storage.com/motaxi/logo.png"
+                    src="/logo.png"
                     alt="MoTaxi logo"
                     width={46}
                     height={46}

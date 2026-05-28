@@ -43,6 +43,8 @@ interface SharedRoute {
   rating: number;
   total_trips: number;
   nequi_qr_key: string | null;
+  request_id: string | null;
+  request_destination: string | null;
 }
 
 const VEHICLE_LABELS: Record<string, string> = {
@@ -133,6 +135,18 @@ export default function SharedRoutesPage() {
     try {
       await sharedRoutesAPI.cancelRequest(modal.route.id, modal.requestId);
       setModal(null);
+      fetchRoutes();
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'No se pudo cancelar la reserva');
+    }
+  };
+
+  const handleCancelFromList = async (route: SharedRoute) => {
+    if (!route.request_id) return;
+    const confirm = window.confirm(`¿Cancelar tu reserva en la ruta de ${route.full_name} hacia ${route.request_destination}?`);
+    if (!confirm) return;
+    try {
+      await sharedRoutesAPI.cancelRequest(route.id, route.request_id);
       fetchRoutes();
     } catch (e: any) {
       alert(e?.response?.data?.error || 'No se pudo cancelar la reserva');
@@ -292,13 +306,27 @@ export default function SharedRoutesPage() {
                 </div>
 
                 {/* Botones acción */}
-                <button
-                  onClick={() => openRequestModal(route)}
-                  disabled={route.available_seats === 0}
-                  className="w-full bg-[#008000] text-white font-semibold py-2.5 rounded-xl hover:bg-[#006800] transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {route.available_seats === 0 ? 'Sin puestos disponibles' : 'Pedir puesto'}
-                </button>
+                {route.request_id ? (
+                  <div className="space-y-2">
+                    <div className="w-full bg-[#008000]/10 text-[#008000] font-semibold py-2.5 rounded-xl text-sm text-center">
+                      ✓ Puesto reservado → {route.request_destination}
+                    </div>
+                    <button
+                      onClick={() => handleCancelFromList(route)}
+                      className="w-full border border-red-300 text-red-500 font-semibold py-2 rounded-xl text-sm hover:bg-red-50 transition-colors"
+                    >
+                      Cancelar reserva
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => openRequestModal(route)}
+                    disabled={route.available_seats === 0}
+                    className="w-full bg-[#008000] text-white font-semibold py-2.5 rounded-xl hover:bg-[#006800] transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {route.available_seats === 0 ? 'Sin puestos disponibles' : 'Pedir puesto'}
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -11,7 +11,18 @@ export const sharedRouteRoutes = new Hono<{ Bindings: Env }>();
  */
 sharedRouteRoutes.get('/', async (c) => {
   try {
-    const destination = c.req.query('destination'); // filtro opcional por destino
+    const destination = c.req.query('destination');
+
+    // Intentar obtener usuario autenticado (opcional, no bloquea si no hay token)
+    let passengerId: string | null = null;
+    try {
+      const authHeader = c.req.header('Authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const { AuthUtils } = await import('../utils/auth');
+        const session = await AuthUtils.verifyToken(c.env.DB, authHeader.slice(7));
+        if (session?.id) passengerId = session.id;
+      }
+    } catch {}
 
     let query = `
       SELECT sr.id, sr.origin, sr.destination,
@@ -26,17 +37,36 @@ sharedRouteRoutes.get('/', async (c) => {
       WHERE sr.status = 'active' AND sr.available_seats > 0
     `;
 
-    if (destination) {
-      query += ` AND sr.destination = ?`;
-    }
-
+    if (destination) query += ` AND sr.destination = ?`;
     query += ` ORDER BY sr.departure_time ASC`;
 
     const result = destination
       ? await c.env.DB.prepare(query).bind(destination).all()
       : await c.env.DB.prepare(query).all();
 
-    return c.json({ routes: result.results || [] });
+    let routes = result.results || [];
+
+    // Anotar qué ruta tiene reservada el pasajero actual
+    if (passengerId && routes.length > 0) {
+      const requests = await c.env.DB.prepare(
+        `SELECT rr.id as request_id, rr.route_id, rr.destination as request_destination
+         FROM route_requests rr
+         JOIN users u ON u.phone = rr.passenger_phone
+         WHERE u.id = ? AND rr.status = 'pending'`
+      ).bind(passengerId).all();
+
+      const byRoute: Record<string, { request_id: string; request_destination: string }> = {};
+      for (const r of (requests.results || []) as any[]) {
+        byRoute[r.route_id] = { request_id: r.request_id, request_destination: r.request_destination };
+      }
+
+      routes = (routes as any[]).map((r) => ({
+        ...r,
+        ...(byRoute[r.id] || { request_id: null, request_destination: null }),
+      }));
+    }
+
+    return c.json({ routes });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to get routes' }, 500);
   }

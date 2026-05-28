@@ -240,8 +240,14 @@ export default function DriverSharedRoutePage() {
                 <div className="w-2.5 h-2.5 rounded-full border-2 border-[#008000]" />
               </div>
               <div className="flex-1 space-y-1.5">
-                <p className="text-sm font-medium text-gray-800">{myRoute.origin}</p>
-                <p className="text-sm font-medium text-gray-800">{myRoute.destination}</p>
+                <div>
+                  <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide leading-none mb-0.5">Ubicación de salida</p>
+                  <p className="text-sm font-medium text-gray-800">{myRoute.origin}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide leading-none mb-0.5">Destino</p>
+                  <p className="text-sm font-medium text-gray-800">{myRoute.destination}</p>
+                </div>
               </div>
               <div className="bg-gray-50 rounded-xl px-3 py-2 text-center">
                 <p className="text-xs text-gray-400">Puestos libres</p>

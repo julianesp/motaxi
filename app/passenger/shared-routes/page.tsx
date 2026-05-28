@@ -358,18 +358,25 @@ export default function SharedRoutesPage() {
                       className="w-48 h-48 object-contain rounded-xl mx-auto border border-[#7B2D8B]/10"
                     />
                     <p className="text-xs text-gray-500 text-center">Escanea el QR con la app de Nequi o Bancolombia</p>
-                    <a
-                      href={`${process.env.NEXT_PUBLIC_API_URL}/images/${modal.route.nequi_qr_key}`}
-                      download={`nequi-${modal.route.full_name?.replace(/\s+/g, '-') ?? 'conductor'}.jpg`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={async () => {
+                        const url = `${process.env.NEXT_PUBLIC_API_URL}/images/${modal.route.nequi_qr_key}`;
+                        const res = await fetch(url);
+                        const blob = await res.blob();
+                        const objectUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = objectUrl;
+                        a.download = `nequi-${modal.route.full_name?.replace(/\s+/g, '-') ?? 'conductor'}.jpg`;
+                        a.click();
+                        URL.revokeObjectURL(objectUrl);
+                      }}
                       className="flex items-center justify-center gap-2 w-full border border-[#7B2D8B]/40 text-[#7B2D8B] text-xs font-semibold py-2 rounded-lg hover:bg-[#7B2D8B]/10 transition-colors"
                     >
                       <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
                       Descargar QR
-                    </a>
+                    </button>
                   </div>
                 )}
 

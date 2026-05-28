@@ -10,7 +10,7 @@ import { loginWithPasskey, isPasskeySupported } from "@/lib/hooks/usePasskey";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, refreshUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -104,6 +104,8 @@ export default function LoginPage() {
     }
     // Guardar token en cookie (igual que el login normal)
     document.cookie = `authToken=${result.token}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+    // Sincronizar el contexto de auth antes de redirigir
+    await refreshUser();
     const u = result.user;
     if (u.email === "admin@neurai.dev") router.push("/admin");
     else if (u.role === "passenger") router.push("/passenger");

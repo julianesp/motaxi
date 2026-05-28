@@ -244,7 +244,7 @@ sharedRouteRoutes.get('/:id/requests', authMiddleware, async (c) => {
     const result = await c.env.DB.prepare(
       `SELECT id, passenger_name, passenger_phone, destination, status, created_at,
               pickup_latitude, pickup_longitude, pickup_address
-       FROM route_requests WHERE route_id = ? ORDER BY created_at ASC`
+       FROM route_requests WHERE route_id = ? AND status = 'pending' ORDER BY created_at ASC`
     ).bind(routeId).all();
 
     return c.json({ requests: result.results || [] });

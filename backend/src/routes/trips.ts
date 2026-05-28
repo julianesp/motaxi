@@ -35,11 +35,16 @@ tripRoutes.post('/', async (c) => {
       estimated_fare, // Precio estimado calculado por el frontend
       trip_type = 'ride', // 'ride' o 'delivery'
       delivery_note,      // Nota/descripción del paquete (solo para delivery)
+      home_pickup = false, // El pasajero solicita que lo vayan a recoger a casa: +$1.000
     } = body;
 
     if (user.role !== 'passenger') {
       return c.json({ error: 'Only passengers can create trips' }, 403);
     }
+
+    const HOME_PICKUP_SURCHARGE = 1000;
+    const homePickupFlag = home_pickup ? 1 : 0;
+    const fareWithSurcharge = (estimated_fare || 0) + (home_pickup ? HOME_PICKUP_SURCHARGE : 0);
 
     const tripId = uuidv4();
 
@@ -48,8 +53,8 @@ tripRoutes.post('/', async (c) => {
       `INSERT INTO trips (
         id, passenger_id, pickup_latitude, pickup_longitude, pickup_address,
         dropoff_latitude, dropoff_longitude, dropoff_address, fare, distance_km, status,
-        trip_type, delivery_note
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?)`
+        trip_type, delivery_note, home_pickup
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?, ?)`
     )
       .bind(
         tripId,
@@ -60,10 +65,11 @@ tripRoutes.post('/', async (c) => {
         dropoff_latitude,
         dropoff_longitude,
         dropoff_address,
-        estimated_fare || 0,
+        fareWithSurcharge,
         distance_km,
         trip_type,
-        delivery_note || null
+        delivery_note || null,
+        homePickupFlag
       )
       .run();
 
@@ -82,11 +88,12 @@ tripRoutes.post('/', async (c) => {
         `).all();
 
         const subscriptions = pushSubs.results || [];
-        const fareStr = estimated_fare ? `$${Number(estimated_fare).toLocaleString('es-CO')}` : '';
+        const fareStr = fareWithSurcharge ? `$${Number(fareWithSurcharge).toLocaleString('es-CO')}` : '';
         const isDelivery = trip_type === 'delivery';
+        const homePickupTag = home_pickup ? ' · 🏠 Recogida a domicilio (+$1.000)' : '';
         const notifPayload = {
           title: isDelivery ? '📦 ¡Nueva solicitud de envío!' : '🏍️ ¡Nueva solicitud de viaje!',
-          body: `${pickup_address}${fareStr ? ' · ' + fareStr : ''}`,
+          body: `${pickup_address}${fareStr ? ' · ' + fareStr : ''}${homePickupTag}`,
           data: { type: 'new_trip', tripId },
           icon: '/logo.png',
           tag: `trip-${tripId}`,
@@ -426,7 +433,8 @@ tripRoutes.put('/:id/accept', async (c) => {
       }
     }
 
-    calculatedFare = Math.round(selectedBaseFare + distanceKm * perKmFare);
+    const homePickupSurcharge = (trip as any).home_pickup ? 1000 : 0;
+    calculatedFare = Math.round(selectedBaseFare + distanceKm * perKmFare) + homePickupSurcharge;
 
     // Actualizar viaje con el conductor asignado y la tarifa calculada
     await c.env.DB.prepare(
@@ -921,7 +929,7 @@ tripRoutes.get('/:id', async (c) => {
       // Obtener información del conductor (nombre, teléfono, rating, ubicación)
       const driver = await c.env.DB.prepare(
         `SELECT u.full_name, u.phone, d.rating AS driver_avg_rating, d.vehicle_model, d.vehicle_color, d.vehicle_plate,
-                d.current_latitude, d.current_longitude
+                d.current_latitude, d.current_longitude, d.nequi_phone, d.nequi_qr_key
          FROM users u
          LEFT JOIN drivers d ON d.id = u.id
          WHERE u.id = ?`
@@ -936,9 +944,10 @@ tripRoutes.get('/:id', async (c) => {
         tripWithDetails.vehicle_model = driver.vehicle_model;
         tripWithDetails.vehicle_color = driver.vehicle_color;
         tripWithDetails.vehicle_plate = driver.vehicle_plate;
-        // AGREGAR UBICACIÓN EN TIEMPO REAL DEL CONDUCTOR
         tripWithDetails.driver_latitude = driver.current_latitude;
         tripWithDetails.driver_longitude = driver.current_longitude;
+        tripWithDetails.driver_nequi_phone = driver.nequi_phone;
+        tripWithDetails.driver_nequi_qr_key = driver.nequi_qr_key;
       }
     }
 

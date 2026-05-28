@@ -151,6 +151,7 @@ export const tripsAPI = {
     preferred_driver_id?: string;
     trip_type?: 'ride' | 'delivery' | 'cargo';
     delivery_note?: string;
+    home_pickup?: boolean;
   }) => {
     const response = await apiClient.post('/trips', tripData);
     return response.data;

@@ -195,6 +195,7 @@ export default function PassengerHomePage() {
   // Modo de solicitud: viaje normal o envío de paquete
   const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">("ride");
   const [deliveryNote, setDeliveryNote] = useState("");
+  const [homePickup, setHomePickup] = useState(false);
 
   // Estado para conductores disponibles y favoritos
   const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
@@ -270,21 +271,25 @@ export default function PassengerHomePage() {
     return Math.round(base + extraKm * rate);
   };
 
+  const HOME_PICKUP_SURCHARGE = 1000;
+
   // Precio recomendado calculado automáticamente
   const recommendedPrice = useMemo(() => {
     if (!estimatedDistance) return null;
+    let base: number;
     if (selectedDriver) {
-      return calcFare(selectedDriver.base_fare, selectedDriver.per_km_fare, estimatedDistance);
-    }
-    if (nearbyDrivers.length > 0) {
+      base = calcFare(selectedDriver.base_fare, selectedDriver.per_km_fare, estimatedDistance);
+    } else if (nearbyDrivers.length > 0) {
       // Promedio de los conductores cercanos para un precio justo
       const fares = sortedNearbyDrivers.map(d =>
         calcFare(d.base_fare, d.per_km_fare, estimatedDistance)
       );
-      return Math.round(fares.reduce((s, f) => s + f, 0) / fares.length);
+      base = Math.round(fares.reduce((s, f) => s + f, 0) / fares.length);
+    } else {
+      base = calcFare(5000, 1500, estimatedDistance);
     }
-    return calcFare(5000, 1500, estimatedDistance);
-  }, [estimatedDistance, selectedDriver, nearbyDrivers, sortedNearbyDrivers]);
+    return base + (homePickup ? HOME_PICKUP_SURCHARGE : 0);
+  }, [estimatedDistance, selectedDriver, nearbyDrivers, sortedNearbyDrivers, homePickup]);
 
   useEffect(() => {
     // Solo verificar autenticación una vez que termine de cargar
@@ -546,6 +551,11 @@ export default function PassengerHomePage() {
     } else {
       estimatedFare = calcFare(5000, 1500, distance);
     }
+    // El recargo de recogida a domicilio ya viene incluido en passengerCustomPrice si el usuario
+    // lo ajustó manualmente, pero si usamos el recomendado lo sumamos aquí explícitamente.
+    if (!passengerCustomPrice && homePickup) {
+      estimatedFare += HOME_PICKUP_SURCHARGE;
+    }
 
     try {
       setShowTripRequest(true);
@@ -563,6 +573,7 @@ export default function PassengerHomePage() {
         distance_km: parseFloat(distance.toFixed(2)),
         estimated_fare: estimatedFare,
         trip_type: tripMode,
+        home_pickup: homePickup,
         ...(tripMode === "delivery" && deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
         ...(selectedDriver ? { preferred_driver_id: selectedDriver.id } : {}),
       });
@@ -957,7 +968,7 @@ export default function PassengerHomePage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setTripMode("delivery"); setVehicleType("moto"); setVehicleCarouselIndex(0); }}
+                    onClick={() => { setTripMode("delivery"); setVehicleType("moto"); setVehicleCarouselIndex(0); setHomePickup(false); }}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                       tripMode === "delivery"
                         ? "bg-white text-[#008000] shadow-sm"
@@ -969,7 +980,7 @@ export default function PassengerHomePage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setTripMode("cargo"); setVehicleType("piaggio"); setVehicleCarouselIndex(0); }}
+                    onClick={() => { setTripMode("cargo"); setVehicleType("piaggio"); setVehicleCarouselIndex(0); setHomePickup(false); }}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                       tripMode === "cargo"
                         ? "bg-white text-[#008000] shadow-sm"
@@ -1352,6 +1363,29 @@ export default function PassengerHomePage() {
                   )}
                 </div>
 
+                {/* Opción de recogida a domicilio — solo en modo viaje */}
+                {tripMode === "ride" && (
+                  <label className="flex items-start gap-3 cursor-pointer select-none bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={homePickup}
+                      onChange={(e) => {
+                        setHomePickup(e.target.checked);
+                        setPassengerCustomPrice(null);
+                      }}
+                      className="mt-0.5 w-4 h-4 accent-blue-600 flex-shrink-0"
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-blue-800">
+                        🏠 Quiero que me vayan a recoger a casa
+                      </p>
+                      <p className="text-xs text-blue-600 mt-0.5">
+                        El conductor irá hasta tu casa · Costo adicional: +$1.000
+                      </p>
+                    </div>
+                  </label>
+                )}
+
                 {/* Campo de nota para envío de paquete */}
                 {tripMode === "delivery" && (
                   <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-2xl p-3 space-y-2">
@@ -1378,7 +1412,7 @@ export default function PassengerHomePage() {
                     {nearbyDrivers.length > 0 && (
                       <div className="divide-y divide-gray-50">
                         {sortedNearbyDrivers.slice(0, 4).map((driver) => {
-                          const driverFare = calcFare(driver.base_fare, driver.per_km_fare, estimatedDistance!);
+                          const driverFare = calcFare(driver.base_fare, driver.per_km_fare, estimatedDistance!) + (homePickup ? HOME_PICKUP_SURCHARGE : 0);
                           const isSelected = selectedDriver?.id === driver.id;
                           return (
                             <div
@@ -1475,6 +1509,11 @@ export default function PassengerHomePage() {
                     {/* Panel de precio */}
                     <div className="border-t border-gray-100 px-3 py-3">
                       <p className="text-xs text-gray-400 mb-2">Tu oferta al conductor</p>
+                      {homePickup && (
+                        <p className="text-xs text-blue-600 font-medium mb-2">
+                          🏠 Incluye +$1.000 por recogida a domicilio
+                        </p>
+                      )}
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => adjustCustomPrice(-500)}

@@ -42,6 +42,9 @@ interface TripData {
   vehicle_plate?: string;
   driver_latitude?: number;
   driver_longitude?: number;
+  home_pickup?: number;
+  driver_nequi_phone?: string;
+  driver_nequi_qr_key?: string;
 }
 
 export default function TripTrackingPage() {
@@ -433,12 +436,68 @@ export default function TripTrackingPage() {
                   <p className="text-lg font-semibold text-gray-900">{trip.distance_km.toFixed(1)} km</p>
                 </div>
               </div>
+              {trip.home_pickup === 1 && (
+                <p className="text-xs text-blue-600 font-medium mt-2">
+                  🏠 Incluye $1.000 de recogida a domicilio
+                </p>
+              )}
               {trip.status === 'requested' && (
                 <p className="text-xs text-gray-500 mt-2">
                   💡 El precio puede ajustarse según las tarifas del conductor que acepte
                 </p>
               )}
             </div>
+
+            {/* Pago Nequi del recargo de recogida a domicilio */}
+            {trip.home_pickup === 1 && trip.driver_id && (trip.driver_nequi_qr_key || trip.driver_nequi_phone) && (
+              <div className="bg-[#7B2D8B]/5 border border-[#7B2D8B]/25 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">💜</span>
+                  <div>
+                    <p className="text-sm font-bold text-[#7B2D8B]">Paga el recargo por Nequi</p>
+                    <p className="text-xs text-gray-500">Envía $1.000 al conductor por la recogida a domicilio</p>
+                  </div>
+                </div>
+                {trip.driver_nequi_phone && (
+                  <div className="flex items-center gap-2 bg-white border border-[#7B2D8B]/20 rounded-lg px-3 py-2">
+                    <span className="text-sm text-gray-600">Nequi:</span>
+                    <span className="text-sm font-bold text-gray-900 flex-1">{trip.driver_nequi_phone}</span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(trip.driver_nequi_phone!)}
+                      className="text-xs text-[#7B2D8B] font-semibold hover:underline"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                )}
+                {trip.driver_nequi_qr_key && (
+                  <div className="space-y-2">
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_API_URL}/images/${trip.driver_nequi_qr_key}`}
+                      alt="QR Nequi del conductor"
+                      className="w-40 h-40 object-contain rounded-xl mx-auto border border-[#7B2D8B]/15"
+                    />
+                    <p className="text-xs text-gray-400 text-center">Escanea con la app de Nequi o Bancolombia</p>
+                    <button
+                      onClick={async () => {
+                        const url = `${process.env.NEXT_PUBLIC_API_URL}/images/${trip.driver_nequi_qr_key}`;
+                        const res = await fetch(url);
+                        const blob = await res.blob();
+                        const objectUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = objectUrl;
+                        a.download = `nequi-conductor.jpg`;
+                        a.click();
+                        URL.revokeObjectURL(objectUrl);
+                      }}
+                      className="flex items-center justify-center gap-2 w-full border border-[#7B2D8B]/40 text-[#7B2D8B] text-xs font-semibold py-2 rounded-lg hover:bg-[#7B2D8B]/10 transition-colors"
+                    >
+                      Descargar QR
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Buscando conductor - animación de espera */}
             {trip.status === 'requested' && driverOffers.length === 0 && (

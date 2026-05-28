@@ -897,6 +897,17 @@ export default function DriverHomePage() {
                               </div>
                             )}
 
+                            {/* Badge de recogida a domicilio */}
+                            {trip.home_pickup === 1 && (
+                              <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 mb-3">
+                                <span className="text-lg">🏠</span>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Recogida a domicilio</span>
+                                  <p className="text-xs text-blue-600 mt-0.5">El pasajero paga +$1.000 porque solicita que lo vayan a recoger a casa</p>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center mb-2">

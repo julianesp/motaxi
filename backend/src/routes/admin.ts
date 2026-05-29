@@ -5,7 +5,7 @@ export const adminRoutes = new Hono<{ Bindings: Env }>();
 
 const ADMIN_EMAIL = 'admin@neurai.dev';
 
-// Middleware: solo el email admin puede acceder
+// Middleware: solo el email admin puede acceder, o token de API estático para cron jobs
 async function adminOnlyMiddleware(c: any, next: any) {
   const authHeader = c.req.header('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,6 +13,15 @@ async function adminOnlyMiddleware(c: any, next: any) {
   }
 
   const token = authHeader.substring(7);
+
+  // Token de API estático para cron jobs (configurado como secret en Cloudflare/Vercel)
+  if (c.env.ADMIN_API_TOKEN && token === c.env.ADMIN_API_TOKEN) {
+    c.set('user', { email: ADMIN_EMAIL, id: 'cron', role: 'admin' });
+    c.set('userId', 'cron');
+    await next();
+    return;
+  }
+
   const { AuthUtils } = await import('../utils/auth');
   const user = await AuthUtils.verifyToken(c.env.DB, token);
 
@@ -568,6 +577,20 @@ adminRoutes.put('/subscriptions/:userId/activate', async (c) => {
   } catch (error: any) {
     console.error('Activate subscription error:', error);
     return c.json({ error: error.message || 'Failed to activate subscription' }, 500);
+  }
+});
+
+/**
+ * POST /admin/subscriptions/run-renewal
+ * Disparar manualmente el cron de renovación (para pruebas o forzar desde el panel)
+ */
+adminRoutes.post('/subscriptions/run-renewal', async (c) => {
+  try {
+    const { runSubscriptionRenewal } = await import('../services/subscription-renewal');
+    const result = await runSubscriptionRenewal(c.env);
+    return c.json({ message: 'Cron ejecutado', result });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error al ejecutar cron' }, 500);
   }
 });
 

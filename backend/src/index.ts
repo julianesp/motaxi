@@ -15,6 +15,7 @@ import { referralRoutes } from './routes/referrals';
 import { sharedRouteRoutes } from './routes/shared_routes';
 import { municipalityRoutes } from './routes/municipalities';
 import { passkeyRoutes } from './routes/passkeys';
+import { runSubscriptionRenewal } from './services/subscription-renewal';
 
 export interface Env {
   DB: D1Database;
@@ -34,6 +35,7 @@ export interface Env {
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_MESSAGING_SERVICE_SID?: string;
+  ADMIN_API_TOKEN?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -108,4 +110,17 @@ app.onError((err, c) => {
   }, 500);
 });
 
-export default app;
+export default {
+  fetch: app.fetch.bind(app),
+
+  // Cron trigger diario: notifica vencimientos y bloquea suscripciones expiradas
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(
+      runSubscriptionRenewal(env).then(result => {
+        console.log(`[cron] Suscripciones procesadas:`, result);
+      }).catch(err => {
+        console.error('[cron] Error en renovación de suscripciones:', err);
+      })
+    );
+  },
+};

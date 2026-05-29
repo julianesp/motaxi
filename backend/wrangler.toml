@@ -59,3 +59,8 @@ preview_id = "84bb680fe29f4ad9b3ab65d60124a6b5"
 # [[durable_objects.bindings]]
 # name = "TRIPS"
 # class_name = "TripCoordinator"
+
+# Cron desactivado: límite de 5 cron triggers del plan gratuito de Cloudflare alcanzado.
+# El cron se ejecuta desde Vercel Cron (vercel.json) llamando a /admin/subscriptions/run-renewal
+# [triggers]
+# crons = ["0 13 * * *"]

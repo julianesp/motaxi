@@ -1375,7 +1375,8 @@ export default function DriverHomePage() {
                         <div className="grid grid-cols-2 gap-2">
                           {([
                             { value: 'moto' as const, icon: '🏍️', label: 'Mototaxi' },
-                            { value: 'taxi' as const, icon: '🚕', label: 'Taxi' },
+                            // TAXI OCULTO: pendiente confirmación de Cootransvalle
+                            // { value: 'taxi' as const, icon: '🚕', label: 'Taxi' },
                             { value: 'carro' as const, icon: '🚐', label: 'Carro / Van' },
                             { value: 'piaggio' as const, icon: '🛻', label: 'Piaggio' },
                           ]).map((type) => (

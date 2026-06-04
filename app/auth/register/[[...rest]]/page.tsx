@@ -191,7 +191,8 @@ function RegisterForm() {
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { value: "moto", label: "Moto", emoji: "🏍️" },
-                      { value: "taxi", label: "Taxi", emoji: "🚖" },
+                      // TAXI OCULTO: pendiente confirmación de Cootransvalle
+                      // { value: "taxi", label: "Taxi", emoji: "🚖" },
                       { value: "carro", label: "Carro / Van", emoji: "🚗" },
                       { value: "piaggio", label: "Piaggio", emoji: "🛺" },
                     ].map((v) => (

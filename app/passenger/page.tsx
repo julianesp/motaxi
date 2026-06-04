@@ -1022,7 +1022,9 @@ export default function PassengerHomePage() {
                   {(() => {
                     const vehicleOptsMap = {
                       ride: [
-                        { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
+                        // TAXI OCULTO: pendiente confirmación de Cootransvalle para habilitar
+                        // { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
+                        { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Rápido · económico" },
                       ],
                       delivery: [
                         { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Solo objetos · rápido" },

@@ -193,7 +193,7 @@ export default function PassengerHomePage() {
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
-  const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">("ride");
+  const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">("delivery");
   const [deliveryNote, setDeliveryNote] = useState("");
   const [homePickup, setHomePickup] = useState(false);
 
@@ -922,50 +922,19 @@ export default function PassengerHomePage() {
 
             {!isPanelMinimized && (
               <>
-                {/* Acceso a rutas compartidas */}
-                <button
+                {/* TAXI OCULTO: pendiente confirmación de Cootransvalle para habilitar rutas compartidas */}
+                {/* <button
                   onClick={() => router.push('/passenger/shared-routes')}
-                  className={`w-full flex items-center justify-between rounded-xl px-4 py-2.5 transition-colors border ${
-                    hasSharedRoutes
-                      ? 'bg-[#008000]/8 border-[#008000]/30 hover:bg-[#008000]/15'
-                      : 'bg-red-50 border-red-200 hover:bg-red-100'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <span className="text-lg">🚕</span>
-                      {hasSharedRoutes && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#008000] animate-ping" />
-                      )}
-                    </div>
-                    <div className="text-left">
-                      <p className={`text-sm font-semibold ${hasSharedRoutes ? 'text-[#008000]' : 'text-red-600'}`}>
-                        Taxis con puestos disponibles
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {hasSharedRoutes ? 'Hay rutas disponibles ahora' : 'Sin rutas disponibles ahora'}
-                      </p>
-                    </div>
-                  </div>
-                  <svg className={`w-4 h-4 ${hasSharedRoutes ? 'text-[#008000]' : 'text-red-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                  ...
+                </button> */}
 
-                {/* Toggle: Viaje / Envío / Cargas y Trasteos */}
+                {/* Toggle: Envío / Cargas y Trasteos — VIAJE EN TAXI OCULTO: pendiente Cootransvalle */}
                 <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => { setTripMode("ride"); setVehicleType("taxi"); setVehicleCarouselIndex(0); }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                      tripMode === "ride"
-                        ? "bg-white text-[#008000] shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <span>🧍</span>
-                    <span>Viaje</span>
-                  </button>
+                    ...Viaje en taxi oculto...
+                  </button> */}
                   <button
                     type="button"
                     onClick={() => { setTripMode("delivery"); setVehicleType("moto"); setVehicleCarouselIndex(0); setHomePickup(false); }}

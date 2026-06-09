@@ -193,7 +193,6 @@ function RegisterForm() {
                       { value: "moto", label: "Moto", emoji: "🏍️" },
                       // TAXI OCULTO: pendiente confirmación de Cootransvalle
                       // { value: "taxi", label: "Taxi", emoji: "🚖" },
-                      { value: "carro", label: "Carro / Van", emoji: "🚗" },
                       { value: "piaggio", label: "Piaggio", emoji: "🛺" },
                     ].map((v) => (
                       <button

@@ -103,6 +103,17 @@ export async function subscriptionMiddleware(c: any, next: any) {
     return;
   }
 
+  // Solo los conductores de taxi requieren suscripción activa
+  const driver = await (c.env.DB as D1Database)
+    .prepare('SELECT vehicle_types FROM drivers WHERE id = ?')
+    .bind(user.id)
+    .first() as any;
+
+  if (!driver || driver.vehicle_types !== 'taxi') {
+    await next();
+    return;
+  }
+
   const now = Math.floor(Date.now() / 1000);
 
   const subscription = await (c.env.DB as D1Database)

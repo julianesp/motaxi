@@ -29,7 +29,7 @@ function saveRecentPlace(place: RecentPlace) {
   if (typeof window === "undefined") return;
   try {
     const existing = loadRecentPlaces().filter(
-      (p) => p.address !== place.address
+      (p) => p.address !== place.address,
     );
     const updated = [place, ...existing].slice(0, MAX_RECENT_PLACES);
     localStorage.setItem(RECENT_PLACES_KEY, JSON.stringify(updated));
@@ -186,14 +186,18 @@ export default function PassengerHomePage() {
   const [isCheckingActiveTrip, setIsCheckingActiveTrip] = useState(false);
 
   // Tipo de vehículo preferido por el pasajero
-  const [vehicleType, setVehicleType] = useState<"moto" | "taxi" | "carro" | "piaggio" | "particular" | null>(null);
+  const [vehicleType, setVehicleType] = useState<
+    "moto" | "taxi" | "carro" | "piaggio" | "particular" | null
+  >(null);
   const [vehicleCarouselIndex, setVehicleCarouselIndex] = useState(0);
   const vehicleTouchStartX = useRef<number | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(true);
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
-  const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">("delivery");
+  const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">(
+    "delivery",
+  );
   const [deliveryNote, setDeliveryNote] = useState("");
   const [homePickup, setHomePickup] = useState(false);
 
@@ -278,18 +282,28 @@ export default function PassengerHomePage() {
     if (!estimatedDistance) return null;
     let base: number;
     if (selectedDriver) {
-      base = calcFare(selectedDriver.base_fare, selectedDriver.per_km_fare, estimatedDistance);
+      base = calcFare(
+        selectedDriver.base_fare,
+        selectedDriver.per_km_fare,
+        estimatedDistance,
+      );
     } else if (nearbyDrivers.length > 0) {
       // Promedio de los conductores cercanos para un precio justo
-      const fares = sortedNearbyDrivers.map(d =>
-        calcFare(d.base_fare, d.per_km_fare, estimatedDistance)
+      const fares = sortedNearbyDrivers.map((d) =>
+        calcFare(d.base_fare, d.per_km_fare, estimatedDistance),
       );
       base = Math.round(fares.reduce((s, f) => s + f, 0) / fares.length);
     } else {
       base = calcFare(5000, 1500, estimatedDistance);
     }
     return base + (homePickup ? HOME_PICKUP_SURCHARGE : 0);
-  }, [estimatedDistance, selectedDriver, nearbyDrivers, sortedNearbyDrivers, homePickup]);
+  }, [
+    estimatedDistance,
+    selectedDriver,
+    nearbyDrivers,
+    sortedNearbyDrivers,
+    homePickup,
+  ]);
 
   useEffect(() => {
     // Solo verificar autenticación una vez que termine de cargar
@@ -407,7 +421,11 @@ export default function PassengerHomePage() {
         const { driversAPI } = await import("@/lib/api-client");
         const lat = currentLocation?.lat || 1.1656;
         const lng = currentLocation?.lng || -77.0;
-        const data = await driversAPI.getNearbyDrivers(lat, lng, vehicleType || undefined);
+        const data = await driversAPI.getNearbyDrivers(
+          lat,
+          lng,
+          vehicleType || undefined,
+        );
         setNearbyDrivers(data.drivers || []);
       } catch (error) {
         // Silencioso - no interrumpir la experiencia
@@ -544,10 +562,18 @@ export default function PassengerHomePage() {
     if (passengerCustomPrice) {
       estimatedFare = passengerCustomPrice;
     } else if (selectedDriver) {
-      estimatedFare = calcFare(selectedDriver.base_fare, selectedDriver.per_km_fare, distance);
+      estimatedFare = calcFare(
+        selectedDriver.base_fare,
+        selectedDriver.per_km_fare,
+        distance,
+      );
     } else if (nearbyDrivers.length > 0) {
       const nearestDriver = nearbyDrivers[0];
-      estimatedFare = calcFare(nearestDriver.base_fare, nearestDriver.per_km_fare, distance);
+      estimatedFare = calcFare(
+        nearestDriver.base_fare,
+        nearestDriver.per_km_fare,
+        distance,
+      );
     } else {
       estimatedFare = calcFare(5000, 1500, distance);
     }
@@ -574,27 +600,44 @@ export default function PassengerHomePage() {
         estimated_fare: estimatedFare,
         trip_type: tripMode,
         home_pickup: homePickup,
-        ...(tripMode === "delivery" && deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
+        ...(tripMode === "delivery" && deliveryNote.trim()
+          ? { delivery_note: deliveryNote.trim() }
+          : {}),
         ...(selectedDriver ? { preferred_driver_id: selectedDriver.id } : {}),
       });
 
       // Éxito: solicitud creada
       await Swal.fire({
         icon: "success",
-        title: tripMode === "delivery" ? "¡Envío solicitado!" : tripMode === "cargo" ? "¡Trasteo solicitado!" : "¡Solicitud enviada!",
-        text: tripMode === "delivery"
-          ? "Tu solicitud de envío está visible en el tablero de conductores. Un conductor irá a recoger el objeto."
-          : tripMode === "cargo"
-          ? "Tu solicitud de carga está visible en el tablero de conductores. Un conductor con vehículo de carga aceptará tu trasteo."
-          : "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
+        title:
+          tripMode === "delivery"
+            ? "¡Envío solicitado!"
+            : tripMode === "cargo"
+              ? "¡Trasteo solicitado!"
+              : "¡Solicitud enviada!",
+        text:
+          tripMode === "delivery"
+            ? "Tu solicitud de envío está visible en el tablero de conductores. Un conductor irá a recoger el objeto."
+            : tripMode === "cargo"
+              ? "Tu solicitud de carga está visible en el tablero de conductores. Un conductor con vehículo de carga aceptará tu trasteo."
+              : "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
         confirmButtonColor: "#008000",
-        confirmButtonText: tripMode === "delivery" ? "Seguir envío" : tripMode === "cargo" ? "Seguir trasteo" : "Seguir viaje",
+        confirmButtonText:
+          tripMode === "delivery"
+            ? "Seguir envío"
+            : tripMode === "cargo"
+              ? "Seguir trasteo"
+              : "Seguir viaje",
         timer: 3000,
         timerProgressBar: true,
       });
 
       // Guardar destino en historial reciente
-      if (destination.latitude && destination.longitude && destination.address) {
+      if (
+        destination.latitude &&
+        destination.longitude &&
+        destination.address
+      ) {
         saveRecentPlace({
           address: destination.address,
           latitude: destination.latitude,
@@ -789,34 +832,132 @@ export default function PassengerHomePage() {
                   onClick={() => setShowProfileMenu((v) => !v)}
                   className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center hover:shadow-md transition-shadow"
                 >
-                  <svg className="w-5 h-5 md:w-6 md:h-6 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="w-5 h-5 md:w-6 md:h-6 text-[#008000]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </button>
                 {showProfileMenu && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowProfileMenu(false)}
+                    />
                     <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="font-semibold text-gray-900 text-sm truncate">{user?.full_name}</p>
+                        <p className="font-semibold text-gray-900 text-sm truncate">
+                          {user?.full_name}
+                        </p>
                         <p className="text-xs text-gray-400">Pasajero</p>
                       </div>
-                      <button onClick={() => { setShowProfileMenu(false); router.push("/passenger/profile"); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-                        <svg className="w-4 h-4 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                        <span className="text-sm text-gray-700">Ver perfil</span>
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          router.push("/passenger/profile");
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <svg
+                          className="w-4 h-4 text-[#008000]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        <span className="text-sm text-gray-700">
+                          Ver perfil
+                        </span>
                       </button>
-                      <button onClick={() => { setShowProfileMenu(false); router.push("/passenger/profile#settings"); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          router.push("/passenger/profile#settings");
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <svg
+                          className="w-4 h-4 text-blue-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
                         <span className="text-sm text-gray-700">Ajustes</span>
                       </button>
-                      <button onClick={() => { setShowProfileMenu(false); router.push("/help"); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-                        <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          router.push("/help");
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <svg
+                          className="w-4 h-4 text-yellow-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
                         <span className="text-sm text-gray-700">Ayuda</span>
                       </button>
                       <div className="border-t border-gray-100" />
-                      <button onClick={async () => { setShowProfileMenu(false); await logout(); router.push("/"); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left">
-                        <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                        <span className="text-sm text-red-600 font-medium">Cerrar sesión</span>
+                      <button
+                        onClick={async () => {
+                          setShowProfileMenu(false);
+                          await logout();
+                          router.push("/");
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left"
+                      >
+                        <svg
+                          className="w-4 h-4 text-red-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
+                        </svg>
+                        <span className="text-sm text-red-600 font-medium">
+                          Cerrar sesión
+                        </span>
                       </button>
                     </div>
                   </>
@@ -937,7 +1078,12 @@ export default function PassengerHomePage() {
                   </button> */}
                   <button
                     type="button"
-                    onClick={() => { setTripMode("delivery"); setVehicleType("moto"); setVehicleCarouselIndex(0); setHomePickup(false); }}
+                    onClick={() => {
+                      setTripMode("delivery");
+                      setVehicleType("moto");
+                      setVehicleCarouselIndex(0);
+                      setHomePickup(false);
+                    }}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                       tripMode === "delivery"
                         ? "bg-white text-[#008000] shadow-sm"
@@ -949,7 +1095,12 @@ export default function PassengerHomePage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setTripMode("cargo"); setVehicleType("piaggio"); setVehicleCarouselIndex(0); setHomePickup(false); }}
+                    onClick={() => {
+                      setTripMode("cargo");
+                      setVehicleType("piaggio");
+                      setVehicleCarouselIndex(0);
+                      setHomePickup(false);
+                    }}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                       tripMode === "cargo"
                         ? "bg-white text-[#008000] shadow-sm"
@@ -966,7 +1117,9 @@ export default function PassengerHomePage() {
                   <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
                     <span className="shrink-0 mt-0.5">ℹ️</span>
                     <span>
-                      El conductor <strong>no transporta personas</strong>. Solo irá a recoger tu objeto y lo entregará en el destino indicado.
+                      El conductor <strong>no transporta personas</strong>. Solo
+                      irá a recoger tu objeto y lo entregará en el destino
+                      indicado.
                     </span>
                   </div>
                 )}
@@ -974,13 +1127,18 @@ export default function PassengerHomePage() {
                   <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
                     <span className="shrink-0 mt-0.5">ℹ️</span>
                     <span>
-                      Servicio de <strong>cargas y trasteos</strong>. Disponible con Piaggio o Van para mudanzas y carga voluminosa.
+                      Servicio de <strong>cargas y trasteos</strong>. Disponible
+                      con Piaggio o Van para mudanzas y carga voluminosa.
                     </span>
                   </div>
                 )}
 
                 <h2 className="text-lg font-bold text-gray-800 mb-1">
-                  {tripMode === "delivery" ? "¿A dónde va el paquete?" : tripMode === "cargo" ? "¿A dónde va la carga?" : "¿A dónde vas?"}
+                  {tripMode === "delivery"
+                    ? "¿A dónde va el paquete?"
+                    : tripMode === "cargo"
+                      ? "¿A dónde va la carga?"
+                      : "¿A dónde vas?"}
                 </h2>
 
                 {/* Selector de tipo de vehículo */}
@@ -993,120 +1151,192 @@ export default function PassengerHomePage() {
                       ride: [
                         // TAXI OCULTO: pendiente confirmación de Cootransvalle para habilitar
                         // { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
-                        { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Rápido · económico" },
+                        {
+                          value: "moto" as const,
+                          icon: "🏍️",
+                          label: "Mototaxi",
+                          sub: "Rápido · económico",
+                        },
                       ],
                       delivery: [
-                        { value: "moto" as const, icon: "🏍️", label: "Mototaxi", sub: "Solo objetos · rápido" },
+                        {
+                          value: "moto" as const,
+                          icon: "🏍️",
+                          label: "Mototaxi",
+                          sub: "Solo objetos · rápido",
+                        },
                       ],
                       cargo: [
-                        { value: "piaggio" as const, icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
-                        { value: "carro" as const, icon: "🚐", label: "Van", sub: "Carga voluminosa" },
+                        {
+                          value: "piaggio" as const,
+                          icon: "🛻",
+                          label: "Piaggio",
+                          sub: "Mudanzas · carga",
+                        },
+                        {
+                          value: "carro" as const,
+                          icon: "🚐",
+                          label: "Van",
+                          sub: "Carga voluminosa",
+                        },
                       ],
                     };
                     const vehicleOpts = vehicleOptsMap[tripMode];
                     return (
                       <div className="space-y-1">
-                      <div className="relative flex items-center" style={{ height: '90px' }}>
-                        {/* Flecha izquierda */}
-                        <button
-                          type="button"
-                          onClick={() => setVehicleCarouselIndex((i) => (i - 1 + vehicleOpts.length) % vehicleOpts.length)}
-                          className="absolute left-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-l-2xl shadow-sm transition-colors"
-                          aria-label="Anterior"
-                        >
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                          </svg>
-                        </button>
-
-                        {/* Carrusel */}
                         <div
-                          className="flex-1 overflow-hidden mx-8 relative"
-                          style={{ height: '90px' }}
-                          onTouchStart={(e) => { vehicleTouchStartX.current = e.touches[0].clientX; }}
-                          onTouchEnd={(e) => {
-                            if (vehicleTouchStartX.current === null) return;
-                            const diff = vehicleTouchStartX.current - e.changedTouches[0].clientX;
-                            if (Math.abs(diff) > 30) {
-                              setShowSwipeHint(false);
-                              if (diff > 0) {
-                                setVehicleCarouselIndex((i) => (i + 1) % vehicleOpts.length);
-                              } else {
-                                setVehicleCarouselIndex((i) => (i - 1 + vehicleOpts.length) % vehicleOpts.length);
-                              }
-                            }
-                            vehicleTouchStartX.current = null;
-                          }}
+                          className="relative flex items-center"
+                          style={{ height: "90px" }}
                         >
-                          {vehicleOpts.map((opt, i) => {
-                            const total = vehicleOpts.length;
-                            let norm = i - vehicleCarouselIndex;
-                            if (norm > total / 2) norm -= total;
-                            if (norm < -total / 2) norm += total;
-                            const isActive = norm === 0;
-                            const isVisible = Math.abs(norm) <= 1;
-                            const translateX = norm * 110;
-                            const scale = isActive ? 1 : 0.75;
-                            const opacity = isActive ? 1 : 0.4;
-                            const isSelected = vehicleType === opt.value;
-                            return (
-                              <div
-                                key={opt.value}
-                                onClick={() => {
-                                  if (!isActive) {
-                                    setVehicleCarouselIndex(i);
-                                    setVehicleType(opt.value);
-                                  } else {
-                                    setVehicleType(isSelected ? null : opt.value);
-                                  }
-                                }}
-                                style={{
-                                  position: 'absolute',
-                                  top: 0,
-                                  left: '50%',
-                                  width: '120px',
-                                  marginLeft: '-60px',
-                                  height: '86px',
-                                  transform: `translateX(${translateX}%) scale(${scale})`,
-                                  transition: 'transform 0.3s ease, opacity 0.3s ease',
-                                  opacity,
-                                  zIndex: isActive ? 10 : 5,
-                                  cursor: 'pointer',
-                                  pointerEvents: isVisible ? 'auto' : 'none',
-                                }}
-                                className={`flex flex-col items-center justify-center rounded-2xl border-2 transition-colors ${
-                                  isSelected
-                                    ? "border-[#008000] bg-green-50 shadow-md"
-                                    : "border-gray-200 bg-white"
-                                }`}
-                              >
-                                <span className="text-2xl mb-0.5">{opt.icon}</span>
-                                <span className={`text-xs font-bold ${isSelected ? "text-[#008000]" : "text-gray-700"}`}>
-                                  {opt.label}
-                                </span>
-                                <span className="text-xs text-gray-400">{opt.sub}</span>
-                              </div>
-                            );
-                          })}
+                          {/* Flecha izquierda */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVehicleCarouselIndex(
+                                (i) =>
+                                  (i - 1 + vehicleOpts.length) %
+                                  vehicleOpts.length,
+                              )
+                            }
+                            className="absolute left-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-l-2xl shadow-sm transition-colors"
+                            aria-label="Anterior"
+                          >
+                            <svg
+                              className="w-4 h-4 text-gray-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.5}
+                                d="M15 19l-7-7 7-7"
+                              />
+                            </svg>
+                          </button>
+
+                          {/* Carrusel */}
+                          <div
+                            className="flex-1 overflow-hidden mx-8 relative"
+                            style={{ height: "90px" }}
+                            onTouchStart={(e) => {
+                              vehicleTouchStartX.current = e.touches[0].clientX;
+                            }}
+                            onTouchEnd={(e) => {
+                              if (vehicleTouchStartX.current === null) return;
+                              const diff =
+                                vehicleTouchStartX.current -
+                                e.changedTouches[0].clientX;
+                              if (Math.abs(diff) > 30) {
+                                setShowSwipeHint(false);
+                                if (diff > 0) {
+                                  setVehicleCarouselIndex(
+                                    (i) => (i + 1) % vehicleOpts.length,
+                                  );
+                                } else {
+                                  setVehicleCarouselIndex(
+                                    (i) =>
+                                      (i - 1 + vehicleOpts.length) %
+                                      vehicleOpts.length,
+                                  );
+                                }
+                              }
+                              vehicleTouchStartX.current = null;
+                            }}
+                          >
+                            {vehicleOpts.map((opt, i) => {
+                              const total = vehicleOpts.length;
+                              let norm = i - vehicleCarouselIndex;
+                              if (norm > total / 2) norm -= total;
+                              if (norm < -total / 2) norm += total;
+                              const isActive = norm === 0;
+                              const isVisible = Math.abs(norm) <= 1;
+                              const translateX = norm * 110;
+                              const scale = isActive ? 1 : 0.75;
+                              const opacity = isActive ? 1 : 0.4;
+                              const isSelected = vehicleType === opt.value;
+                              return (
+                                <div
+                                  key={opt.value}
+                                  onClick={() => {
+                                    if (!isActive) {
+                                      setVehicleCarouselIndex(i);
+                                      setVehicleType(opt.value);
+                                    } else {
+                                      setVehicleType(
+                                        isSelected ? null : opt.value,
+                                      );
+                                    }
+                                  }}
+                                  style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: "50%",
+                                    width: "120px",
+                                    marginLeft: "-60px",
+                                    height: "86px",
+                                    transform: `translateX(${translateX}%) scale(${scale})`,
+                                    transition:
+                                      "transform 0.3s ease, opacity 0.3s ease",
+                                    opacity,
+                                    zIndex: isActive ? 10 : 5,
+                                    cursor: "pointer",
+                                    pointerEvents: isVisible ? "auto" : "none",
+                                  }}
+                                  className={`flex flex-col items-center justify-center rounded-2xl border-2 transition-colors ${
+                                    isSelected
+                                      ? "border-[#008000] bg-green-50 shadow-md"
+                                      : "border-gray-200 bg-white"
+                                  }`}
+                                >
+                                  <span className="text-2xl mb-0.5">
+                                    {opt.icon}
+                                  </span>
+                                  <span
+                                    className={`text-xs font-bold ${isSelected ? "text-[#008000]" : "text-gray-700"}`}
+                                  >
+                                    {opt.label}
+                                  </span>
+                                  <span className="text-xs text-gray-400">
+                                    {opt.sub}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Flecha derecha */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVehicleCarouselIndex(
+                                (i) => (i + 1) % vehicleOpts.length,
+                              )
+                            }
+                            className="absolute right-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-r-2xl shadow-sm transition-colors"
+                            aria-label="Siguiente"
+                          >
+                            <svg
+                              className="w-4 h-4 text-gray-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.5}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </button>
                         </div>
 
-                        {/* Flecha derecha */}
-                        <button
-                          type="button"
-                          onClick={() => setVehicleCarouselIndex((i) => (i + 1) % vehicleOpts.length)}
-                          className="absolute right-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-r-2xl shadow-sm transition-colors"
-                          aria-label="Siguiente"
-                        >
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* Hint swipe */}
-                      {showSwipeHint && (
-                        <>
-                          <style>{`
+                        {/* Hint swipe */}
+                        {showSwipeHint && (
+                          <>
+                            <style>{`
                             @keyframes swipe-hint {
                               0%   { transform: translateX(18px); opacity: 0; }
                               15%  { opacity: 1; }
@@ -1118,20 +1348,22 @@ export default function PassengerHomePage() {
                               animation-fill-mode: forwards;
                             }
                           `}</style>
-                          <div
-                            className="flex items-center justify-center gap-1.5 mt-1"
-                            onAnimationEnd={() => setShowSwipeHint(false)}
-                          >
-                            <span
-                              className="swipe-hint-finger text-lg select-none"
-                              style={{ display: 'inline-block' }}
+                            <div
+                              className="flex items-center justify-center gap-1.5 mt-1"
+                              onAnimationEnd={() => setShowSwipeHint(false)}
                             >
-                              👆
-                            </span>
-                            <span className="text-xs text-gray-400">desliza para ver más</span>
-                          </div>
-                        </>
-                      )}
+                              <span
+                                className="swipe-hint-finger text-lg select-none"
+                                style={{ display: "inline-block" }}
+                              >
+                                👆
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                desliza para ver más
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     );
                   })()}
@@ -1258,42 +1490,60 @@ export default function PassengerHomePage() {
                         icon="destination"
                         favorites={[]}
                       />
-                      {destination.address && (
-                        <button
-                          onClick={() => {
-                            setDestination({ address: "", latitude: 0, longitude: 0 });
-                            setShowRecentPlaces(true);
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors z-10"
-                          title="Limpiar destino"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
                     </div>
-                    {destination.address && (
+                  </div>
+                  {destination.address && (
+                    <div className="flex items-stretch gap-2">
                       <button
                         onClick={() => {
-                          setDestination({ address: "", latitude: 0, longitude: 0 });
+                          setDestination({
+                            address: "",
+                            latitude: 0,
+                            longitude: 0,
+                          });
                           setShowRecentPlaces(true);
                         }}
                         className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-[#008000] text-white hover:bg-[#006800] transition-colors shadow-md"
                         title="Cambiar destino"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
                         </svg>
                       </button>
-                    )}
+                      <button
+                        onClick={() => {
+                          setMapClickMode("destination");
+                          setIsPanelMinimized(true);
+                          setShowRecentPlaces(false);
+                        }}
+                        className={`flex-1 px-3 rounded-xl text-xs font-medium transition-all duration-200 ${
+                          mapClickMode === "destination"
+                            ? "bg-[#008000] text-white shadow-lg shadow-[#008000]/30"
+                            : "bg-[#008000]/10 text-[#008000] hover:bg-[#008000]/20 border border-[#008000]/30"
+                        }`}
+                      >
+                        {mapClickMode === "destination" ? "📍" : "🗺️ Mapa"}
+                      </button>
+                    </div>
+                  )}
+                  {!destination.address && (
                     <button
                       onClick={() => {
                         setMapClickMode("destination");
                         setIsPanelMinimized(true);
                         setShowRecentPlaces(false);
                       }}
-                      className={`flex-shrink-0 px-3 rounded-xl text-xs font-medium transition-all duration-200 ${
+                      className={`w-full px-3 h-11 rounded-xl text-xs font-medium transition-all duration-200 ${
                         mapClickMode === "destination"
                           ? "bg-[#008000] text-white shadow-lg shadow-[#008000]/30"
                           : "bg-[#008000]/10 text-[#008000] hover:bg-[#008000]/20 border border-[#008000]/30"
@@ -1301,13 +1551,15 @@ export default function PassengerHomePage() {
                     >
                       {mapClickMode === "destination" ? "📍" : "🗺️ Mapa"}
                     </button>
-                  </div>
+                  )}
 
                   {/* Historial de lugares recientes - estilo InDrive */}
                   {showRecentPlaces && recentPlaces.length > 0 && (
                     <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
                       <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
-                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Recientes</span>
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                          Recientes
+                        </span>
                       </div>
                       {recentPlaces.map((place, idx) => (
                         <button
@@ -1323,11 +1575,23 @@ export default function PassengerHomePage() {
                           className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 text-left"
                         >
                           <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <svg
+                              className="w-3.5 h-3.5 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
                             </svg>
                           </div>
-                          <span className="text-sm text-gray-700 truncate">{place.address}</span>
+                          <span className="text-sm text-gray-700 truncate">
+                            {place.address}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -1351,7 +1615,8 @@ export default function PassengerHomePage() {
                         🏠 Quiero que me vayan a recoger a casa
                       </p>
                       <p className="text-xs text-blue-600 mt-0.5">
-                        El conductor irá hasta tu casa · Costo adicional: +$1.000
+                        El conductor irá hasta tu casa · Costo adicional:
+                        +$1.000
                       </p>
                     </div>
                   </label>
@@ -1362,28 +1627,42 @@ export default function PassengerHomePage() {
                   <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-2xl p-3 space-y-2">
                     <div className="flex items-center gap-2">
                       <span>📦</span>
-                      <span className="text-sm font-semibold text-[#008000]">Detalles del paquete</span>
+                      <span className="text-sm font-semibold text-[#008000]">
+                        Detalles del paquete
+                      </span>
                     </div>
                     <textarea
                       value={deliveryNote}
                       onChange={(e) => setDeliveryNote(e.target.value)}
-                      placeholder="Ej: Caja pequeña de ropa, llama al llegar · Nombre del destinatario: Juan · Frágil"
+                      placeholder="Ej: Caja pequeña de ropa, llama al llegar · Nombre del destinatario: Persona · Frágil"
                       rows={3}
                       maxLength={300}
                       className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 resize-none placeholder-gray-400"
                     />
-                    <p className="text-xs text-gray-400 text-right">{deliveryNote.length}/300</p>
+                    <p className="text-xs text-gray-400 text-right">
+                      {deliveryNote.length}/300
+                    </p>
                   </div>
                 )}
 
                 {/* Panel de tarifa estilo InDrive - solo cuando hay origen y destino */}
-                {!!(pickup.latitude && destination.latitude && estimatedDistance && recommendedPrice) && (
+                {!!(
+                  pickup.latitude &&
+                  destination.latitude &&
+                  estimatedDistance &&
+                  recommendedPrice
+                ) && (
                   <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
                     {/* Lista de conductores */}
                     {nearbyDrivers.length > 0 && (
                       <div className="divide-y divide-gray-50">
                         {sortedNearbyDrivers.slice(0, 4).map((driver) => {
-                          const driverFare = calcFare(driver.base_fare, driver.per_km_fare, estimatedDistance!) + (homePickup ? HOME_PICKUP_SURCHARGE : 0);
+                          const driverFare =
+                            calcFare(
+                              driver.base_fare,
+                              driver.per_km_fare,
+                              estimatedDistance!,
+                            ) + (homePickup ? HOME_PICKUP_SURCHARGE : 0);
                           const isSelected = selectedDriver?.id === driver.id;
                           return (
                             <div
@@ -1405,40 +1684,75 @@ export default function PassengerHomePage() {
                                   />
                                 ) : (
                                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    <svg
+                                      className="w-5 h-5"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                      />
                                     </svg>
                                   </div>
                                 )}
                               </button>
                               {/* Info — selecciona conductor */}
                               <button
-                                onClick={() => setSelectedDriver(isSelected ? null : driver)}
+                                onClick={() =>
+                                  setSelectedDriver(isSelected ? null : driver)
+                                }
                                 className="flex-1 min-w-0 text-left"
                               >
                                 <div className="flex items-center gap-1.5">
                                   {driver.vehicle_types && (
                                     <span className="text-base flex-shrink-0">
-                                      {({ moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻', particular: '🚗' } as Record<string, string>)[driver.vehicle_types] ?? '🚗'}
+                                      {(
+                                        {
+                                          moto: "🏍️",
+                                          taxi: "🚕",
+                                          carro: "🚐",
+                                          piaggio: "🛻",
+                                          particular: "🚗",
+                                        } as Record<string, string>
+                                      )[driver.vehicle_types] ?? "🚗"}
                                     </span>
                                   )}
-                                  <span className="text-sm font-semibold text-gray-800 truncate">{driver.full_name}</span>
-                                  {isSelected && <span className="text-xs text-[#008000] font-bold flex-shrink-0">✓</span>}
+                                  <span className="text-sm font-semibold text-gray-800 truncate">
+                                    {driver.full_name}
+                                  </span>
+                                  {isSelected && (
+                                    <span className="text-xs text-[#008000] font-bold flex-shrink-0">
+                                      ✓
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-400 flex items-center gap-1.5">
-                                  <span>⭐ {driver.rating != null ? driver.rating.toFixed(1) : 'Nuevo'}</span>
+                                  <span>
+                                    ⭐{" "}
+                                    {driver.rating != null
+                                      ? driver.rating.toFixed(1)
+                                      : "Nuevo"}
+                                  </span>
                                   <span>·</span>
                                   <span>{driver.total_trips ?? 0} viajes</span>
                                   {driver.distance_km && (
                                     <>
                                       <span>·</span>
-                                      <span>{driver.distance_km.toFixed(1)} km</span>
+                                      <span>
+                                        {driver.distance_km.toFixed(1)} km
+                                      </span>
                                     </>
                                   )}
                                   {driver.night_only === 1 && (
                                     <>
                                       <span>·</span>
-                                      <span className="text-[#008000] font-medium">🌙 Solo nocturno</span>
+                                      <span className="text-[#008000] font-medium">
+                                        🌙 Solo nocturno
+                                      </span>
                                     </>
                                   )}
                                 </div>
@@ -1479,7 +1793,9 @@ export default function PassengerHomePage() {
 
                     {/* Panel de precio */}
                     <div className="border-t border-gray-100 px-3 py-3">
-                      <p className="text-xs text-gray-400 mb-2">Tu oferta al conductor</p>
+                      <p className="text-xs text-gray-400 mb-2">
+                        Tu oferta al conductor
+                      </p>
                       {homePickup && (
                         <p className="text-xs text-blue-600 font-medium mb-2">
                           🏠 Incluye +$1.000 por recogida a domicilio
@@ -1493,14 +1809,22 @@ export default function PassengerHomePage() {
                           −
                         </button>
                         <div className="flex-1 relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#008000] font-bold text-lg pointer-events-none">$</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#008000] font-bold text-lg pointer-events-none">
+                            $
+                          </span>
                           <input
                             type="number"
                             inputMode="numeric"
-                            value={passengerCustomPrice ?? recommendedPrice ?? ''}
+                            value={
+                              passengerCustomPrice ?? recommendedPrice ?? ""
+                            }
                             onChange={(e) => {
-                              const val = parseInt(e.target.value.replace(/\D/g, ''), 10);
-                              if (!isNaN(val) && val > 0) setPassengerCustomPrice(val);
+                              const val = parseInt(
+                                e.target.value.replace(/\D/g, ""),
+                                10,
+                              );
+                              if (!isNaN(val) && val > 0)
+                                setPassengerCustomPrice(val);
                             }}
                             onFocus={(e) => e.target.select()}
                             className="w-full pl-7 pr-3 py-2 text-lg font-bold text-center text-[#008000] border-2 border-[#008000]/30 rounded-xl focus:outline-none focus:border-[#008000] bg-[#008000]/5"
@@ -1513,14 +1837,15 @@ export default function PassengerHomePage() {
                           +
                         </button>
                       </div>
-                      {passengerCustomPrice && passengerCustomPrice !== recommendedPrice && (
-                        <button
-                          onClick={() => setPassengerCustomPrice(null)}
-                          className="mt-1.5 text-[10px] text-gray-400 underline hover:text-gray-600 w-full text-center"
-                        >
-                          Restablecer precio sugerido
-                        </button>
-                      )}
+                      {passengerCustomPrice &&
+                        passengerCustomPrice !== recommendedPrice && (
+                          <button
+                            onClick={() => setPassengerCustomPrice(null)}
+                            className="mt-1.5 text-[10px] text-gray-400 underline hover:text-gray-600 w-full text-center"
+                          >
+                            Restablecer precio sugerido
+                          </button>
+                        )}
                     </div>
                   </div>
                 )}
@@ -1560,7 +1885,11 @@ export default function PassengerHomePage() {
                   ) : tripMode === "delivery" ? (
                     "📦 Solicitar envío"
                   ) : tripMode === "cargo" ? (
-                    vehicleType === "carro" ? "🚐 Solicitar Van" : "🛻 Solicitar Piaggio"
+                    vehicleType === "carro" ? (
+                      "🚐 Solicitar Van"
+                    ) : (
+                      "🛻 Solicitar Piaggio"
+                    )
                   ) : vehicleType === "taxi" ? (
                     "🚕 Solicitar taxi"
                   ) : (
@@ -1577,7 +1906,10 @@ export default function PassengerHomePage() {
       {driverDetailDriver && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50"
-          onClick={() => { setDriverDetailDriver(null); setPhotoExpanded(false); }}
+          onClick={() => {
+            setDriverDetailDriver(null);
+            setPhotoExpanded(false);
+          }}
         >
           <div
             className="bg-white rounded-t-3xl w-full max-w-md shadow-2xl pb-safe"
@@ -1601,15 +1933,35 @@ export default function PassengerHomePage() {
                     className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-100"
                   />
                   <div className="absolute inset-0 rounded-2xl bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    <svg
+                      className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                      />
                     </svg>
                   </div>
                 </button>
               ) : (
                 <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="w-10 h-10 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
               )}
@@ -1618,18 +1970,40 @@ export default function PassengerHomePage() {
                   <h3 className="font-bold text-gray-900 text-lg leading-tight">
                     {driverDetailDriver.full_name}
                   </h3>
-                  {driverDetailDriver.rating >= 4.5 && driverDetailDriver.total_trips >= 20 && (
-                    <span className="inline-flex items-center gap-0.5 bg-[#008000] text-white px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
-                      ⭐ Destacado
-                    </span>
-                  )}
+                  {driverDetailDriver.rating >= 4.5 &&
+                    driverDetailDriver.total_trips >= 20 && (
+                      <span className="inline-flex items-center gap-0.5 bg-[#008000] text-white px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
+                        ⭐ Destacado
+                      </span>
+                    )}
                 </div>
                 {/* Tipo de vehículo y horario */}
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {driverDetailDriver.vehicle_types && (
                     <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">
-                      <span>{({ moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻', particular: '🚗' } as Record<string, string>)[driverDetailDriver.vehicle_types] ?? '🚗'}</span>
-                      <span>{({ moto: 'Mototaxi', taxi: 'Taxi', carro: 'Carro / Van', piaggio: 'Piaggio', particular: 'Particular' } as Record<string, string>)[driverDetailDriver.vehicle_types] ?? driverDetailDriver.vehicle_types}</span>
+                      <span>
+                        {(
+                          {
+                            moto: "🏍️",
+                            taxi: "🚕",
+                            carro: "🚐",
+                            piaggio: "🛻",
+                            particular: "🚗",
+                          } as Record<string, string>
+                        )[driverDetailDriver.vehicle_types] ?? "🚗"}
+                      </span>
+                      <span>
+                        {(
+                          {
+                            moto: "Mototaxi",
+                            taxi: "Taxi",
+                            carro: "Carro / Van",
+                            piaggio: "Piaggio",
+                            particular: "Particular",
+                          } as Record<string, string>
+                        )[driverDetailDriver.vehicle_types] ??
+                          driverDetailDriver.vehicle_types}
+                      </span>
                     </span>
                   )}
                   {driverDetailDriver.night_only === 1 && (
@@ -1639,15 +2013,29 @@ export default function PassengerHomePage() {
                   )}
                 </div>
                 <p className="text-sm text-gray-500 mt-1">
-                  {driverDetailDriver.vehicle_color} {driverDetailDriver.vehicle_model}
+                  {driverDetailDriver.vehicle_color}{" "}
+                  {driverDetailDriver.vehicle_model}
                 </p>
               </div>
               <button
-                onClick={() => { setDriverDetailDriver(null); setPhotoExpanded(false); }}
+                onClick={() => {
+                  setDriverDetailDriver(null);
+                  setPhotoExpanded(false);
+                }}
                 className="self-start text-gray-400 hover:text-gray-600 p-1"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -1657,7 +2045,10 @@ export default function PassengerHomePage() {
               <div className="bg-[#008000]/10 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-500 mb-0.5">Calificación</p>
                 <p className="font-bold text-[#008000] text-base">
-                  ⭐ {driverDetailDriver.rating != null ? driverDetailDriver.rating.toFixed(1) : 'Nuevo'}
+                  ⭐{" "}
+                  {driverDetailDriver.rating != null
+                    ? driverDetailDriver.rating.toFixed(1)
+                    : "Nuevo"}
                 </p>
               </div>
               <div className="bg-[#008000]/10 rounded-xl p-3 text-center">
@@ -1669,7 +2060,9 @@ export default function PassengerHomePage() {
               <div className="bg-green-50 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-500 mb-0.5">Distancia</p>
                 <p className="font-bold text-green-600 text-base">
-                  {driverDetailDriver.distance_km ? `${driverDetailDriver.distance_km.toFixed(1)} km` : '—'}
+                  {driverDetailDriver.distance_km
+                    ? `${driverDetailDriver.distance_km.toFixed(1)} km`
+                    : "—"}
                 </p>
               </div>
             </div>
@@ -1679,13 +2072,23 @@ export default function PassengerHomePage() {
               {driverDetailDriver.vehicle_plate && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span className="text-gray-400 w-4">🪪</span>
-                  <span>Placa: <span className="font-semibold text-gray-800">{driverDetailDriver.vehicle_plate}</span></span>
+                  <span>
+                    Placa:{" "}
+                    <span className="font-semibold text-gray-800">
+                      {driverDetailDriver.vehicle_plate}
+                    </span>
+                  </span>
                 </div>
               )}
               {driverDetailDriver.municipality && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span className="text-gray-400 w-4">📍</span>
-                  <span>Zona: <span className="font-semibold text-gray-800">{driverDetailDriver.municipality}</span></span>
+                  <span>
+                    Zona:{" "}
+                    <span className="font-semibold text-gray-800">
+                      {driverDetailDriver.municipality}
+                    </span>
+                  </span>
                 </div>
               )}
             </div>
@@ -1693,16 +2096,29 @@ export default function PassengerHomePage() {
             {/* Pagar por Nequi — solo si el conductor tiene número Nequi registrado */}
             {driverDetailDriver.nequi_phone && (
               <div className="mx-5 mb-4 bg-[#7B2D8B]/10 border border-[#7B2D8B]/25 rounded-2xl p-3">
-                <p className="text-xs font-semibold text-[#7B2D8B] mb-1">¿Conoces al conductor? Paga por Nequi</p>
-                <p className="text-[11px] text-[#7B2D8B]/70 mb-2">Solo si ya acordaron el precio directamente con el conductor.</p>
+                <p className="text-xs font-semibold text-[#7B2D8B] mb-1">
+                  ¿Conoces al conductor? Paga por Nequi
+                </p>
+                <p className="text-[11px] text-[#7B2D8B]/70 mb-2">
+                  Solo si ya acordaron el precio directamente con el conductor.
+                </p>
                 <div className="flex items-center gap-2 bg-white border border-[#7B2D8B]/30 rounded-xl px-3 py-2.5">
                   <span className="text-lg">💜</span>
-                  <span className="flex-1 text-sm font-semibold text-gray-800 tracking-wide">{driverDetailDriver.nequi_phone}</span>
+                  <span className="flex-1 text-sm font-semibold text-gray-800 tracking-wide">
+                    {driverDetailDriver.nequi_phone}
+                  </span>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(driverDetailDriver.nequi_phone!);
-                      const btn = document.getElementById('nequi-copy-btn');
-                      if (btn) { btn.textContent = '¡Copiado!'; setTimeout(() => { btn.textContent = 'Copiar'; }, 2000); }
+                      navigator.clipboard.writeText(
+                        driverDetailDriver.nequi_phone!,
+                      );
+                      const btn = document.getElementById("nequi-copy-btn");
+                      if (btn) {
+                        btn.textContent = "¡Copiado!";
+                        setTimeout(() => {
+                          btn.textContent = "Copiar";
+                        }, 2000);
+                      }
                     }}
                     id="nequi-copy-btn"
                     className="text-xs font-semibold px-3 py-1 bg-[#7B2D8B] text-white rounded-lg hover:bg-[#6a2578] transition-colors"
@@ -1720,21 +2136,35 @@ export default function PassengerHomePage() {
                   href={`tel:${driverDetailDriver.phone}`}
                   className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold text-sm text-center hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
                   </svg>
                   Llamar
                 </a>
               )}
               {(driverDetailDriver.whatsapp || driverDetailDriver.phone) && (
                 <a
-                  href={`https://wa.me/57${(driverDetailDriver.whatsapp || driverDetailDriver.phone)!.replace(/\D/g, '')}`}
+                  href={`https://wa.me/57${(driverDetailDriver.whatsapp || driverDetailDriver.phone)!.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 py-3 bg-[#25D366] text-white rounded-xl font-semibold text-sm text-center hover:bg-[#1ebe5d] transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.855L.057 23.882l6.19-1.624A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.727.977.995-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/>
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.855L.057 23.882l6.19-1.624A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.727.977.995-3.645-.234-.374A9.818 9.818 0 1112 21.818z" />
                   </svg>
                   WhatsApp
                 </a>
@@ -1742,7 +2172,8 @@ export default function PassengerHomePage() {
               <button
                 onClick={() => {
                   setSelectedDriver(driverDetailDriver);
-                  setDriverDetailDriver(null); setPhotoExpanded(false);
+                  setDriverDetailDriver(null);
+                  setPhotoExpanded(false);
                 }}
                 className="flex-1 py-3 bg-[#008000] text-white rounded-xl font-semibold text-sm hover:bg-[#38b018] transition-colors"
               >
@@ -1768,8 +2199,18 @@ export default function PassengerHomePage() {
             onClick={() => setPhotoExpanded(false)}
             className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

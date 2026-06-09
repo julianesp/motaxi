@@ -11,6 +11,7 @@ import InstallPWAModal from "@/components/InstallPWAModal";
 import PageViewTracker from "@/components/PageViewTracker";
 import { Analytics } from "@vercel/analytics/next";
 import { GoogleMapsProvider } from "@/lib/google-maps-provider";
+import { ThemeProvider } from "@/lib/theme-context";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", preload: true });
 
@@ -168,14 +169,16 @@ export default function RootLayout({
               }),
             }}
           />
-          <Analytics />
-          <PageViewTracker />
-          <OpenInBrowser />
-          <InstallPWAModal />
-          <GoogleMapsProvider>
-            <AuthProvider>{children}</AuthProvider>
-          </GoogleMapsProvider>
-          <Footer />
+          <ThemeProvider>
+            <Analytics />
+            <PageViewTracker />
+            <OpenInBrowser />
+            <InstallPWAModal />
+            <GoogleMapsProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </GoogleMapsProvider>
+            <Footer />
+          </ThemeProvider>
           <Script
             src="https://checkout.epayco.co/checkout.js"
             strategy="lazyOnload"

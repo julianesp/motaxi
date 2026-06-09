@@ -200,6 +200,23 @@ export default function DriverHomePage() {
           // setHasMissingVehicleInfo(isPending(response.driver.vehicle_plate) || isPending(response.driver.license_number));
           setHasMissingVehicleInfo(false);
 
+          // Advertir a conductores con vehículo no permitido (carro particular)
+          const tipoNoPermitido = ['particular', 'carro'];
+          if (tipoNoPermitido.includes(response.driver.vehicle_types || '')) {
+            const { default: Swal } = await import('sweetalert2');
+            await Swal.fire({
+              icon: 'warning',
+              title: '⚠️ Vehículo no admitido',
+              html: `Tu vehículo registrado (<strong>${response.driver.vehicle_types === 'particular' ? 'Automóvil particular' : 'Carro / Van'}</strong>) ya no está admitido en MoTaxi.<br><br>Debes actualizar tu tipo de vehículo a <strong>Mototaxi</strong> o <strong>Piaggio</strong> para seguir recibiendo viajes.`,
+              confirmButtonColor: '#008000',
+              confirmButtonText: 'Actualizar mi vehículo',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            });
+            setOnboardingStep(2);
+            setShowProfileModal(true);
+          }
+
           // Verificar si el perfil está completo
           if (!response.driver.profile_completed) {
             const skippedAt = response.driver.profile_skipped_at;
@@ -1377,7 +1394,6 @@ export default function DriverHomePage() {
                             { value: 'moto' as const, icon: '🏍️', label: 'Mototaxi' },
                             // TAXI OCULTO: pendiente confirmación de Cootransvalle
                             // { value: 'taxi' as const, icon: '🚕', label: 'Taxi' },
-                            { value: 'carro' as const, icon: '🚐', label: 'Carro / Van' },
                             { value: 'piaggio' as const, icon: '🛻', label: 'Piaggio' },
                           ]).map((type) => (
                             <button

@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Image from "next/image";
 import styles from "./Navbar.module.scss";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
   const router = useRouter();
@@ -241,6 +242,8 @@ export default function Navbar() {
                 </>
               )}
             </div>
+
+            <ThemeToggle />
 
             {/* Mobile menu button */}
             <div className="md:hidden">

@@ -3,10 +3,12 @@
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 export default function SSOComplete() {
   const { user: clerkUser, isLoaded } = useUser();
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const done = useRef(false);
 
   useEffect(() => {
@@ -53,8 +55,19 @@ export default function SSOComplete() {
           // Si es usuario nuevo, pedir teléfono antes de continuar
           if (data.isNewUser) {
             router.push("/auth/complete-profile");
+            return;
+          }
+          // Actualizar el contexto de auth con el usuario recién autenticado
+          await refreshUser();
+          // Redirigir al dashboard según rol
+          const role = data.user?.role;
+          const email = data.user?.email;
+          if (email === "admin@neurai.dev") {
+            router.push("/admin");
+          } else if (role === "driver") {
+            router.push("/driver");
           } else {
-            router.push("/");
+            router.push("/passenger");
           }
         } else {
           router.push("/");

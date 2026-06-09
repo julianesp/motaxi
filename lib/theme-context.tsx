@@ -27,12 +27,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
   const [isAuto, setIsAuto] = useState(true);
 
-  // Aplicar clase al <html> de forma inmediata
+  // Aplicar clase al <body> — Next.js no interfiere con él tras la hidratación
   const applyTheme = useCallback((t: Theme) => {
     if (t === 'dark') {
       document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
     }
     setTheme(t);
   }, []);

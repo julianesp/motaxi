@@ -104,7 +104,7 @@
   --white: #ffffff;
 }
 
-html.dark {
+html.dark, .dark {
   --mt-bg-page:    #0f1117;
   --mt-bg-surface: #1a1d27;
   --fg-primary:    #f1f5f9;
@@ -115,7 +115,7 @@ html.dark {
   color-scheme: dark;
 }
 
-html.dark body {
+html.dark body, body.dark {
   background: linear-gradient(to top, #003300, #050a14);
 }
 

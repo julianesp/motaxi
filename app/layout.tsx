@@ -82,6 +82,20 @@ export default function RootLayout({
     <ClerkProvider localization={esES}>
       <html lang="es">
         <body className={inter.className}>
+          {/* Script bloqueante: aplica tema antes del primer render para evitar flash */}
+          <script dangerouslySetInnerHTML={{ __html: `
+            (function() {
+              try {
+                var saved = localStorage.getItem('motaxi_theme');
+                var hour = new Date().getHours();
+                var isDark = saved === 'dark' || (!saved && (hour >= 19 || hour < 7));
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                  document.body.classList.add('dark');
+                }
+              } catch(e) {}
+            })();
+          `}} />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{

@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import dynamic from "next/dynamic";
 import Swal from "sweetalert2";
 import { playNotificationSound } from "@/lib/useSound";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const RECENT_PLACES_KEY = "motaxi_recent_places";
 const MAX_RECENT_PLACES = 5;
@@ -827,6 +828,7 @@ export default function PassengerHomePage() {
                   </span>
                 </div>
               )}
+              <ThemeToggle />
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu((v) => !v)}

@@ -8,6 +8,7 @@ import { usePushNotifications } from '@/lib/hooks/usePushNotifications';
 import dynamic from 'next/dynamic';
 import Swal from 'sweetalert2';
 import EpaycoSubscriptionCheckout from '@/components/EpaycoSubscriptionCheckout';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
   ssr: false,
@@ -618,6 +619,7 @@ export default function DriverHomePage() {
               </button>
             </div>
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               {/* Botón ganancias con icono de moneda */}
               <button
                 onClick={() => router.push('/driver/earnings')}

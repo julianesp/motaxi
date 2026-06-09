@@ -318,6 +318,10 @@ export const usersAPI = {
     const response = await apiClient.put('/users/profile', data);
     return response.data;
   },
+  switchRole: async (role: 'passenger' | 'driver') => {
+    const response = await apiClient.put('/users/switch-role', { role });
+    return response.data;
+  },
 };
 
 // API de rutas compartidas

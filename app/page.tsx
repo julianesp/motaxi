@@ -1217,11 +1217,14 @@ export default function HomePage() {
               </div>
               <ul className="space-y-5">
                 {[
-                  { icon: "⚡", title: "Respuesta en minutos", desc: "Solicita tu moto desde donde estés y un conductor cerca de ti llega rápidamente." },
+                  { icon: "🏍️", title: "Mototaxi", desc: "Transporte rápido y económico en moto para moverte por el municipio en minutos." },
+                  { icon: "🛺", title: "Piayo", desc: "Vehículo ideal para recorridos cortos con mayor comodidad y espacio." },
+                  { icon: "📦", title: "Envío de paquetes en moto", desc: "Envía objetos o encomiendas sin moverte de tu lugar. El conductor los entrega por ti." },
+                  { icon: "🚐", title: "Van / Carro", desc: "Para grupos o equipaje grande. Más espacio y comodidad cuando lo necesites." },
+                  { icon: "🚕", title: "Taxi Cootransvalle", desc: "Próximamente disponible, pendiente confirmación de la gerencia de Cootransvalle." },
                   { icon: "📍", title: "Seguimiento en tiempo real", desc: "Observa en el mapa la ubicación de tu conductor desde que acepta hasta que llega." },
                   { icon: "💰", title: "Tarifas transparentes", desc: "Conoce el precio estimado antes de confirmar el viaje. Sin sorpresas al llegar." },
-                  { icon: "⭐", title: "Conductores verificados", desc: "Cada mototaxista pasa por un proceso de verificación antes de poder operar en la plataforma." },
-                  { icon: "📦", title: "Envío de paquetes", desc: "Envía objetos o encomiendas sin moverte de tu lugar. El conductor los entrega por ti." },
+                  { icon: "⭐", title: "Conductores verificados", desc: "Cada conductor pasa por un proceso de verificación antes de poder operar en la plataforma." },
                   { icon: "❤️", title: "Guarda tus favoritos", desc: "Agrega conductores de confianza a tus favoritos y contáctalos fácilmente para futuros viajes." },
                 ].map((b) => (
                   <li key={b.title} className="flex items-start gap-4">
@@ -1245,12 +1248,12 @@ export default function HomePage() {
               </div>
               <ul className="space-y-5">
                 {[
-                  { icon: "📲", title: "Más visibilidad, más clientes", desc: "Tu perfil está disponible para todos los pasajeros del Valle de Sibundoy las 24 horas." },
-                  { icon: "🆓", title: "Uso gratuito", desc: "Registrarse y recibir viajes es completamente gratis para mototaxistas y piaggieros." },
+                  { icon: "📲", title: "Más visibilidad, más clientes", desc: "Tu perfil está disponible para todos los pasajeros del Valle de Sibundoy durante tu horario activo." },
                   { icon: "🗺️", title: "Solicitudes cerca de ti", desc: "Solo recibes solicitudes de pasajeros que están dentro de tu zona de operación." },
                   { icon: "💵", title: "Tú fijas tu tarifa", desc: "Define tus propias tarifas base, por kilómetro y para rutas intermunicipales o rurales." },
                   { icon: "📊", title: "Registro de ganancias", desc: "Lleva un historial detallado de todos tus viajes y el dinero que has generado en la plataforma." },
                   { icon: "🔔", title: "Notificaciones instantáneas", desc: "Recibe alertas en tiempo real cuando un pasajero solicite un viaje cercano a tu ubicación." },
+                  { icon: "📋", title: "Suscripción con tarifas claras", desc: "El acceso a la plataforma tiene un costo definido por la gerencia, con condiciones justas y transparentes." },
                 ].map((b) => (
                   <li key={b.title} className="flex items-start gap-4">
                     <span className="text-2xl flex-shrink-0 mt-0.5">{b.icon}</span>
@@ -1268,10 +1271,10 @@ export default function HomePage() {
           {/* Stat bar */}
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { value: "100%", label: "Gratis para mototaxistas" },
-              { value: "24/7", label: "Disponible todos los días" },
+              { value: "4", label: "Tipos de vehículo disponibles" },
               { value: "4", label: "Municipios cubiertos" },
               { value: "5★", label: "Sistema de calificaciones" },
+              { value: "GPS", label: "Seguimiento en tiempo real" },
             ].map((s) => (
               <div key={s.label} className="text-center bg-[#008000]/5 rounded-2xl py-6 px-4">
                 <p className="text-3xl font-extrabold text-[#008000]">{s.value}</p>

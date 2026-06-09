@@ -58,6 +58,7 @@ interface NearbyDriver {
   distance_km?: number;
   municipality?: string;
   night_only?: number;
+  accepts_rides?: number;
   whatsapp?: string | null;
   nequi_phone?: string | null;
   profile_image?: string | null;
@@ -1726,6 +1727,11 @@ export default function PassengerHomePage() {
                                   <span className="text-sm font-semibold text-gray-800 truncate">
                                     {driver.full_name}
                                   </span>
+                                  {driver.vehicle_types === 'taxi' && driver.accepts_rides === 1 && (
+                                    <span className="flex-shrink-0 text-xs font-semibold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                                      Acepta carreras
+                                    </span>
+                                  )}
                                   {isSelected && (
                                     <span className="text-xs text-[#008000] font-bold flex-shrink-0">
                                       ✓

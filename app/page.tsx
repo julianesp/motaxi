@@ -1187,95 +1187,99 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
+      {/* Beneficios Section */}
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* Título */}
           <div className="text-center mb-16">
+            <span className="inline-block bg-[#008000]/10 text-[#008000] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+              ¿Por qué MoTaxi?
+            </span>
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              ¿Por qué elegir MoTaxi?
+              Beneficios de usar este sistema de transporte
             </h2>
-            <p className="text-xl text-black max-w-2xl mx-auto">
-              La solución de transporte moderna, disponible donde estés
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              Diseñado para el Valle de Sibundoy. Más rápido, más seguro y más conveniente que cualquier alternativa.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 max-w-3xl mx-auto">
-            {/* Feature 1 */}
-            <div className="text-center group transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
+          {/* Dos columnas: Pasajeros y Conductores */}
+          <div className="grid lg:grid-cols-2 gap-10">
+
+            {/* Columna Pasajeros */}
+            <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
+                  <span className="text-2xl">🧍</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">Para pasajeros</h3>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Rápido y Confiable
-              </h3>
-              <p className="text-black">
-                Encuentra un conductor en minutos. Sistema de geolocalización en
-                tiempo real para conexiones instantáneas.
-              </p>
+              <ul className="space-y-5">
+                {[
+                  { icon: "⚡", title: "Respuesta en minutos", desc: "Solicita tu moto desde donde estés y un conductor cerca de ti llega rápidamente." },
+                  { icon: "📍", title: "Seguimiento en tiempo real", desc: "Observa en el mapa la ubicación de tu conductor desde que acepta hasta que llega." },
+                  { icon: "💰", title: "Tarifas transparentes", desc: "Conoce el precio estimado antes de confirmar el viaje. Sin sorpresas al llegar." },
+                  { icon: "⭐", title: "Conductores verificados", desc: "Cada mototaxista pasa por un proceso de verificación antes de poder operar en la plataforma." },
+                  { icon: "📦", title: "Envío de paquetes", desc: "Envía objetos o encomiendas sin moverte de tu lugar. El conductor los entrega por ti." },
+                  { icon: "❤️", title: "Guarda tus favoritos", desc: "Agrega conductores de confianza a tus favoritos y contáctalos fácilmente para futuros viajes." },
+                ].map((b) => (
+                  <li key={b.title} className="flex items-start gap-4">
+                    <span className="text-2xl flex-shrink-0 mt-0.5">{b.icon}</span>
+                    <div>
+                      <p className="font-semibold text-gray-900">{b.title}</p>
+                      <p className="text-sm text-gray-500 mt-0.5">{b.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* Feature 2 */}
-            {/* <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
+            {/* Columna Conductores */}
+            <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
+                  <span className="text-2xl">🏍️</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">Para conductores</h3>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Seguro</h3>
-              <p className="text-black">
-                Conductores verificados y sistema de calificaciones. Tu
-                seguridad es nuestra prioridad.
-              </p>
-            </div> */}
-
-            {/* Feature 3 */}
-            <div className="text-center group transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-[#008000] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Tarifas Justas
-              </h3>
-              <p className="text-black">
-                Precios transparentes y competitivos. Sabe cuánto pagarás antes
-                de viajar.
-              </p>
+              <ul className="space-y-5">
+                {[
+                  { icon: "📲", title: "Más visibilidad, más clientes", desc: "Tu perfil está disponible para todos los pasajeros del Valle de Sibundoy las 24 horas." },
+                  { icon: "🆓", title: "Uso gratuito", desc: "Registrarse y recibir viajes es completamente gratis para mototaxistas y piaggieros." },
+                  { icon: "🗺️", title: "Solicitudes cerca de ti", desc: "Solo recibes solicitudes de pasajeros que están dentro de tu zona de operación." },
+                  { icon: "💵", title: "Tú fijas tu tarifa", desc: "Define tus propias tarifas base, por kilómetro y para rutas intermunicipales o rurales." },
+                  { icon: "📊", title: "Registro de ganancias", desc: "Lleva un historial detallado de todos tus viajes y el dinero que has generado en la plataforma." },
+                  { icon: "🔔", title: "Notificaciones instantáneas", desc: "Recibe alertas en tiempo real cuando un pasajero solicite un viaje cercano a tu ubicación." },
+                ].map((b) => (
+                  <li key={b.title} className="flex items-start gap-4">
+                    <span className="text-2xl flex-shrink-0 mt-0.5">{b.icon}</span>
+                    <div>
+                      <p className="font-semibold text-gray-900">{b.title}</p>
+                      <p className="text-sm text-gray-500 mt-0.5">{b.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
+
           </div>
+
+          {/* Stat bar */}
+          <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { value: "100%", label: "Gratis para mototaxistas" },
+              { value: "24/7", label: "Disponible todos los días" },
+              { value: "4", label: "Municipios cubiertos" },
+              { value: "5★", label: "Sistema de calificaciones" },
+            ].map((s) => (
+              <div key={s.label} className="text-center bg-[#008000]/5 rounded-2xl py-6 px-4">
+                <p className="text-3xl font-extrabold text-[#008000]">{s.value}</p>
+                <p className="text-sm text-gray-500 mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
         </div>
       </section>
 

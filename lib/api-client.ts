@@ -232,6 +232,7 @@ export const driversAPI = {
 
   updateProfile: async (data: {
     municipality?: string;
+    accepts_rides?: boolean;
     accepts_intercity_trips?: boolean;
     accepts_rural_trips?: boolean;
     night_only?: boolean;

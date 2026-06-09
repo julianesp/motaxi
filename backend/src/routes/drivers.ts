@@ -186,6 +186,7 @@ driverRoutes.put('/profile', async (c) => {
       per_km_fare,
       vehicle_types,
       default_route_fares,
+      accepts_rides,
     } = body;
 
     const updates: string[] = [];
@@ -261,6 +262,10 @@ driverRoutes.put('/profile', async (c) => {
     if (default_route_fares !== undefined) {
       updates.push('default_route_fares = ?');
       values.push(default_route_fares ? JSON.stringify(default_route_fares) : null);
+    }
+    if (accepts_rides !== undefined) {
+      updates.push('accepts_rides = ?');
+      values.push(accepts_rides ? 1 : 0);
     }
     const { usual_hours, usual_origin, usual_destination } = body;
     if (usual_hours !== undefined) {
@@ -590,7 +595,7 @@ driverRoutes.get('/nearby', async (c) => {
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,
               d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.is_available,
               d.municipality, d.night_only, d.weekend_daytime, d.whatsapp, d.nequi_phone,
-              d.vehicle_types,
+              d.vehicle_types, d.accepts_rides,
               COALESCE(d.base_fare, 2000) AS base_fare,
               COALESCE(d.per_km_fare, 500) AS per_km_fare,
               u.full_name, u.phone, u.profile_image

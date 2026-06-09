@@ -8,12 +8,15 @@ export default function InstallPWAModal() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Si ya está instalado como PWA, no mostrar nunca
+    // Si ya está corriendo como PWA instalada, no mostrar nunca
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true;
 
     if (isStandalone) return;
+
+    // Si el usuario ya descartó o instaló, no volver a molestar
+    if (localStorage.getItem('pwa-install-dismissed')) return;
 
     // Detectar iOS (Safari)
     const ua = navigator.userAgent;
@@ -28,7 +31,7 @@ export default function InstallPWAModal() {
     };
     window.addEventListener('beforeinstallprompt', handler);
 
-    // En iOS no hay beforeinstallprompt → mostrar igualmente con instrucciones manuales
+    // En iOS no hay beforeinstallprompt → mostrar con instrucciones manuales
     if (ios) {
       setShow(true);
     }
@@ -41,12 +44,14 @@ export default function InstallPWAModal() {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
+        localStorage.setItem('pwa-install-dismissed', '1');
         setShow(false);
       }
     }
   }
 
   function handleClose() {
+    localStorage.setItem('pwa-install-dismissed', '1');
     setShow(false);
   }
 

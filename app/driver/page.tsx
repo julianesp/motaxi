@@ -49,6 +49,10 @@ export default function DriverHomePage() {
   // Estado para ver la ruta de un viaje disponible
   const [selectedTripForMap, setSelectedTripForMap] = useState<any>(null);
 
+  // Estado para "acepto carreras" (solo taxis)
+  const [acceptsRides, setAcceptsRides] = useState(false);
+  const [driverVehicleType, setDriverVehicleType] = useState<string>('');
+
   // Estados para notificaciones
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -183,6 +187,8 @@ export default function DriverHomePage() {
         const response = await driversAPI.getProfile();
         if (response.driver) {
           setIsAvailable(response.driver.is_available === 1);
+          setAcceptsRides(response.driver.accepts_rides === 1);
+          setDriverVehicleType(response.driver.vehicle_types || '');
 
           // Pre-cargar datos existentes (ignorar valores PENDING del registro inicial)
           const clean = (v: string) => (!v || v.startsWith('PENDING') ? '' : v);
@@ -482,6 +488,18 @@ export default function DriverHomePage() {
       }
     } finally {
       setIsUpdatingAvailability(false);
+    }
+  };
+
+  const toggleAcceptsRides = async () => {
+    const next = !acceptsRides;
+    setAcceptsRides(next);
+    try {
+      const { driversAPI } = await import('@/lib/api-client');
+      await driversAPI.updateProfile({ accepts_rides: next });
+    } catch (error) {
+      console.error('Error actualizando acepto carreras:', error);
+      setAcceptsRides(!next); // revertir si falla
     }
   };
 
@@ -824,6 +842,26 @@ export default function DriverHomePage() {
                       <p className="text-yellow-800">
                         Activa tu disponibilidad para empezar a recibir solicitudes de viaje
                       </p>
+                    </div>
+                  )}
+
+                  {/* Toggle "Acepto carreras" — solo para taxis */}
+                  {driverVehicleType === 'taxi' && (
+                    <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900">🚕 Acepto carreras</p>
+                        <p className="text-xs text-blue-600 mt-0.5">Los pasajeros verán que estás disponible para carreras en taxi</p>
+                      </div>
+                      <button
+                        onClick={toggleAcceptsRides}
+                        className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none flex-shrink-0 ${
+                          acceptsRides ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
+                          acceptsRides ? 'translate-x-6' : 'translate-x-0'
+                        }`} />
+                      </button>
                     </div>
                   )}
 

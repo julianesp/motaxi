@@ -1619,12 +1619,12 @@ export default function HomePage() {
       </section>
 
       {!user && (
-        <section className="py-20 bg-gradient-to-br from-[#008000] via-[#008000] to-[#008000]">
+        <section className="py-20 bg-gradient-to-br from-[#008000] via-[#008000] to-[#008000] dark:from-[#022c02] dark:via-[#043004] dark:to-[#022c02]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
               ¿Listo para comenzar?
             </h2>
-            <p className="text-xl text-green-100 mb-8">
+            <p className="text-xl text-green-100 dark:text-green-200/80 mb-8">
               Únete a la revolución del transporte, desde cualquier lugar
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -135,7 +135,7 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 backdrop-blur-sm z-50 ${isHomePage ? "bg-transparent" : "bg-white shadow-md"} border border-white/10 ${styles.navbar}`}
+        className={`fixed top-0 left-0 right-0 backdrop-blur-sm z-50 ${isHomePage ? "bg-transparent" : "bg-white dark:bg-gray-900 shadow-md"} border border-white/10 dark:border-white/5 ${styles.navbar}`}
         style={{
           borderBottomLeftRadius: 30,
           borderBottomRightRadius: 30,
@@ -176,7 +176,7 @@ export default function Navbar() {
                 // Usuario autenticado
                 <>
                   <span
-                    className={`${isHomePage ? "text-white" : "text-gray-700"}`}
+                    className={`${isHomePage ? "text-white" : "text-gray-700 dark:text-gray-200"}`}
                   >
                     Hola,{" "}
                     <span className="font-semibold">{user.full_name}</span>
@@ -194,7 +194,7 @@ export default function Navbar() {
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       isHomePage
                         ? "bg-white bg-opacity-20 text-white hover:bg-opacity-30 backdrop-blur-sm"
-                        : "bg-green-100 text-[#008000] hover:bg-green-200"
+                        : "bg-green-100 dark:bg-green-900/40 text-[#008000] dark:text-[#42CE1D] hover:bg-green-200 dark:hover:bg-green-900/60"
                     }`}
                   >
                     {user.email === "admin@neurai.dev"
@@ -206,7 +206,7 @@ export default function Navbar() {
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       isHomePage
                         ? "bg-white bg-opacity-20 text-white hover:bg-opacity-30 backdrop-blur-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
                     }`}
                   >
                     Cerrar sesión
@@ -218,7 +218,7 @@ export default function Navbar() {
                   {!isHomePage && (
                     <button
                       onClick={() => router.push("/")}
-                      className="text-gray-700 hover:text-[#008000] font-medium transition-colors"
+                      className="text-gray-700 dark:text-gray-200 hover:text-[#008000] dark:hover:text-[#42CE1D] font-medium transition-colors"
                     >
                       Inicio
                     </button>
@@ -250,7 +250,7 @@ export default function Navbar() {
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`p-2 rounded-lg ${
-                  isHomePage ? "text-white" : "text-gray-700"
+                  isHomePage ? "text-white" : "text-gray-700 dark:text-gray-200"
                 } hover:bg-opacity-20 hover:bg-gray-500 transition-colors`}
               >
                 <svg
@@ -290,7 +290,7 @@ export default function Navbar() {
               className={`absolute top-4 right-4 p-2 rounded-full ${
                 isHomePage
                   ? "text-white hover:bg-white/10"
-                  : "text-gray-700 hover:bg-gray-100"
+                  : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
               } transition-colors`}
             >
               <svg
@@ -310,7 +310,7 @@ export default function Navbar() {
               {user ? (
                 <>
                   <p
-                    className={`text-sm mb-1 ${isHomePage ? "text-green-300" : "text-gray-500"}`}
+                    className={`text-sm mb-1 ${isHomePage ? "text-green-300" : "text-gray-500 dark:text-gray-400"}`}
                   >
                     Hola, <span className="font-bold">{user.full_name}</span>
                   </p>
@@ -339,7 +339,7 @@ export default function Navbar() {
                     className={`w-full text-center px-4 py-3 rounded-xl font-semibold transition-all ${
                       isHomePage
                         ? "border border-white/40 text-white hover:bg-white/10"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
                     }`}
                   >
                     Cerrar sesión

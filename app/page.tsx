@@ -20,7 +20,6 @@ function getYoutubeId(url: string): string | null {
 import dynamic from "next/dynamic";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 import Navbar from "@/components/Navbar/page";
-import styles from "./styles.module.scss";
 
 // Cargar el mapa dinámicamente (solo client-side, sin bloquear el render inicial)
 const LandingMap = dynamic(() => import("@/components/LandingMap"), {
@@ -50,6 +49,7 @@ export default function HomePage() {
   const [topDropoffs, setTopDropoffs] = useState<
     { address: string; trip_count: number }[]
   >([]);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   interface ReferralWinner {
     full_name: string;
@@ -435,7 +435,7 @@ export default function HomePage() {
                     aria-label="Video anterior"
                   >
                     <svg
-                      className="w-5 h-5 text-black"
+                      className="w-5 h-5 text-zinc-900"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -464,7 +464,7 @@ export default function HomePage() {
                     aria-label="Video siguiente"
                   >
                     <svg
-                      className="w-5 h-5 text-black"
+                      className="w-5 h-5 text-zinc-900"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -509,44 +509,95 @@ export default function HomePage() {
             const novedades = [
               {
                 icon: (
-                  <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a5 5 0 010 10" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 4a9 9 0 010 16" />
+                  <svg
+                    className="w-7 h-7 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11c0 .936.432 1.771 1.106 2.31C5.86 14.05 5 15.426 5 17v1h8v-1c0-1.574-.86-2.95-2.106-3.69A2.995 2.995 0 0012 11z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 7a5 5 0 010 10"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M18 4a9 9 0 010 16"
+                    />
                   </svg>
                 ),
                 titulo: "¡Entra con tu huella digital!",
-                descripcion: "Inicia sesión normal → ve a tu perfil → registra tu huella → y la próxima vez entras sin contraseña.",
+                descripcion:
+                  "Inicia sesión normal → ve a tu perfil → registra tu huella → y la próxima vez entras sin contraseña.",
                 boton: "Probar",
                 accion: () => router.push("/auth/login"),
               },
               {
                 icon: (
-                  <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-7 h-7 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                 ),
                 titulo: "¡Propón la foto de tu municipio!",
-                descripcion: "¿Tienes una buena foto de tu municipio? Súgierela y si el administrador la aprueba, aparecerá como imagen de fondo en la tarjeta del municipio.",
+                descripcion:
+                  "¿Tienes una buena foto de tu municipio? Súgierela y si el administrador la aprueba, aparecerá como imagen de fondo en la tarjeta del municipio.",
                 boton: "Ver municipios",
-                accion: () => { const el = document.getElementById('municipios-section'); el?.scrollIntoView({ behavior: 'smooth' }); },
+                accion: () => {
+                  const el = document.getElementById("municipios-section");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                },
               },
               {
                 icon: (
-                  <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    className="w-7 h-7 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                 ),
                 titulo: "Publica tu negocio en tu municipio",
-                descripcion: "Ingresa a tu municipio y sube la dirección y fotos de tu local. Otros usuarios podrán verte y pedir un mototaxi directamente a tu negocio.",
+                descripcion:
+                  "Ingresa a tu municipio y sube la dirección y fotos de tu local. Otros usuarios podrán verte y pedir un mototaxi directamente a tu negocio.",
                 boton: "Explorar",
                 accion: () => router.push("/municipio/santiago"),
               },
             ];
             const total = novedades.length;
             return (
-              <div className="mt-12 mx-auto relative" style={{ maxWidth: "700px" }}>
+              <div
+                className="mt-12 mx-auto relative"
+                style={{ maxWidth: "700px" }}
+              >
                 <div
                   className="relative flex items-center justify-center"
                   style={{ height: "140px" }}
@@ -583,7 +634,8 @@ export default function HomePage() {
                           width: "100%",
                           maxWidth: "560px",
                           transform: `translateX(${translateX}%) scale(${scale})`,
-                          transition: "transform 0.45s ease-in-out, filter 0.45s ease-in-out, opacity 0.45s ease-in-out",
+                          transition:
+                            "transform 0.45s ease-in-out, filter 0.45s ease-in-out, opacity 0.45s ease-in-out",
                           filter: `brightness(${brightness})`,
                           opacity: isVisible ? 1 : 0,
                           zIndex,
@@ -598,15 +650,24 @@ export default function HomePage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-xs font-bold uppercase tracking-wider text-[#42CE1D]">Novedad</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-[#42CE1D]">
+                                  Novedad
+                                </span>
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#42CE1D] animate-pulse" />
                               </div>
-                              <p className="text-white font-semibold text-sm leading-snug">{nov.titulo}</p>
-                              <p className="text-white/70 text-xs mt-0.5 line-clamp-2">{nov.descripcion}</p>
+                              <p className="text-white font-semibold text-sm leading-snug">
+                                {nov.titulo}
+                              </p>
+                              <p className="text-white/70 text-xs mt-0.5 line-clamp-2">
+                                {nov.descripcion}
+                              </p>
                             </div>
                             {isActive && (
                               <button
-                                onClick={(e) => { e.stopPropagation(); nov.accion(); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  nov.accion();
+                                }}
                                 className="flex-shrink-0 text-xs font-semibold text-white bg-[#42CE1D] hover:bg-[#36b018] transition-colors px-3 py-1.5 rounded-lg"
                               >
                                 {nov.boton}
@@ -620,13 +681,28 @@ export default function HomePage() {
 
                   {/* Flecha izquierda — más pequeña */}
                   <button
-                    onClick={() => setNovedadIndex((i) => (i - 1 + total) % total)}
+                    onClick={() =>
+                      setNovedadIndex((i) => (i - 1 + total) % total)
+                    }
                     className="absolute top-1/2 -translate-y-1/2 z-20 w-6 h-10 bg-white/80 hover:bg-white flex items-center justify-center transition-all duration-200 shadow-md"
-                    style={{ borderRadius: "0 6px 6px 0", left: "calc(-50vw + 50%)" }}
+                    style={{
+                      borderRadius: "0 6px 6px 0",
+                      left: "calc(-50vw + 50%)",
+                    }}
                     aria-label="Novedad anterior"
                   >
-                    <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    <svg
+                      className="w-3.5 h-3.5 text-zinc-900"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
                   </button>
 
@@ -634,11 +710,24 @@ export default function HomePage() {
                   <button
                     onClick={() => setNovedadIndex((i) => (i + 1) % total)}
                     className="absolute top-1/2 -translate-y-1/2 z-20 w-6 h-10 bg-white/80 hover:bg-white flex items-center justify-center transition-all duration-200 shadow-md"
-                    style={{ borderRadius: "6px 0 0 6px", right: "calc(-50vw + 50%)" }}
+                    style={{
+                      borderRadius: "6px 0 0 6px",
+                      right: "calc(-50vw + 50%)",
+                    }}
                     aria-label="Novedad siguiente"
                   >
-                    <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    <svg
+                      className="w-3.5 h-3.5 text-zinc-900"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -653,7 +742,10 @@ export default function HomePage() {
                       style={{
                         width: i === novedadIndex ? "24px" : "8px",
                         height: "8px",
-                        background: i === novedadIndex ? "#42CE1D" : "rgba(255,255,255,0.35)",
+                        background:
+                          i === novedadIndex
+                            ? "#42CE1D"
+                            : "rgba(255,255,255,0.35)",
                       }}
                       aria-label={`Novedad ${i + 1}`}
                     />
@@ -682,7 +774,7 @@ export default function HomePage() {
 
       {/* Banner: Ganador del Concurso de Referidos */}
       {referralWinner && (
-        <section className="py-10 bg-white">
+        <section className="py-10 bg-white dark:bg-gray-950">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-gradient-to-r from-[#008000]/10 to-[#008000]/5 border border-[#008000]/20 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5 shadow-md">
               <div className="flex-shrink-0 w-16 h-16 bg-[#008000]/20 rounded-full flex items-center justify-center text-3xl">
@@ -692,10 +784,10 @@ export default function HomePage() {
                 <p className="text-xs font-bold text-[#008000] uppercase tracking-widest mb-1">
                   Conductor del Mes — Más Referidos
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {referralWinner.full_name}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   {referralWinner.referral_count} pasajero
                   {referralWinner.referral_count !== 1 ? "s" : ""} registrado
                   {referralWinner.referral_count !== 1 ? "s" : ""} con su enlace
@@ -712,7 +804,7 @@ export default function HomePage() {
                 </span>
               </div>
             </div>
-            <p className="text-center text-xs text-gray-500 mt-3">
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3">
               Cada conductor tiene un enlace de referido en su perfil. El que
               más pasajeros inscriba durante el mes gana el siguiente mes
               gratis.
@@ -722,13 +814,13 @@ export default function HomePage() {
       )}
 
       {/* Municipios Section */}
-      <section id="municipios-section" className="py-20 bg-white">
+      <section id="municipios-section" className="py-20 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Zonas de cobertura
             </h2>
-            <p className="text-xl text-black max-w-2xl mx-auto">
+            <p className="text-xl text-black dark:text-gray-200 max-w-2xl mx-auto">
               Iniciamos en el Valle de Sibundoy, pero MoTaxi funciona desde
               cualquier lugar donde haya conductores registrados cerca de ti
             </p>
@@ -738,7 +830,11 @@ export default function HomePage() {
             {MUNICIPALITIES.map((municipality) => (
               <div
                 key={municipality.id}
-                className="rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#008000] relative overflow-hidden flex flex-col"
+                className={`rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-[#008000] relative overflow-hidden flex flex-col ${
+                  municipality.id === "santiago"
+                    ? ""
+                    : "bg-white dark:bg-gray-900"
+                }`}
                 style={
                   municipality.id === "santiago"
                     ? {
@@ -747,21 +843,21 @@ export default function HomePage() {
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                       }
-                    : { backgroundColor: "white" }
+                    : undefined
                 }
               >
                 {municipality.id === "santiago" && (
-                  <div className="absolute inset-0 bg-white/60" />
+                  <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/70" />
                 )}
                 <div className="relative z-10 p-8 flex-1">
                   {/* Chip circular con inicial — patrón del Design System */}
                   <div className="w-16 h-16 rounded-full bg-[#008000] flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-md">
                     {municipality.name[0]}
                   </div>
-                  <h3 className="text-2xl font-extrabold mb-1 text-gray-900">
+                  <h3 className="text-2xl font-extrabold mb-1 text-gray-900 dark:text-gray-100">
                     {municipality.name}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {municipality.description}
                   </p>
                 </div>
@@ -807,8 +903,8 @@ export default function HomePage() {
           {/* Modal: proponer imagen de municipio */}
           {proposeImageMunicipality && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                   Proponer imagen para{" "}
                   {
                     MUNICIPALITIES.find(
@@ -816,7 +912,7 @@ export default function HomePage() {
                     )?.name
                   }
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                   El administrador revisará tu propuesta antes de publicarla.
                 </p>
                 <form onSubmit={handleProposeImage}>
@@ -828,7 +924,7 @@ export default function HomePage() {
                     value={proposeImageUrl}
                     onChange={(e) => setProposeImageUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#42CE1D] mb-3"
+                    className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#42CE1D] mb-3"
                   />
                   {proposeImageMsg && (
                     <p
@@ -851,7 +947,7 @@ export default function HomePage() {
                         setProposeImageMunicipality(null);
                         setProposeImageMsg(null);
                       }}
-                      className="flex-1 py-2 border border-gray-300 text-gray-600 font-semibold rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                      className="flex-1 py-2 border border-gray-300 text-gray-600 dark:text-gray-300 font-semibold rounded-xl text-sm hover:bg-gray-50 transition-colors"
                     >
                       Cancelar
                     </button>
@@ -865,13 +961,13 @@ export default function HomePage() {
 
       {/* Lugares más frecuentados — solo si hay datos */}
       {(topPickups.length > 0 || topDropoffs.length > 0) && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-gray-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 Lugares más frecuentados
               </h2>
-              <p className="text-xl text-black max-w-2xl mx-auto">
+              <p className="text-xl text-black dark:text-gray-200 max-w-2xl mx-auto">
                 Los destinos y puntos de recogida con más actividad en los
                 últimos 30 días
               </p>
@@ -903,7 +999,7 @@ export default function HomePage() {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       Puntos de recogida
                     </h3>
                   </div>
@@ -911,13 +1007,13 @@ export default function HomePage() {
                     {topPickups.map((place, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors"
+                        className="flex items-center gap-4 bg-white dark:bg-gray-900 rounded-xl px-5 py-4 hover:bg-green-50 dark:hover:bg-gray-800 transition-colors"
                       >
                         <span className="text-2xl font-bold text-[#008000] w-7 text-center flex-shrink-0">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 font-medium truncate">
+                          <p className="text-gray-900 dark:text-gray-100 font-medium truncate">
                             {place.address}
                           </p>
                         </div>
@@ -950,7 +1046,7 @@ export default function HomePage() {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       Destinos populares
                     </h3>
                   </div>
@@ -958,13 +1054,13 @@ export default function HomePage() {
                     {topDropoffs.map((place, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 hover:bg-green-50 transition-colors"
+                        className="flex items-center gap-4 bg-white dark:bg-gray-900 rounded-xl px-5 py-4 hover:bg-green-50 dark:hover:bg-gray-800 transition-colors"
                       >
                         <span className="text-2xl font-bold text-[#008000] w-7 text-center flex-shrink-0">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 font-medium truncate">
+                          <p className="text-gray-900 dark:text-gray-100 font-medium truncate">
                             {place.address}
                           </p>
                         </div>
@@ -984,20 +1080,20 @@ export default function HomePage() {
 
       {/* Galería de fotos de conductores */}
       {publicPhotos.length > 0 && (
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6">
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 Destinos compartidos por conductores
               </h2>
-              <p className="text-xl text-black max-w-2xl mx-auto">
+              <p className="text-xl text-black dark:text-gray-200 max-w-2xl mx-auto">
                 Fotos reales de los lugares a donde nuestros conductores llevan
                 a sus pasajeros
               </p>
             </div>
 
             {/* Aviso votación anónima */}
-            <div className="max-w-2xl mx-auto mb-10 flex items-start gap-3 bg-white border border-[#008000]/20 rounded-2xl px-5 py-4 shadow-sm">
+            <div className="max-w-2xl mx-auto mb-10 flex items-start gap-3 bg-white dark:bg-gray-900 border border-[#008000]/20 rounded-2xl px-5 py-4 shadow-sm">
               <svg
                 className="w-5 h-5 text-[#008000] flex-shrink-0 mt-0.5"
                 fill="none"
@@ -1011,7 +1107,7 @@ export default function HomePage() {
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                 />
               </svg>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 <strong className="text-gray-800">
                   Vota por tus fotos favoritas de forma anónima
                 </strong>{" "}
@@ -1126,14 +1222,14 @@ export default function HomePage() {
                         }
                         className="w-full max-h-[75vh] object-contain bg-black"
                       />
-                      <div className="bg-white px-4 py-3 flex items-center justify-between gap-3">
+                      <div className="bg-white dark:bg-gray-900 px-4 py-3 flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           {expandedPhoto.caption && (
                             <p className="text-gray-800 text-sm font-medium truncate">
                               {expandedPhoto.caption}
                             </p>
                           )}
-                          <p className="text-gray-500 text-xs">
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">
                             {expandedPhoto.driver_name}
                           </p>
                         </div>
@@ -1188,50 +1284,89 @@ export default function HomePage() {
       )}
 
       {/* Beneficios Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
           {/* Título */}
           <div className="text-center mb-16">
             <span className="inline-block bg-[#008000]/10 text-[#008000] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
               ¿Por qué MoTaxi?
             </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Beneficios de usar este sistema de transporte
             </h2>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-              Diseñado para el Valle de Sibundoy. Más rápido, más seguro y más conveniente que cualquier alternativa.
+            <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+              Diseñado para el Valle de Sibundoy. Más rápido, más seguro y más
+              conveniente que cualquier alternativa.
             </p>
           </div>
 
           {/* Dos columnas: Pasajeros y Conductores */}
           <div className="grid lg:grid-cols-2 gap-10">
-
             {/* Columna Pasajeros */}
             <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
                   <span className="text-2xl">🧍</span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">Para pasajeros</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Para pasajeros
+                </h3>
               </div>
               <ul className="space-y-5">
                 {[
-                  { icon: "🏍️", title: "Mototaxi", desc: "Transporte rápido y económico en moto para moverte por el municipio en minutos." },
-                  { icon: "🛺", title: "Piayo", desc: "Vehículo ideal para recorridos cortos con mayor comodidad y espacio." },
-                  { icon: "📦", title: "Envío de paquetes en moto", desc: "Envía objetos o encomiendas sin moverte de tu lugar. El conductor los entrega por ti." },
-                  { icon: "🚐", title: "Van / Carro", desc: "Para grupos o equipaje grande. Más espacio y comodidad cuando lo necesites." },
-                  { icon: "🚕", title: "Taxi Cootransvalle", desc: "Próximamente disponible, pendiente confirmación de la gerencia de Cootransvalle." },
-                  { icon: "📍", title: "Seguimiento en tiempo real", desc: "Observa en el mapa la ubicación de tu conductor desde que acepta hasta que llega." },
-                  { icon: "💰", title: "Tarifas transparentes", desc: "Conoce el precio estimado antes de confirmar el viaje. Sin sorpresas al llegar." },
-                  { icon: "⭐", title: "Conductores verificados", desc: "Cada conductor pasa por un proceso de verificación antes de poder operar en la plataforma." },
-                  { icon: "❤️", title: "Guarda tus favoritos", desc: "Agrega conductores de confianza a tus favoritos y contáctalos fácilmente para futuros viajes." },
+                  {
+                    icon: "🏍️",
+                    title: "Mototaxi",
+                    desc: "Transporte rápido y económico en moto para enviar tus encomiendas. No se puede llevar pasajeros",
+                  },
+                  {
+                    icon: "🛺",
+                    title: "Piayo",
+                    desc: "Vehículo ideal para recorridos con carga.",
+                  },
+                  {
+                    icon: "📦",
+                    title: "Envío de paquetes en moto",
+                    desc: "Envía objetos o encomiendas sin moverte de tu lugar. El conductor los entrega por ti.",
+                  },
+                  {
+                    icon: "🚐",
+                    title: "Van / Carro",
+                    desc: "Para grupos o equipaje grande. Más espacio y comodidad cuando lo necesites.",
+                  },
+                  // {
+                  //   icon: "🚕",
+                  //   title: "Taxi Cootransvalle",
+                  //   desc: "Próximamente disponible, pendiente confirmación de la gerencia de Cootransvalle.",
+                  // },
+                  {
+                    icon: "📍",
+                    title: "Seguimiento en tiempo real",
+                    desc: "Observa en el mapa la ubicación de tu conductor desde que acepta hasta que llega.",
+                  },
+                  {
+                    icon: "💰",
+                    title: "Tarifas transparentes",
+                    desc: "Conoce el precio estimado antes de confirmar el viaje. Sin sorpresas al llegar.",
+                  },
+                  // {
+                  //   icon: "⭐",
+                  //   title: "Conductores verificados",
+                  //   desc: "Cada conductor pasa por un proceso de verificación antes de poder operar en la plataforma.",
+                  // },
+                  {
+                    icon: "❤️",
+                    title: "Guarda tus favoritos",
+                    desc: "Agrega conductores de confianza a tus favoritos y contáctalos fácilmente para futuros viajes.",
+                  },
                 ].map((b) => (
                   <li key={b.title} className="flex items-start gap-4">
-                    <span className="text-2xl flex-shrink-0 mt-0.5">{b.icon}</span>
+                    <span className="text-2xl flex-shrink-0 mt-0.5">
+                      {b.icon}
+                    </span>
                     <div>
-                      <p className="font-semibold text-gray-900">{b.title}</p>
-                      <p className="text-sm text-gray-500 mt-0.5">{b.desc}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{b.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{b.desc}</p>
                     </div>
                   </li>
                 ))}
@@ -1244,28 +1379,55 @@ export default function HomePage() {
                 <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
                   <span className="text-2xl">🏍️</span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">Para conductores</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Para conductores
+                </h3>
               </div>
               <ul className="space-y-5">
                 {[
-                  { icon: "📲", title: "Más visibilidad, más clientes", desc: "Tu perfil está disponible para todos los pasajeros del Valle de Sibundoy durante tu horario activo." },
-                  { icon: "🗺️", title: "Solicitudes cerca de ti", desc: "Solo recibes solicitudes de pasajeros que están dentro de tu zona de operación." },
-                  { icon: "💵", title: "Tú fijas tu tarifa", desc: "Define tus propias tarifas base, por kilómetro y para rutas intermunicipales o rurales." },
-                  { icon: "📊", title: "Registro de ganancias", desc: "Lleva un historial detallado de todos tus viajes y el dinero que has generado en la plataforma." },
-                  { icon: "🔔", title: "Notificaciones instantáneas", desc: "Recibe alertas en tiempo real cuando un pasajero solicite un viaje cercano a tu ubicación." },
-                  { icon: "📋", title: "Suscripción con tarifas claras", desc: "El acceso a la plataforma tiene un costo definido por la gerencia, con condiciones justas y transparentes." },
+                  {
+                    icon: "📲",
+                    title: "Más visibilidad, más clientes",
+                    desc: "Tu perfil está disponible para todos los pasajeros del Valle de Sibundoy durante tu horario activo.",
+                  },
+                  {
+                    icon: "🗺️",
+                    title: "Solicitudes cerca de ti",
+                    desc: "Solo recibes solicitudes de pasajeros que están dentro de tu zona de operación.",
+                  },
+                  {
+                    icon: "💵",
+                    title: "Tú fijas tu tarifa",
+                    desc: "Define tus propias tarifas base, por kilómetro y para rutas intermunicipales o rurales.",
+                  },
+                  {
+                    icon: "📊",
+                    title: "Registro de ganancias",
+                    desc: "Lleva un historial detallado de todos tus viajes y el dinero que has generado en la plataforma.",
+                  },
+                  {
+                    icon: "🔔",
+                    title: "Notificaciones instantáneas",
+                    desc: "Recibe alertas en tiempo real cuando un pasajero solicite un viaje cercano a tu ubicación.",
+                  },
+                  {
+                    icon: "📋",
+                    title: "Suscripción con tarifas claras",
+                    desc: "El acceso a la plataforma tiene un costo definido por la gerencia, con condiciones justas y transparentes.",
+                  },
                 ].map((b) => (
                   <li key={b.title} className="flex items-start gap-4">
-                    <span className="text-2xl flex-shrink-0 mt-0.5">{b.icon}</span>
+                    <span className="text-2xl flex-shrink-0 mt-0.5">
+                      {b.icon}
+                    </span>
                     <div>
-                      <p className="font-semibold text-gray-900">{b.title}</p>
-                      <p className="text-sm text-gray-500 mt-0.5">{b.desc}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{b.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{b.desc}</p>
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
-
           </div>
 
           {/* Stat bar */}
@@ -1276,18 +1438,22 @@ export default function HomePage() {
               { value: "5★", label: "Sistema de calificaciones" },
               { value: "GPS", label: "Seguimiento en tiempo real" },
             ].map((s) => (
-              <div key={s.label} className="text-center bg-[#008000]/5 rounded-2xl py-6 px-4">
-                <p className="text-3xl font-extrabold text-[#008000]">{s.value}</p>
-                <p className="text-sm text-gray-500 mt-1">{s.label}</p>
+              <div
+                key={s.label}
+                className="text-center bg-[#008000]/5 rounded-2xl py-6 px-4"
+              >
+                <p className="text-3xl font-extrabold text-[#008000]">
+                  {s.value}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{s.label}</p>
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
       {/* Aviso método de pago */}
-      <section className="py-14 bg-white">
+      <section className="py-14 bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="flex-shrink-0 w-14 h-14 bg-[#008000]/10 border-2 border-[#008000] rounded-full flex items-center justify-center">
@@ -1306,10 +1472,10 @@ export default function HomePage() {
               </svg>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-black mb-2">
+              <h3 className="text-xl font-bold text-black dark:text-gray-200 mb-2">
                 Aviso sobre métodos de pago
               </h3>
-              <p className="text-black leading-relaxed">
+              <p className="text-black dark:text-gray-200 leading-relaxed">
                 <strong>MoTaxi es una plataforma de conexión</strong> entre
                 conductores y pasajeros. El método de pago de cada viaje es
                 acordado directamente y de forma libre entre las partes
@@ -1326,19 +1492,74 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Mapa Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* FAQ Section */}
+      <section className="py-20 bg-white dark:bg-gray-950">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Conductores en tiempo real
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Preguntas frecuentes
             </h2>
-            <p className="text-xl text-black max-w-2xl mx-auto">
-              Ve dónde están los conductores disponibles cerca de ti ahora mismo
+            <p className="text-xl text-black dark:text-gray-200 max-w-2xl mx-auto">
+              Resolvemos las dudas más comunes sobre MoTaxi
             </p>
           </div>
-          <div className={`h-[400px] lg:h-[550px] ${styles.container}`}>
-            <LandingMap />
+          <div className="space-y-4">
+            {[
+              {
+                q: "¿Cómo solicito un viaje?",
+                a: "Inicia sesión como pasajero, comparte tu ubicación y elige tu destino. Verás los conductores disponibles cerca de ti y podrás seguir tu viaje en tiempo real desde el mapa.",
+              },
+              {
+                q: "¿Cómo pago mi viaje?",
+                a: "El método de pago lo acuerdas directamente con el conductor (efectivo, transferencia u otro medio). MoTaxi pronto implementará el método de pago a través de Nequi.",
+              },
+              {
+                q: "¿Qué necesito para ser conductor?",
+                a: "Regístrate como conductor con tus datos reales. Si tu vehículo es taxi o aerovan (estos hacen viajes fuera y dentro del Alto Putumayo), debes contar con placa, número de licencia y seguro vigente (SOAT).",
+              },
+              {
+                q: "¿En qué zonas está disponible MoTaxi?",
+                a: "MoTaxi opera en los municipios del Valle de Sibundoy, Putumayo. La cobertura se amplía a medida que más conductores se unen a la plataforma.",
+              },
+            ].map((item, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <div
+                  key={index}
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : index)}
+                    aria-expanded={isOpen}
+                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      {item.q}
+                    </span>
+                    <svg
+                      className={`w-5 h-5 text-[#008000] flex-shrink-0 transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-4 text-black dark:text-gray-200 leading-relaxed">
+                      {item.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1349,14 +1570,32 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-4 items-start">
             <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
-              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="w-5 h-5 text-amber-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-amber-800 text-base mb-1">Requisito obligatorio de seguridad</h3>
+              <h3 className="font-bold text-amber-800 text-base mb-1">
+                Requisito obligatorio de seguridad
+              </h3>
               <p className="text-sm text-amber-700 leading-relaxed">
-                Todo vehículo registrado en MoTaxi <strong>debe contar con seguro vigente (SOAT)</strong>. Este es un requisito legal en Colombia y una garantía de protección para conductores y pasajeros. Los conductores sin seguro no podrán activarse en la plataforma. Además, placa y número de licencia deben ser datos reales y verificables — cualquier información falsa resultará en la suspensión inmediata de la cuenta.
+                Todo vehículo registrado en MoTaxi{" "}
+                <strong>debe contar con seguro vigente (SOAT)</strong>. Este es
+                un requisito legal en Colombia y una garantía de protección para
+                conductores y pasajeros. Los conductores sin seguro no podrán
+                activarse en la plataforma. Además, placa y número de licencia
+                deben ser datos reales y verificables — cualquier información
+                falsa resultará en la suspensión inmediata de la cuenta.
               </p>
             </div>
           </div>
@@ -1375,13 +1614,13 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => router.push("/auth/role-selection")}
-                className="px-8 py-4 bg-white text-black font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
+                className="px-8 py-4 bg-white text-zinc-900 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
               >
                 Registrarse como Pasajero
               </button>
               <button
                 onClick={() => router.push("/auth/role-selection")}
-                className="px-8 py-4 bg-white text-gray-900 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
+                className="px-8 py-4 bg-white text-zinc-900 font-bold rounded-xl shadow-2xl hover:shadow-3xl hover:scale-105 transform transition-all duration-200"
               >
                 Registrarse como Conductor
               </button>

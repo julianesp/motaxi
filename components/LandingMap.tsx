@@ -175,13 +175,18 @@ export default function LandingMap() {
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
       {/* Badge conductores activos */}
-      {totalActiveDrivers > 0 && (
+      {totalActiveDrivers > 0 ? (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow text-sm font-semibold text-gray-800">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
           </span>
           {totalActiveDrivers} {totalActiveDrivers === 1 ? 'conductor activo' : 'conductores activos'}
+        </div>
+      ) : (
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow text-sm font-semibold text-gray-600">
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-400"></span>
+          No hay conductores conectados ahora mismo
         </div>
       )}
       <GoogleMap

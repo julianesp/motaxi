@@ -132,21 +132,21 @@ function RegisterForm() {
     >
       <Navbar />
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
-        <div className="max-w-md w-full space-y-6 bg-gray-900 bg-opacity-90 p-8 rounded-2xl shadow-2xl border border-green-500 border-opacity-30">
+        <div className="max-w-md w-full space-y-6 bg-white bg-opacity-90 dark:bg-gray-900/90 p-8 rounded-2xl shadow-2xl border border-[#008000] dark:border-green-500 border-opacity-30">
 
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-green-400 mb-2">MoTaxi</h1>
-            <h2 className="text-2xl font-semibold text-white">Crear Cuenta</h2>
-            <p className="mt-1 text-gray-400">
+            <h1 className="text-4xl font-bold text-[#008000] dark:text-green-400 mb-2">MoTaxi</h1>
+            <h2 className="text-2xl font-semibold text-black dark:text-white">Crear Cuenta</h2>
+            <p className="mt-1 text-gray-500 dark:text-gray-500 dark:text-gray-400">
               Regístrate como {formData.role === "passenger" ? "Pasajero" : "Conductor"}
             </p>
           </div>
 
           {/* Indicador de pasos */}
           <div className="flex items-center gap-2">
-            <div className={`flex-1 h-1.5 rounded-full ${step >= 1 ? "bg-[#008000]" : "bg-gray-600"}`} />
-            <div className={`flex-1 h-1.5 rounded-full ${step >= 2 ? "bg-[#008000]" : "bg-gray-600"}`} />
+            <div className={`flex-1 h-1.5 rounded-full ${step >= 1 ? "bg-[#008000]" : "bg-gray-300 dark:bg-gray-600"}`} />
+            <div className={`flex-1 h-1.5 rounded-full ${step >= 2 ? "bg-[#008000]" : "bg-gray-300 dark:bg-gray-600"}`} />
           </div>
 
           {/* Error */}
@@ -164,10 +164,10 @@ function RegisterForm() {
           {/* Paso 1: datos principales */}
           {step === 1 && (
             <form onSubmit={handleStep1} className="space-y-4">
-              <p className="text-sm text-gray-400 font-medium">Paso 1 de 2 — Datos principales</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Paso 1 de 2 — Datos principales</p>
 
               <div>
-                <label htmlFor="full_name" className="block text-sm font-medium text-gray-300 mb-1">
+                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nombre completo
                 </label>
                 <input
@@ -177,7 +177,7 @@ function RegisterForm() {
                   value={formData.full_name}
                   onChange={handleChange}
                   required
-                  className="input text-black"
+                  className="input bg-white dark:bg-gray-800 text-black dark:text-gray-100 dark:border-gray-600"
                   placeholder="Juan Pérez"
                   autoComplete="name"
                 />
@@ -185,7 +185,7 @@ function RegisterForm() {
 
               {formData.role === "driver" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tipo de vehículo
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -202,7 +202,7 @@ function RegisterForm() {
                         className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
                           formData.vehicle_types === v.value
                             ? "border-[#008000] bg-[#008000] bg-opacity-20 text-[#008000]"
-                            : "border-gray-600 text-gray-300 hover:border-gray-400"
+                            : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400"
                         }`}
                       >
                         <span className="text-lg">{v.emoji}</span>
@@ -214,7 +214,7 @@ function RegisterForm() {
               )}
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-1">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Número de celular
                 </label>
                 <input
@@ -224,14 +224,14 @@ function RegisterForm() {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="input text-black"
+                  className="input bg-white dark:bg-gray-800 text-black dark:text-gray-100 dark:border-gray-600"
                   placeholder="3001234567"
                   autoComplete="tel"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -242,7 +242,7 @@ function RegisterForm() {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="input text-black w-full pr-12"
+                    className="input bg-white dark:bg-gray-800 text-black dark:text-gray-100 dark:border-gray-600 w-full pr-12"
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />
@@ -267,7 +267,7 @@ function RegisterForm() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Confirmar contraseña
                 </label>
                 <div className="relative">
@@ -278,7 +278,7 @@ function RegisterForm() {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
-                    className="input text-black w-full pr-12"
+                    className="input bg-white dark:bg-gray-800 text-black dark:text-gray-100 dark:border-gray-600 w-full pr-12"
                     placeholder="••••••••"
                     autoComplete="new-password"
                   />
@@ -314,11 +314,11 @@ function RegisterForm() {
           {/* Paso 2: email opcional */}
           {step === 2 && (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <p className="text-sm text-gray-400 font-medium">Paso 2 de 2 — Correo electrónico (opcional)</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Paso 2 de 2 — Correo electrónico (opcional)</p>
 
-              <div className="bg-gray-800 rounded-xl p-4 text-sm text-gray-300 space-y-1">
+              <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 text-sm text-gray-700 dark:text-gray-300 space-y-1">
                 <p>Agregar tu correo te permite:</p>
-                <ul className="list-disc list-inside space-y-1 text-gray-400">
+                <ul className="list-disc list-inside space-y-1 text-gray-500 dark:text-gray-400">
                   <li>Recuperar tu cuenta si olvidas la contraseña</li>
                   <li>Recibir notificaciones por email</li>
                 </ul>
@@ -326,7 +326,7 @@ function RegisterForm() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Correo electrónico <span className="text-gray-500">(opcional)</span>
                 </label>
                 <input
@@ -335,7 +335,7 @@ function RegisterForm() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="input text-black"
+                  className="input bg-white dark:bg-gray-800 text-black dark:text-gray-100 dark:border-gray-600"
                   placeholder="tu@email.com"
                   autoComplete="email"
                 />
@@ -348,7 +348,7 @@ function RegisterForm() {
                   required
                   className="h-4 w-4 text-[#008000] focus:ring-green-500 border-gray-300 rounded mt-1"
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-300">
+                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Acepto los{" "}
                   <a href="/terms" className="text-[#008000] hover:text-green-500">términos y condiciones</a>{" "}
                   y la{" "}
@@ -360,7 +360,7 @@ function RegisterForm() {
                 <button
                   type="button"
                   onClick={() => { setError(""); setStep(1); }}
-                  className="flex-1 py-3 rounded-xl border border-gray-600 text-gray-300 font-semibold hover:bg-gray-800 transition-colors"
+                  className="flex-1 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   Atrás
                 </button>
@@ -376,7 +376,7 @@ function RegisterForm() {
           )}
 
           <div className="text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               ¿Ya tienes una cuenta?{" "}
               <Link href="/auth/login" className="font-medium text-[#008000] hover:text-green-500">
                 Inicia sesión

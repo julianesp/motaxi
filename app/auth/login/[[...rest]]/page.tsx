@@ -153,12 +153,12 @@ export default function LoginPage() {
     >
       <Navbar />
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
-        <div className="max-w-md w-full space-y-8 bg-white bg-opacity-90 p-8 rounded-2xl shadow-2xl border border-[#008000] border-opacity-30">
+        <div className="max-w-md w-full space-y-8 bg-white bg-opacity-90 dark:bg-gray-900/90 p-8 rounded-2xl shadow-2xl border border-[#008000] border-opacity-30">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-[#008000] mb-2">MoTaxi</h1>
-            <h2 className="text-2xl font-semibold text-black">Iniciar Sesión</h2>
-            <p className="mt-2 text-black">Elige cómo quieres ingresar</p>
+            <h1 className="text-4xl font-bold text-[#008000] dark:text-[#42CE1D] mb-2">MoTaxi</h1>
+            <h2 className="text-2xl font-semibold text-black dark:text-gray-100">Iniciar Sesión</h2>
+            <p className="mt-2 text-black dark:text-gray-300">Elige cómo quieres ingresar</p>
           </div>
 
           {/* Usuario no registrado */}
@@ -204,7 +204,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className="flex items-center gap-3 w-full justify-center px-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="flex items-center gap-3 w-full justify-center px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {googleLoading ? (
               <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -221,10 +221,10 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-gray-300 dark:border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">o ingresa con tu cuenta</span>
+              <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">o ingresa con tu cuenta</span>
             </div>
           </div>
 
@@ -232,22 +232,22 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-black mb-1">
+                <label className="block text-sm font-medium text-black dark:text-gray-200 mb-1">
                   Celular o correo electrónico
                 </label>
                 {/* Toggle Celular / Correo */}
-                <div className="flex rounded-lg border border-gray-300 overflow-hidden mb-2">
+                <div className="flex rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden mb-2">
                   <button
                     type="button"
                     onClick={() => { setLoginMode("phone"); setEmail(""); }}
-                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${loginMode === "phone" ? "bg-[#008000] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${loginMode === "phone" ? "bg-[#008000] text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
                   >
                     📱 Celular
                   </button>
                   <button
                     type="button"
                     onClick={() => { setLoginMode("email"); setEmail(""); }}
-                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${loginMode === "email" ? "bg-[#008000] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${loginMode === "email" ? "bg-[#008000] text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
                   >
                     ✉️ Correo
                   </button>
@@ -259,14 +259,14 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-white text-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 text-black dark:text-gray-100 border border-gray-700 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   placeholder={loginMode === "phone" ? "3001234567" : "tu@email.com"}
                   autoComplete={loginMode === "phone" ? "tel" : "email"}
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-black dark:text-gray-200 mb-1">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -276,7 +276,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-3 pr-12 bg-white text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 pr-12 bg-white dark:bg-gray-800 text-black dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="••••••••"
                     autoComplete="current-password"
                   />
@@ -312,7 +312,7 @@ export default function LoginPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-700 rounded bg-gray-800"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-black">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-black dark:text-gray-200">
                   Recordarme
                 </label>
               </div>
@@ -336,10 +336,10 @@ export default function LoginPage() {
             <>
               <div className="relative my-2">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
+                  <div className="w-full border-t border-gray-300 dark:border-gray-700" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-3 bg-white text-gray-500">o</span>
+                  <span className="px-3 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">o</span>
                 </div>
               </div>
 
@@ -403,7 +403,7 @@ export default function LoginPage() {
           )}
 
           <div className="text-center">
-            <p className="text-black">
+            <p className="text-black dark:text-gray-300">
               ¿No tienes una cuenta?{" "}
               <Link href="/auth/role-selection" className="font-medium text-[#008000] hover:text-green-300">
                 Regístrate aquí

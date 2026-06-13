@@ -1601,10 +1601,10 @@ export default function HomePage() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-amber-800 dark:text-amber-300 text-base mb-1">
+              <h3 className="font-bold  text-base mb-1">
                 Requisito obligatorio de seguridad
               </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-200/80 leading-relaxed">
+              <p className="text-sm dark:text-white leading-relaxed">
                 Todo vehículo registrado en MoTaxi{" "}
                 <strong>debe contar con seguro vigente (SOAT)</strong>. Este es
                 un requisito legal en Colombia y una garantía de protección para
@@ -1619,7 +1619,7 @@ export default function HomePage() {
       </section>
 
       {!user && (
-        <section className="py-20 bg-gradient-to-br from-[#008000] via-[#008000] to-[#008000] dark:from-[#022c02] dark:via-[#043004] dark:to-[#022c02]">
+        <section className="py-20 dark:from-[#022c02] dark:via-[#043004] dark:to-[#022c02]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
               ¿Listo para comenzar?

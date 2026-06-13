@@ -9,6 +9,10 @@ export const paymentRoutes = new Hono<{ Bindings: Env }>();
 paymentRoutes.use('/subscription/*', authMiddleware);
 // /epayco/create-session requiere auth; /epayco/confirmation es público (webhook de ePayco)
 paymentRoutes.use('/epayco/create-session', authMiddleware);
+// Add-on premium de predicción de demanda
+paymentRoutes.use('/premium/*', authMiddleware);
+
+const DEMAND_PREMIUM_AMOUNT = 9900; // $9.900/mes — add-on de predicción de demanda
 
 /**
  * GET /payments/subscription/status
@@ -207,6 +211,7 @@ paymentRoutes.post('/epayco/confirmation', async (c) => {
     const transactionId = body.x_transaction_id || body.x_ref_payco;
     const reference = body.x_id_invoice || body.x_extra2;
     const userId = body.x_extra1;
+    const feature = body.x_extra3; // 'demand_prediction' para el add-on premium
 
     if (!userId || !reference) {
       return c.json({ error: 'Missing required fields' }, 400);
@@ -214,6 +219,35 @@ paymentRoutes.post('/epayco/confirmation', async (c) => {
 
     const now = Math.floor(Date.now() / 1000);
     const periodEnd = now + (30 * 24 * 60 * 60); // 30 días
+
+    // Add-on premium de predicción de demanda (flujo separado de la suscripción base)
+    if (feature === 'demand_prediction' || reference.startsWith('MTX-DMD-')) {
+      if (transactionState === 'Aceptada') {
+        const existingPremium = await c.env.DB.prepare(
+          `SELECT id FROM driver_premium WHERE user_id = ? AND feature = 'demand_prediction' LIMIT 1`
+        ).bind(userId).first() as any;
+
+        if (existingPremium) {
+          await c.env.DB.prepare(
+            `UPDATE driver_premium SET status = 'active', current_period_start = ?,
+              current_period_end = ?, epayco_reference = ?, epayco_transaction_id = ?, updated_at = ?
+             WHERE id = ?`
+          ).bind(now, periodEnd, reference, transactionId, now, existingPremium.id).run();
+        } else {
+          await c.env.DB.prepare(
+            `INSERT INTO driver_premium (id, user_id, feature, status, amount,
+              current_period_start, current_period_end, epayco_reference, epayco_transaction_id)
+             VALUES (?, ?, 'demand_prediction', 'active', ?, ?, ?, ?, ?)`
+          ).bind(uuidv4(), userId, DEMAND_PREMIUM_AMOUNT, now, periodEnd, reference, transactionId).run();
+        }
+      } else if (transactionState === 'Rechazada' || transactionState === 'Fallida') {
+        await c.env.DB.prepare(
+          `UPDATE driver_premium SET status = 'inactive', updated_at = ?
+           WHERE user_id = ? AND feature = 'demand_prediction'`
+        ).bind(now, userId).run();
+      }
+      return c.json({ success: true, message: 'Confirmación de add-on procesada' });
+    }
 
     // Verificar si existe suscripción para este usuario
     const existing = await c.env.DB.prepare(
@@ -255,5 +289,123 @@ paymentRoutes.post('/epayco/confirmation', async (c) => {
   } catch (error: any) {
     console.error('ePayco confirmation error:', error);
     return c.json({ error: error.message || 'Failed to process confirmation' }, 500);
+  }
+});
+
+/**
+ * GET /payments/premium/status
+ * Estado del add-on premium de predicción de demanda del conductor
+ */
+paymentRoutes.get('/premium/status', async (c) => {
+  try {
+    const user = c.get('user');
+    const now = Math.floor(Date.now() / 1000);
+
+    // Cuentas exentas: acceso premium ilimitado
+    if (EXEMPT_EMAILS.includes(user.email?.toLowerCase())) {
+      return c.json({ is_active: true, is_exempt: true, amount: 0 });
+    }
+
+    const row = await c.env.DB.prepare(
+      `SELECT * FROM driver_premium WHERE user_id = ? AND feature = 'demand_prediction' LIMIT 1`
+    ).bind(user.id).first() as any;
+
+    const isActive =
+      !!row &&
+      row.status === 'active' &&
+      row.current_period_end &&
+      now < (row.current_period_end as number);
+
+    return c.json({
+      is_active: isActive,
+      is_exempt: false,
+      amount: DEMAND_PREMIUM_AMOUNT,
+      current_period_end: row?.current_period_end ?? null,
+      status: row?.status ?? 'inactive',
+    });
+  } catch (error: any) {
+    console.error('Get premium status error:', error);
+    return c.json({ error: error.message || 'Failed to get premium status' }, 500);
+  }
+});
+
+/**
+ * POST /payments/premium/create-session
+ * Crear sesión de pago ePayco para el add-on de predicción de demanda
+ */
+paymentRoutes.post('/premium/create-session', async (c) => {
+  try {
+    const user = c.get('user');
+
+    if (EXEMPT_EMAILS.includes(user.email?.toLowerCase())) {
+      return c.json({ error: 'Esta cuenta ya tiene acceso premium' }, 403);
+    }
+    if (user.role !== 'driver') {
+      return c.json({ error: 'Solo los conductores pueden activar esta función' }, 403);
+    }
+
+    const body = await c.req.json().catch(() => ({}));
+    const {
+      customerName, customerEmail, customerPhone, customerAddress,
+      customerCity, customerTypeDoc, customerNumberDoc,
+    } = body;
+
+    const epaycoPublicKey = c.env.EPAYCO_PUBLIC_KEY;
+    if (!epaycoPublicKey) {
+      return c.json({ error: 'ePayco not configured' }, 500);
+    }
+
+    const reference = `MTX-DMD-${user.id.substring(0, 8)}-${Date.now()}`;
+    const sanitize = (v: any, d = '') => String(v || d).trim();
+
+    const config = {
+      key: sanitize(epaycoPublicKey),
+      test: c.env.EPAYCO_TEST_MODE === 'true',
+      name: 'MoTaxi — Predicción de demanda',
+      description: 'Add-on mensual: alertas de zonas con mayor demanda',
+      invoice: reference,
+      currency: 'cop',
+      amount: DEMAND_PREMIUM_AMOUNT.toString(),
+      tax_base: '0',
+      tax: '0',
+      country: 'co',
+      lang: 'es',
+      name_billing: sanitize(customerName, user.full_name),
+      email_billing: sanitize(customerEmail, user.email),
+      mobilephone_billing: sanitize(customerPhone, user.phone),
+      address_billing: sanitize(customerAddress, 'Sin especificar'),
+      city_billing: sanitize(customerCity, 'Sibundoy'),
+      type_doc_billing: sanitize(customerTypeDoc, 'CC'),
+      number_doc_billing: sanitize(customerNumberDoc),
+      extra1: user.id,
+      extra2: reference,
+      extra3: 'demand_prediction',
+      response: `${c.env.SITE_URL || 'https://motaxi.dev'}/respuesta-pago`,
+      confirmation: `${c.env.SITE_URL || 'https://motaxi.dev'}/api/payments/epayco/confirmation`,
+      external: 'false',
+      method_confirmation: 'POST',
+    };
+
+    // Crea/actualiza el registro premium en estado pendiente con la referencia
+    const existing = await c.env.DB.prepare(
+      `SELECT id FROM driver_premium WHERE user_id = ? AND feature = 'demand_prediction' LIMIT 1`
+    ).bind(user.id).first() as any;
+    const now = Math.floor(Date.now() / 1000);
+
+    if (existing) {
+      await c.env.DB.prepare(
+        `UPDATE driver_premium SET epayco_reference = ?, updated_at = ? WHERE id = ?`
+      ).bind(reference, now, existing.id).run();
+    } else {
+      await c.env.DB.prepare(
+        `INSERT INTO driver_premium (id, user_id, feature, status, amount, epayco_reference)
+         VALUES (?, ?, 'demand_prediction', 'inactive', ?, ?)`
+      ).bind(uuidv4(), user.id, DEMAND_PREMIUM_AMOUNT, reference).run();
+    }
+
+    return c.json({ success: true, config, reference });
+  } catch (error: any) {
+    console.error('Premium create session error:', error);
+    return c.json({ error: error.message || 'Failed to create session' }, 500);
   }
 });

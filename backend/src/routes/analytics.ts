@@ -432,6 +432,23 @@ analyticsRoutes.get('/heatmap', async (c) => {
  */
 analyticsRoutes.get('/demand-prediction', authMiddleware, async (c) => {
   try {
+    const user = c.get('user');
+
+    // Solo conductores con el add-on premium activo (o admin/exentos) acceden
+    const EXEMPT = ['julii1295@gmail.com', 'alexriob@gmail.com', 'admin@neurai.dev'];
+    const isExempt = EXEMPT.includes(user.email?.toLowerCase());
+    if (!isExempt) {
+      const now = Math.floor(Date.now() / 1000);
+      const premium = await c.env.DB.prepare(
+        `SELECT current_period_end FROM driver_premium
+         WHERE user_id = ? AND feature = 'demand_prediction' AND status = 'active' LIMIT 1`
+      ).bind(user.id).first() as any;
+      const active = !!premium && premium.current_period_end && now < (premium.current_period_end as number);
+      if (!active) {
+        return c.json({ error: 'premium_required', message: 'Activa la predicción de demanda para acceder.' }, 402);
+      }
+    }
+
     const daysHistory = Math.min(parseInt(c.req.query('days') || '60'), 180);
     const hoursAhead = parseInt(c.req.query('hours_ahead') || '1');
     const limit = Math.min(parseInt(c.req.query('limit') || '5'), 20);

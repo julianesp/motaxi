@@ -8,6 +8,7 @@ import { usePushNotifications } from '@/lib/hooks/usePushNotifications';
 import dynamic from 'next/dynamic';
 import Swal from 'sweetalert2';
 import EpaycoSubscriptionCheckout from '@/components/EpaycoSubscriptionCheckout';
+import DemandPrediction from '@/components/DemandPrediction';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
@@ -890,16 +891,21 @@ export default function DriverHomePage() {
                   )}
 
                   {isAvailable && availableTrips.length === 0 && !pendingOfferTrip && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                      <p className="text-green-800 font-medium">Esperando solicitudes de viaje...</p>
-                      <div className="flex items-center justify-center mt-2">
-                        <div className="animate-pulse flex space-x-2">
-                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                        <p className="text-green-800 font-medium">Esperando solicitudes de viaje...</p>
+                        <div className="flex items-center justify-center mt-2">
+                          <div className="animate-pulse flex space-x-2">
+                            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                      <div className="mt-4">
+                        <DemandPrediction />
+                      </div>
+                    </>
                   )}
 
                   {isAvailable && availableTrips.length > 0 && (

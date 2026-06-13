@@ -814,7 +814,10 @@ export default function HomePage() {
       )}
 
       {/* Municipios Section */}
-      <section id="municipios-section" className="py-20 bg-white dark:bg-gray-950">
+      <section
+        id="municipios-section"
+        className="py-20 bg-white dark:bg-gray-950"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
@@ -1303,7 +1306,10 @@ export default function HomePage() {
           {/* Dos columnas: Pasajeros y Conductores */}
           <div className="grid lg:grid-cols-2 gap-10">
             {/* Columna Pasajeros */}
-            <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm">
+            <div
+              className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm
+             dark:bg-gray-950"
+            >
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
                   <span className="text-2xl">🧍</span>
@@ -1365,8 +1371,12 @@ export default function HomePage() {
                       {b.icon}
                     </span>
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">{b.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{b.desc}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                        {b.title}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        {b.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -1374,7 +1384,7 @@ export default function HomePage() {
             </div>
 
             {/* Columna Conductores */}
-            <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm">
+            <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm dark:bg-gray-950">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
                   <span className="text-2xl">🏍️</span>
@@ -1421,8 +1431,12 @@ export default function HomePage() {
                       {b.icon}
                     </span>
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">{b.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{b.desc}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                        {b.title}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        {b.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -1445,7 +1459,9 @@ export default function HomePage() {
                 <p className="text-3xl font-extrabold text-[#008000]">
                   {s.value}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{s.label}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {s.label}
+                </p>
               </div>
             ))}
           </div>

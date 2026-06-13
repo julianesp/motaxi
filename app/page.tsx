@@ -1582,9 +1582,9 @@ export default function HomePage() {
 
       {/* CTA Section */}
       {/* Aviso de seguridad obligatoria */}
-      <section className="py-10 bg-[#008000]/5 dark:bg-[#008000]/15 border-y border-[#008000]/20 dark:border-[#008000]/40">
+      <section className="py-10 bg-white dark:bg-gray-950">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-4 items-start">
+          <div className="flex gap-4 items-start bg-gradient-to-br from-[#008000]/10 to-white dark:from-[#008000]/25 dark:to-gray-900 border-2 border-[#008000] rounded-2xl p-6 shadow-sm">
             <div className="w-10 h-10 rounded-full bg-[#008000]/10 dark:bg-[#008000]/30 flex items-center justify-center shrink-0 mt-0.5">
               <svg
                 className="w-5 h-5 text-[#008000] dark:text-[#42CE1D]"

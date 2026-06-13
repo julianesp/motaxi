@@ -416,3 +416,106 @@ analyticsRoutes.get('/heatmap', async (c) => {
     return c.json({ error: error.message || 'Failed to get heatmap data' }, 500);
   }
 });
+
+/**
+ * GET /analytics/demand-prediction
+ * "IA" de predicción de demanda por zona y hora.
+ *
+ * Modelo estadístico (no ML): agrupa los viajes históricos por zona geográfica
+ * (lat/lng redondeado), día de la semana y hora, y predice las zonas con mayor
+ * demanda esperada para la próxima hora. Explicable y funciona con pocos datos.
+ *
+ * Query params:
+ *   - hours_ahead: para qué hora predecir (default 1 = próxima hora)
+ *   - days: cuánto histórico usar (default 60)
+ *   - limit: cuántas zonas devolver (default 5)
+ */
+analyticsRoutes.get('/demand-prediction', authMiddleware, async (c) => {
+  try {
+    const daysHistory = Math.min(parseInt(c.req.query('days') || '60'), 180);
+    const hoursAhead = parseInt(c.req.query('hours_ahead') || '1');
+    const limit = Math.min(parseInt(c.req.query('limit') || '5'), 20);
+
+    // Hora objetivo (la próxima hora por defecto), en hora local de Colombia (UTC-5)
+    const COLOMBIA_OFFSET_MS = -5 * 60 * 60 * 1000;
+    const target = new Date(Date.now() + hoursAhead * 60 * 60 * 1000 + COLOMBIA_OFFSET_MS);
+    const targetHour = target.getUTCHours();        // 0-23
+    const targetDow = target.getUTCDay();           // 0=domingo ... 6=sábado
+
+    const startTimestamp = Math.floor(Date.now() / 1000) - daysHistory * 24 * 60 * 60;
+
+    // Agrupa viajes por zona (lat/lng redondeado ~110m) en la misma franja
+    // horaria y mismo día de la semana que la hora objetivo.
+    // strftime con offset '-5 hours' convierte el timestamp UTC a hora local CO.
+    const rows = await c.env.DB.prepare(
+      `SELECT
+        ROUND(pickup_latitude, 3)  AS lat,
+        ROUND(pickup_longitude, 3) AS lng,
+        pickup_address             AS address,
+        COUNT(*)                   AS trips,
+        COUNT(DISTINCT DATE(created_at, 'unixepoch', '-5 hours')) AS active_days
+       FROM trips
+       WHERE created_at >= ?
+         AND pickup_latitude IS NOT NULL
+         AND pickup_longitude IS NOT NULL
+         AND CAST(strftime('%H', created_at, 'unixepoch', '-5 hours') AS INTEGER) = ?
+         AND CAST(strftime('%w', created_at, 'unixepoch', '-5 hours') AS INTEGER) = ?
+       GROUP BY lat, lng
+       ORDER BY trips DESC
+       LIMIT ?`
+    )
+      .bind(startTimestamp, targetHour, targetDow, limit)
+      .all();
+
+    const results = (rows.results || []) as any[];
+
+    // Cuántas veces ha ocurrido esa franja (mismo dow) en el histórico,
+    // para estimar un promedio de viajes esperados por ocurrencia.
+    const weeksInHistory = Math.max(1, Math.floor(daysHistory / 7));
+
+    const DOW_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const hour12 = ((targetHour + 11) % 12) + 1;
+    const ampm = targetHour < 12 ? 'a.m.' : 'p.m.';
+
+    const zones = results.map((r) => {
+      const trips = r.trips as number;
+      // Demanda esperada = promedio de viajes en esa franja por semana
+      const expected = trips / weeksInHistory;
+      // Confianza: cuántas franjas distintas tuvieron actividad (más días = más fiable)
+      const confidence = Math.min(1, (r.active_days as number) / weeksInHistory);
+      return {
+        latitude: r.lat as number,
+        longitude: r.lng as number,
+        address: (r.address as string) || 'Zona sin nombre',
+        historical_trips: trips,
+        expected_demand: Math.round(expected * 10) / 10,
+        confidence: Math.round(confidence * 100) / 100,
+        score: Math.round(expected * (0.5 + confidence / 2) * 10) / 10,
+      };
+    });
+
+    // Ordena por score (demanda ponderada por confianza)
+    zones.sort((a, b) => b.score - a.score);
+
+    const top = zones[0];
+    const summary = top
+      ? `Los ${DOW_NAMES[targetDow]} alrededor de las ${hour12} ${ampm}, la zona de ${top.address} suele tener la mayor demanda (${top.historical_trips} viajes históricos en esta franja).`
+      : `Aún no hay suficientes datos históricos para predecir la demanda de los ${DOW_NAMES[targetDow]} a las ${hour12} ${ampm}.`;
+
+    return c.json({
+      target: {
+        hour: targetHour,
+        hour_label: `${hour12} ${ampm}`,
+        day_of_week: targetDow,
+        day_label: DOW_NAMES[targetDow],
+      },
+      based_on_days: daysHistory,
+      zones,
+      summary,
+      has_data: zones.length > 0,
+    });
+  } catch (error: any) {
+    console.error('Get demand prediction error:', error);
+    return c.json({ error: error.message || 'Failed to get demand prediction' }, 500);
+  }
+});

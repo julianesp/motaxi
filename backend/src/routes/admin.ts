@@ -595,6 +595,21 @@ adminRoutes.post('/subscriptions/run-renewal', async (c) => {
 });
 
 /**
+ * POST /admin/demand-alerts/run
+ * Calcula la zona con mayor demanda para la próxima hora y notifica a los
+ * conductores con el add-on premium activo. Disparado por el cron de Vercel.
+ */
+adminRoutes.post('/demand-alerts/run', async (c) => {
+  try {
+    const { runDemandAlerts } = await import('../services/demand-alerts');
+    const result = await runDemandAlerts(c.env);
+    return c.json({ message: 'Alertas de demanda ejecutadas', result });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error al ejecutar alertas de demanda' }, 500);
+  }
+});
+
+/**
  * POST /admin/driver-of-month
  * Asignar conductor del mes y aplicar mes gratis
  */

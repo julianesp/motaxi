@@ -1582,12 +1582,12 @@ export default function HomePage() {
 
       {/* CTA Section */}
       {/* Aviso de seguridad obligatoria */}
-      <section className="py-10 bg-amber-50 dark:bg-amber-950/30 border-y border-amber-200 dark:border-amber-900/50">
+      <section className="py-10 bg-[#008000]/5 dark:bg-[#008000]/15 border-y border-[#008000]/20 dark:border-[#008000]/40">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-4 items-start">
-            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-10 h-10 rounded-full bg-[#008000]/10 dark:bg-[#008000]/30 flex items-center justify-center shrink-0 mt-0.5">
               <svg
-                className="w-5 h-5 text-amber-600 dark:text-amber-400"
+                className="w-5 h-5 text-[#008000] dark:text-[#42CE1D]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1601,10 +1601,10 @@ export default function HomePage() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold  text-base mb-1">
+              <h3 className="font-bold text-[#008000] dark:text-[#42CE1D] text-base mb-1">
                 Requisito obligatorio de seguridad
               </h3>
-              <p className="text-sm dark:text-white leading-relaxed">
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                 Todo vehículo registrado en MoTaxi{" "}
                 <strong>debe contar con seguro vigente (SOAT)</strong>. Este es
                 un requisito legal en Colombia y una garantía de protección para

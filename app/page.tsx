@@ -1308,7 +1308,7 @@ export default function HomePage() {
             {/* Columna Pasajeros */}
             <div
               className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm
-             dark:bg-gray-950"
+             dark:bg-none dark:bg-gray-900 dark:border-[#42CE1D]/20"
             >
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
@@ -1384,7 +1384,7 @@ export default function HomePage() {
             </div>
 
             {/* Columna Conductores */}
-            <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm dark:bg-gray-950">
+            <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm dark:bg-none dark:bg-gray-900 dark:border-[#42CE1D]/20">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
                   <span className="text-2xl">🏍️</span>
@@ -1582,12 +1582,12 @@ export default function HomePage() {
 
       {/* CTA Section */}
       {/* Aviso de seguridad obligatoria */}
-      <section className="py-10 bg-amber-50 border-y border-amber-200">
+      <section className="py-10 bg-amber-50 dark:bg-amber-950/30 border-y border-amber-200 dark:border-amber-900/50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-4 items-start">
-            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 mt-0.5">
               <svg
-                className="w-5 h-5 text-amber-600"
+                className="w-5 h-5 text-amber-600 dark:text-amber-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1601,10 +1601,10 @@ export default function HomePage() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-amber-800 text-base mb-1">
+              <h3 className="font-bold text-amber-800 dark:text-amber-300 text-base mb-1">
                 Requisito obligatorio de seguridad
               </h3>
-              <p className="text-sm text-amber-700 leading-relaxed">
+              <p className="text-sm text-amber-700 dark:text-amber-200/80 leading-relaxed">
                 Todo vehículo registrado en MoTaxi{" "}
                 <strong>debe contar con seguro vigente (SOAT)</strong>. Este es
                 un requisito legal en Colombia y una garantía de protección para

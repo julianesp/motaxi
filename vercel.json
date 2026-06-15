@@ -1,12 +1,3 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/subscription-renewal",
-      "schedule": "0 13 * * *"
-    },
-    {
-      "path": "/api/cron/demand-alerts",
-      "schedule": "0 * * * *"
-    }
-  ]
+  "crons": []
 }

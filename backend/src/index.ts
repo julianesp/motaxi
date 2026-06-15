@@ -113,8 +113,24 @@ app.onError((err, c) => {
 export default {
   fetch: app.fetch.bind(app),
 
-  // Cron trigger diario: notifica vencimientos y bloquea suscripciones expiradas
-  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  // Cron triggers: se diferencian por el patrón que los disparó (event.cron)
+  //  - "0 13 * * *" (diario): renovación de suscripciones
+  //  - "0 * * * *"  (horario): alertas de zonas con alta demanda
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    if (event.cron === '0 * * * *') {
+      ctx.waitUntil(
+        import('./services/demand-alerts').then(({ runDemandAlerts }) =>
+          runDemandAlerts(env)
+        ).then(result => {
+          console.log('[cron] Alertas de demanda:', result);
+        }).catch(err => {
+          console.error('[cron] Error en alertas de demanda:', err);
+        })
+      );
+      return;
+    }
+
+    // Por defecto (cron diario): renovación de suscripciones
     ctx.waitUntil(
       runSubscriptionRenewal(env).then(result => {
         console.log(`[cron] Suscripciones procesadas:`, result);

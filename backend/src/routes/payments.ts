@@ -384,6 +384,7 @@ paymentRoutes.post('/premium/create-session', async (c) => {
       confirmation: `${c.env.SITE_URL || 'https://motaxi.dev'}/api/payments/epayco/confirmation`,
       external: 'false',
       method_confirmation: 'POST',
+      methodsDisable: [], // no bloquear ningún método: muestra todos los habilitados en la cuenta ePayco (Nequi, Daviplata, PSE, tarjeta)
     };
 
     // Crea/actualiza el registro premium en estado pendiente con la referencia

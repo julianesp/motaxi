@@ -87,28 +87,39 @@ function RegisterForm() {
     e.preventDefault();
     setError("");
 
+    // Muestra los avisos de validación como modal centrado (SweetAlert)
+    const aviso = (text: string) =>
+      Swal.fire({
+        icon: "warning",
+        title: "Falta un dato",
+        text,
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#008000",
+        position: "center",
+      });
+
     if (!formData.full_name.trim()) {
-      setError("Ingresa tu nombre completo");
+      aviso("Ingresa tu nombre completo");
       return;
     }
     if (formData.role === "driver" && !formData.vehicle_types) {
-      setError("Selecciona el tipo de vehículo");
+      aviso("Selecciona el tipo de vehículo");
       return;
     }
     if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError("Ingresa un correo electrónico válido");
+      aviso("Ingresa un correo electrónico válido");
       return;
     }
     if (!/^\d{10}$/.test(formData.phone.replace(/\s/g, ""))) {
-      setError("El número de celular debe tener 10 dígitos");
+      aviso("El número de celular debe tener 10 dígitos");
       return;
     }
     if (formData.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+      aviso("La contraseña debe tener al menos 6 caracteres");
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      aviso("Las contraseñas no coinciden");
       return;
     }
 
@@ -144,22 +155,29 @@ function RegisterForm() {
       }
     } catch (err: any) {
       console.error("Register error:", err);
+      let mensaje = "Error al registrar. Por favor intenta nuevamente.";
       if (err.response?.status === 409) {
         const msg = err.response?.data?.error || "";
         if (msg.includes("Phone")) {
-          setError("Este número de celular ya está registrado.");
+          mensaje = "Este número de celular ya está registrado.";
         } else if (msg.includes("Email")) {
-          setError("Este correo electrónico ya está registrado.");
+          mensaje = "Este correo electrónico ya está registrado.";
         } else {
-          setError("Este celular o correo ya está registrado.");
+          mensaje = "Este celular o correo ya está registrado.";
         }
       } else if (err.response?.status === 403) {
-        setError(err.response?.data?.error || "No puedes registrarte con estos datos.");
+        mensaje = err.response?.data?.error || "No puedes registrarte con estos datos.";
       } else if (err.response?.status === 400) {
-        setError(err.response?.data?.error || "Datos inválidos. Verifica la información.");
-      } else {
-        setError("Error al registrar. Por favor intenta nuevamente.");
+        mensaje = err.response?.data?.error || "Datos inválidos. Verifica la información.";
       }
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo registrar",
+        text: mensaje,
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#008000",
+        position: "center",
+      });
     } finally {
       setLoading(false);
     }

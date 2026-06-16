@@ -732,7 +732,7 @@ tripRoutes.put('/:id/status', async (c) => {
     const user = c.get('user');
     const tripId = c.req.param('id');
     const body = await c.req.json();
-    const { status } = body;
+    const { status, route_polyline } = body;
 
     const validStatuses = [
       'driver_arriving',
@@ -783,18 +783,43 @@ tripRoutes.put('/:id/status', async (c) => {
     if (status === 'completed') timestampColumn = 'completed_at';
     if (status === 'cancelled') timestampColumn = 'cancelled_at';
 
-    // Actualizar viaje
+    // Actualizar viaje. Si llega route_polyline (ruta recorrida) se guarda
+    // para alimentar el análisis de demanda con IA. Si no llega y el viaje
+    // se completa, se intenta generar con Google Directions (origen→destino).
     const timestamp = Math.floor(Date.now() / 1000);
-    if (timestampColumn) {
+    let polylineToSave: string | null =
+      typeof route_polyline === 'string' && route_polyline.length > 0 ? route_polyline : null;
+
+    if (!polylineToSave && status === 'completed' && c.env.GOOGLE_MAPS_API_KEY) {
+      try {
+        const origin = `${trip.pickup_latitude},${trip.pickup_longitude}`;
+        const destination = `${trip.dropoff_latitude},${trip.dropoff_longitude}`;
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${c.env.GOOGLE_MAPS_API_KEY}`;
+        const dirRes = await fetch(url);
+        const dirData = await dirRes.json() as any;
+        const poly = dirData?.routes?.[0]?.overview_polyline?.points;
+        if (poly) polylineToSave = poly;
+      } catch (_) {
+        // Si falla la generación, se guarda el viaje igual sin polyline
+      }
+    }
+
+    const savePolyline = !!polylineToSave;
+
+    if (timestampColumn && savePolyline) {
+      await c.env.DB.prepare(
+        `UPDATE trips SET status = ?, ${timestampColumn} = ?, route_polyline = ? WHERE id = ?`
+      ).bind(status, timestamp, polylineToSave, tripId).run();
+    } else if (timestampColumn) {
       await c.env.DB.prepare(
         `UPDATE trips SET status = ?, ${timestampColumn} = ? WHERE id = ?`
-      )
-        .bind(status, timestamp, tripId)
-        .run();
+      ).bind(status, timestamp, tripId).run();
+    } else if (savePolyline) {
+      await c.env.DB.prepare('UPDATE trips SET status = ?, route_polyline = ? WHERE id = ?')
+        .bind(status, polylineToSave, tripId).run();
     } else {
       await c.env.DB.prepare('UPDATE trips SET status = ? WHERE id = ?')
-        .bind(status, tripId)
-        .run();
+        .bind(status, tripId).run();
     }
 
     // Sincronizar disponibilidad del conductor según estado del viaje

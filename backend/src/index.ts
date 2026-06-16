@@ -36,6 +36,7 @@ export interface Env {
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_MESSAGING_SERVICE_SID?: string;
   ADMIN_API_TOKEN?: string;
+  GOOGLE_MAPS_API_KEY?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();

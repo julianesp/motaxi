@@ -536,3 +536,91 @@ analyticsRoutes.get('/demand-prediction', authMiddleware, async (c) => {
     return c.json({ error: error.message || 'Failed to get demand prediction' }, 500);
   }
 });
+
+/**
+ * GET /analytics/ai-data-status
+ * Resumen del estado de recolección de datos para la herramienta de IA.
+ * Solo admin. Indica cuántos viajes/zonas/rutas hay y si ya es viable activar
+ * la predicción de demanda.
+ */
+analyticsRoutes.get('/ai-data-status', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user');
+    if (user?.email?.toLowerCase() !== 'admin@neurai.dev') {
+      return c.json({ error: 'Forbidden' }, 403);
+    }
+
+    // Umbral sugerido de viajes con GPS completados para activar la IA
+    const THRESHOLD = 200;
+
+    // Total de viajes y cuántos tienen GPS / están completados
+    const totals = await c.env.DB.prepare(
+      `SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN pickup_latitude IS NOT NULL THEN 1 ELSE 0 END) AS con_gps,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completados,
+        SUM(CASE WHEN route_polyline IS NOT NULL THEN 1 ELSE 0 END) AS con_ruta
+       FROM trips`
+    ).first() as any;
+
+    // Zonas distintas de recogida (lat/lng redondeado ~110m)
+    const zonas = await c.env.DB.prepare(
+      `SELECT COUNT(*) AS zonas FROM (
+        SELECT 1 FROM trips
+        WHERE pickup_latitude IS NOT NULL
+        GROUP BY ROUND(pickup_latitude, 3), ROUND(pickup_longitude, 3)
+      )`
+    ).first() as any;
+
+    // Franjas horarias cubiertas (combinación día de semana + hora con viajes)
+    const franjas = await c.env.DB.prepare(
+      `SELECT COUNT(*) AS franjas FROM (
+        SELECT 1 FROM trips
+        WHERE pickup_latitude IS NOT NULL
+        GROUP BY strftime('%w', created_at, 'unixepoch', '-5 hours'),
+                 strftime('%H', created_at, 'unixepoch', '-5 hours')
+      )`
+    ).first() as any;
+
+    // Rutas origen→destino más frecuentes (top 10)
+    const rutas = await c.env.DB.prepare(
+      `SELECT pickup_address, dropoff_address, COUNT(*) AS trips
+       FROM trips
+       WHERE pickup_address IS NOT NULL AND dropoff_address IS NOT NULL
+       GROUP BY pickup_address, dropoff_address
+       ORDER BY trips DESC
+       LIMIT 10`
+    ).all();
+
+    // Viajes por día (últimos 14 días) para ver la tendencia de recolección
+    const porDia = await c.env.DB.prepare(
+      `SELECT DATE(created_at, 'unixepoch', '-5 hours') AS dia, COUNT(*) AS trips
+       FROM trips
+       WHERE created_at >= ?
+       GROUP BY dia
+       ORDER BY dia DESC`
+    ).bind(Math.floor(Date.now() / 1000) - 14 * 24 * 60 * 60).all();
+
+    const conGps = (totals?.con_gps as number) || 0;
+    const progreso = Math.min(100, Math.round((conGps / THRESHOLD) * 100));
+
+    return c.json({
+      threshold: THRESHOLD,
+      progreso_porcentaje: progreso,
+      listo_para_ia: conGps >= THRESHOLD,
+      totales: {
+        viajes_total: (totals?.total as number) || 0,
+        con_gps: conGps,
+        completados: (totals?.completados as number) || 0,
+        con_ruta_polyline: (totals?.con_ruta as number) || 0,
+        zonas_distintas: (zonas?.zonas as number) || 0,
+        franjas_horarias_cubiertas: (franjas?.franjas as number) || 0,
+      },
+      rutas_frecuentes: rutas.results || [],
+      viajes_por_dia: porDia.results || [],
+    });
+  } catch (error: any) {
+    console.error('Get AI data status error:', error);
+    return c.json({ error: error.message || 'Failed to get AI data status' }, 500);
+  }
+});

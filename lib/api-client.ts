@@ -172,8 +172,10 @@ export const tripsAPI = {
     return response.data;
   },
 
-  updateTripStatus: async (tripId: string, status: string) => {
-    const response = await apiClient.put(`/trips/${tripId}/status`, { status });
+  updateTripStatus: async (tripId: string, status: string, routePolyline?: string) => {
+    const body: { status: string; route_polyline?: string } = { status };
+    if (routePolyline) body.route_polyline = routePolyline;
+    const response = await apiClient.put(`/trips/${tripId}/status`, body);
     return response.data;
   },
 

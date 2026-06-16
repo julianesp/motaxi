@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 type Role = "passenger" | "driver";
 
@@ -45,6 +46,17 @@ export default function CompleteProfilePage() {
         if (vtype) {
           await driversAPI.updateProfile({ vehicle_types: vtype as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular' });
         }
+        // Los conductores de taxi requieren confirmación previa de Cootransvalle
+        if (vtype === "taxi") {
+          await Swal.fire({
+            icon: "info",
+            title: "Registro recibido",
+            html: "Tu cuenta de <strong>conductor de taxi</strong> quedó registrada. Sin embargo, <strong>los viajes en taxi estarán habilitados una vez Cootransvalle confirme el permiso correspondiente</strong>.<br/><br/>Te avisaremos cuando puedas empezar a recibir solicitudes.",
+            confirmButtonText: "Entendido",
+            confirmButtonColor: "#008000",
+            allowOutsideClick: false,
+          });
+        }
         router.push("/auth/en-tramite");
       } else {
         router.push("/passenger");
@@ -68,8 +80,8 @@ export default function CompleteProfilePage() {
   const vehicleOptions = [
     { value: "moto", label: "Moto", emoji: "🏍️" },
     { value: "piaggio", label: "Piaggio", emoji: "🛺" },
-    // TAXI OCULTO: pendiente confirmación de Cootransvalle
-    // { value: "taxi", label: "Taxi", emoji: "🚕" },
+    { value: "taxi", label: "Taxi", emoji: "🚖" },
+    { value: "carro", label: "Van / Carro", emoji: "🚐" },
   ];
 
   return (

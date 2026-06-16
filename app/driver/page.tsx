@@ -8,7 +8,7 @@ import { usePushNotifications } from '@/lib/hooks/usePushNotifications';
 import dynamic from 'next/dynamic';
 import Swal from 'sweetalert2';
 import EpaycoSubscriptionCheckout from '@/components/EpaycoSubscriptionCheckout';
-import DemandPrediction from '@/components/DemandPrediction';
+// import DemandPrediction from '@/components/DemandPrediction'; // OCULTO: reactivar junto con el bloque en el dashboard cuando haya datos suficientes
 import ThemeToggle from '@/components/ThemeToggle';
 
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), {
@@ -902,9 +902,16 @@ export default function DriverHomePage() {
                           </div>
                         </div>
                       </div>
+                      {/*
+                        Predicción de demanda con IA — OCULTA temporalmente.
+                        Se reactivará cuando haya suficiente histórico de viajes
+                        (origen/destino) para dar recomendaciones reales y poder
+                        cobrar el add-on de $9.900. Reactivar: descomentar el
+                        bloque <DemandPrediction /> de abajo.
                       <div className="mt-4">
                         <DemandPrediction />
                       </div>
+                      */}
                     </>
                   )}
 

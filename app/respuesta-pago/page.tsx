@@ -13,32 +13,67 @@ function RespuestaPagoContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const epaycoRef = searchParams.get("x_ref_payco");
-    const epaycoState = searchParams.get("x_transaction_state");
+    const stateMap: Record<string, string> = {
+      Aceptada: "APPROVED",
+      Aprobada: "APPROVED",
+      Rechazada: "DECLINED",
+      Pendiente: "PENDING",
+      Fallida: "ERROR",
+      Abandonada: "VOIDED",
+    };
 
-    if (epaycoRef || epaycoState) {
-      const stateMap: Record<string, string> = {
-        Aceptada: "APPROVED",
-        Rechazada: "DECLINED",
-        Pendiente: "PENDING",
-        Fallida: "ERROR",
-        Abandonada: "VOIDED",
-      };
+    // En la redirección, ePayco solo envía ref_payco. El estado real se
+    // consulta a la API de validación de ePayco con esa referencia.
+    const refPayco =
+      searchParams.get("ref_payco") || searchParams.get("x_ref_payco");
 
-      const rawState = epaycoState || "";
-      const data = {
-        transactionId: epaycoRef || searchParams.get("x_transaction_id") || "",
+    // Algunos flujos sí traen x_transaction_state directo: úsalo si existe.
+    const directState = searchParams.get("x_transaction_state");
+
+    const finish = (data: any) => {
+      setPaymentData(data);
+      setLoading(false);
+    };
+
+    if (directState) {
+      finish({
+        transactionId: searchParams.get("x_transaction_id") || refPayco || "",
         reference: searchParams.get("x_id_invoice") || searchParams.get("x_extra2") || "",
         amount: parseFloat(searchParams.get("x_amount") || "0"),
         currency: searchParams.get("x_currency_code") || "COP",
-        status: stateMap[rawState] || "ERROR",
-        statusMessage: rawState,
-        paymentMethod: searchParams.get("x_franchise") || "ePayco",
-        customerEmail: searchParams.get("x_customer_email") || "",
+        status: stateMap[directState] || "ERROR",
+        statusMessage: directState,
         source: "epayco",
-      };
-      setPaymentData(data);
+      });
+      return;
     }
+
+    if (refPayco) {
+      fetch(`https://secure.epayco.co/validation/v1/reference/${refPayco}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((res) => {
+          const d = res?.data;
+          if (!d) {
+            finish({ status: "PENDING", statusMessage: "Pendiente", reference: refPayco, amount: 0 });
+            return;
+          }
+          const rawState = d.x_transaction_state || d.x_response || "";
+          finish({
+            transactionId: d.x_ref_payco || refPayco,
+            reference: d.x_id_invoice || d.x_extra2 || "",
+            amount: parseFloat(d.x_amount || "0"),
+            currency: d.x_currency_code || "COP",
+            status: stateMap[rawState] || "PENDING",
+            statusMessage: rawState || "Pendiente",
+            source: "epayco",
+          });
+        })
+        .catch(() =>
+          finish({ status: "PENDING", statusMessage: "Pendiente", reference: refPayco, amount: 0 })
+        );
+      return;
+    }
+
     setLoading(false);
   }, [searchParams]);
 
@@ -88,7 +123,7 @@ function RespuestaPagoContent() {
 
         <p className="text-gray-600 text-sm mb-6">
           {isApproved
-            ? "Tu suscripción a MoTaxi está activa. ¡Disfruta del servicio!"
+            ? "Tu pago fue aprobado y tu servicio quedó activo. ¡Gracias!"
             : isPending
             ? "Tu pago está siendo procesado. Te notificaremos cuando se confirme."
             : "El pago no pudo completarse. Puedes intentarlo nuevamente."}

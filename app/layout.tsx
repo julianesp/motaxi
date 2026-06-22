@@ -46,9 +46,9 @@ export const metadata: Metadata = {
       "https://motaxi.dev/logo.png",
   },
   openGraph: {
-    title: "MoTaxi - Mototaxi en el Valle de Sibundoy, Putumayo",
+    title: "Motaxi - Tu medio de trabajo",
     description:
-      "Pide tu mototaxi en Sibundoy, Santiago, Colón y San Francisco (Putumayo). Conductores cerca de ti, tarifas justas.",
+      "Motaxi - Tu medio de trabajo. Pide tu vehículo en el Alto Putumayo a conductores cerca de ti. Puedes proponer la tarifa.",
     url: "https://motaxi.dev",
     siteName: "MoTaxi",
     images: [
@@ -64,9 +64,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "MoTaxi - Mototaxi en el Valle de Sibundoy, Putumayo",
+    title: "Motaxi - Tu medio de trabajo",
     description:
-      "Pide tu mototaxi en Sibundoy, Santiago, Colón y San Francisco (Putumayo). Rápido y económico.",
+      "Motaxi - Tu medio de trabajo. Pide tu vehículo en el Alto Putumayo a conductores cerca de ti. Puedes proponer la tarifa.",
     images: [
       "https://motaxi.dev/logo.png",
     ],

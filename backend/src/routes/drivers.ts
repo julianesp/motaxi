@@ -228,11 +228,11 @@ driverRoutes.put('/profile', async (c) => {
       updates.push('vehicle_color = ?');
       values.push(vehicle_color);
     }
-    if (vehicle_plate !== undefined) {
+    if (vehicle_plate !== undefined && vehicle_plate !== '') {
       updates.push('vehicle_plate = ?');
       values.push(vehicle_plate);
     }
-    if (license_number !== undefined) {
+    if (license_number !== undefined && license_number !== '') {
       updates.push('license_number = ?');
       values.push(license_number);
     }

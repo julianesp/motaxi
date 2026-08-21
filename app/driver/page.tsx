@@ -413,8 +413,11 @@ export default function DriverHomePage() {
 
     try {
       const { driversAPI } = await import('@/lib/api-client');
-      const { vehicle_types, ...rest } = profileData;
-      await driversAPI.updateProfile(vehicle_types ? { ...rest, vehicle_types } : rest);
+      const { vehicle_types, license_number, ...rest } = profileData;
+      const payload: Parameters<typeof driversAPI.updateProfile>[0] = { ...rest };
+      if (vehicle_types) payload.vehicle_types = vehicle_types;
+      if (license_number) payload.license_number = license_number;
+      await driversAPI.updateProfile(payload);
 
       await Swal.fire({
         icon: 'success',

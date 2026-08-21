@@ -891,26 +891,36 @@ adminRoutes.post('/emails/broadcast', async (c) => {
       return c.json({ error: 'target, subject y message son requeridos' }, 400);
     }
 
-    if (!['passengers', 'drivers', 'all'].includes(target)) {
-      return c.json({ error: 'target debe ser: passengers, drivers, o all' }, 400);
+    if (!['passengers', 'drivers', 'all', 'specific'].includes(target)) {
+      return c.json({ error: 'target debe ser: passengers, drivers, all, o specific' }, 400);
     }
 
     const { EmailService } = await import('../utils/email');
     const emailService = new EmailService(c.env.RESEND_API_KEY, c.env.RESEND_FROM_EMAIL);
 
-    // Obtener emails según el target
-    let whereClause = `WHERE u.email IS NOT NULL AND u.email != '' AND u.email NOT LIKE '%@motaxi.local'`;
-    if (target === 'passengers') {
-      whereClause += ` AND u.role = 'passenger'`;
-    } else if (target === 'drivers') {
-      whereClause += ` AND u.role = 'driver'`;
+    let recipients: { email: string; full_name: string }[] = [];
+
+    if (target === 'specific') {
+      const { user_ids } = body as { user_ids?: string[] };
+      if (!user_ids || user_ids.length === 0) {
+        return c.json({ error: 'user_ids es requerido para envío específico' }, 400);
+      }
+      const placeholders = user_ids.map(() => '?').join(',');
+      const users = await c.env.DB.prepare(
+        `SELECT email, full_name FROM users WHERE id IN (${placeholders}) AND email IS NOT NULL AND email != '' AND email NOT LIKE '%@motaxi.local'`
+      ).bind(...user_ids).all();
+      recipients = (users.results || []) as { email: string; full_name: string }[];
+    } else {
+      // Obtener emails según el target masivo
+      let whereClause = `WHERE u.email IS NOT NULL AND u.email != '' AND u.email NOT LIKE '%@motaxi.local'`;
+      if (target === 'passengers') whereClause += ` AND u.role = 'passenger'`;
+      else if (target === 'drivers') whereClause += ` AND u.role = 'driver'`;
+
+      const users = await c.env.DB.prepare(
+        `SELECT u.email, u.full_name FROM users u ${whereClause} ORDER BY u.created_at DESC`
+      ).all();
+      recipients = (users.results || []) as { email: string; full_name: string }[];
     }
-
-    const users = await c.env.DB.prepare(
-      `SELECT u.email, u.full_name FROM users u ${whereClause} ORDER BY u.created_at DESC`
-    ).all();
-
-    const recipients = (users.results || []) as { email: string; full_name: string }[];
 
     if (recipients.length === 0) {
       return c.json({ error: 'No hay usuarios con email para este segmento' }, 400);

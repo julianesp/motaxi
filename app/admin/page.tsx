@@ -530,27 +530,64 @@ function QrRequestsSection() {
   );
 }
 
+interface UserOption { id: string; full_name: string; email: string; phone: string; role: string; }
+
 function BroadcastEmailSection() {
-  const [target, setTarget] = useState<'passengers' | 'drivers' | 'all'>('all');
+  const [target, setTarget] = useState<'passengers' | 'drivers' | 'all' | 'specific'>('all');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
   const [error, setError] = useState('');
 
-  const handleSend = async () => {
-    if (!subject.trim() || !message.trim()) {
-      setError('Completa el asunto y el mensaje');
-      return;
+  // Para envío específico
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserOption[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<UserOption[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  const searchUsers = async (q: string) => {
+    if (q.length < 2) { setSearchResults([]); return; }
+    setLoadingUsers(true);
+    try {
+      const res = await apiClient.get('/admin/users');
+      const all: UserOption[] = res.data.users || [];
+      const lower = q.toLowerCase();
+      setSearchResults(
+        all.filter(u =>
+          !selectedUsers.find(s => s.id === u.id) &&
+          (u.full_name?.toLowerCase().includes(lower) ||
+           u.email?.toLowerCase().includes(lower) ||
+           u.phone?.includes(q))
+        ).slice(0, 8)
+      );
+    } catch { /* silencioso */ } finally {
+      setLoadingUsers(false);
     }
+  };
+
+  const addUser = (u: UserOption) => {
+    setSelectedUsers(prev => prev.find(s => s.id === u.id) ? prev : [...prev, u]);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const removeUser = (id: string) => setSelectedUsers(prev => prev.filter(u => u.id !== id));
+
+  const handleSend = async () => {
+    if (!subject.trim() || !message.trim()) { setError('Completa el asunto y el mensaje'); return; }
+    if (target === 'specific' && selectedUsers.length === 0) { setError('Agrega al menos un usuario'); return; }
     setSending(true);
     setError('');
     setResult(null);
     try {
-      const res = await apiClient.post('/admin/emails/broadcast', { target, subject, message });
+      const body: any = { target, subject, message };
+      if (target === 'specific') body.user_ids = selectedUsers.map(u => u.id);
+      const res = await apiClient.post('/admin/emails/broadcast', body);
       setResult(res.data);
       setSubject('');
       setMessage('');
+      if (target === 'specific') setSelectedUsers([]);
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Error al enviar emails');
     } finally {
@@ -560,20 +597,76 @@ function BroadcastEmailSection() {
 
   return (
     <div className="mt-8">
-      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Emails masivos</h2>
+      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Emails</h2>
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+        {/* Selector de destinatarios */}
         <div>
           <label className="block text-xs text-gray-400 mb-1">Destinatarios</label>
           <select
             value={target}
-            onChange={e => setTarget(e.target.value as any)}
+            onChange={e => { setTarget(e.target.value as any); setSelectedUsers([]); setSearchQuery(''); setSearchResults([]); }}
             className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000]"
           >
             <option value="all">Todos (conductores + pasajeros)</option>
             <option value="passengers">Solo pasajeros</option>
             <option value="drivers">Solo conductores</option>
+            <option value="specific">Usuario(s) específico(s)</option>
           </select>
         </div>
+
+        {/* Buscador de usuarios específicos */}
+        {target === 'specific' && (
+          <div className="space-y-2">
+            <label className="block text-xs text-gray-400 mb-1">Buscar por nombre, email o teléfono</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); searchUsers(e.target.value); }}
+                placeholder="Ej: Bayron, 3112102014..."
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600"
+              />
+              {loadingUsers && (
+                <div className="absolute right-3 top-2.5"><svg className="animate-spin w-4 h-4 text-gray-400" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
+              )}
+              {searchResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden shadow-xl">
+                  {searchResults.map(u => (
+                    <button key={u.id} onClick={() => addUser(u)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-0">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-white text-sm font-medium">{u.full_name}</span>
+                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-300">{u.role === 'driver' ? '🏍️ Conductor' : '👤 Pasajero'}</span>
+                        </div>
+                        <span className="text-gray-400 text-xs">{u.phone}</span>
+                      </div>
+                      {u.email && !u.email.includes('@motaxi.local') && (
+                        <p className="text-gray-400 text-xs mt-0.5">{u.email}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Usuarios seleccionados */}
+            {selectedUsers.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedUsers.map(u => (
+                  <div key={u.id} className="flex items-center gap-1.5 bg-[#008000]/20 border border-[#008000]/40 text-green-300 text-xs px-2.5 py-1.5 rounded-full">
+                    <span>{u.full_name}</span>
+                    <button onClick={() => removeUser(u.id)} className="text-green-400 hover:text-white ml-0.5">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedUsers.length === 0 && (
+              <p className="text-gray-600 text-xs">Ningún usuario seleccionado</p>
+            )}
+          </div>
+        )}
+
+        {/* Asunto */}
         <div>
           <label className="block text-xs text-gray-400 mb-1">Asunto</label>
           <input
@@ -584,31 +677,35 @@ function BroadcastEmailSection() {
             className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600"
           />
         </div>
+
+        {/* Mensaje */}
         <div>
           <label className="block text-xs text-gray-400 mb-1">Mensaje</label>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
             rows={5}
-            placeholder="Escribe aquí el mensaje motivador para tus usuarios..."
+            placeholder="Escribe aquí el mensaje para tus usuarios..."
             className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600 resize-none"
           />
         </div>
+
         {error && <p className="text-red-400 text-xs">{error}</p>}
         {result && (
           <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-lg px-4 py-3">
-            <p className="text-[#008000] text-sm font-semibold">Emails enviados: {result.sent} / {result.total}</p>
+            <p className="text-[#008000] text-sm font-semibold">✓ Emails enviados: {result.sent} / {result.total}</p>
             {result.failed > 0 && <p className="text-amber-400 text-xs mt-0.5">Fallidos: {result.failed}</p>}
           </div>
         )}
+
         <button
           onClick={handleSend}
           disabled={sending}
           className="w-full bg-[#008000] hover:bg-[#006800] text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
         >
           {sending ? (
-            <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Enviando...</>
-          ) : 'Enviar emails'}
+            <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Enviando...</>
+          ) : `Enviar email${target === 'specific' && selectedUsers.length > 0 ? ` (${selectedUsers.length})` : 's'}`}
         </button>
       </div>
     </div>

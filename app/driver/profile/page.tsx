@@ -206,6 +206,8 @@ export default function DriverProfilePage() {
           accepts_rural_trips: driver.accepts_rural_trips || 1,
           night_only: driver.night_only || 0,
           weekend_daytime: driver.weekend_daytime || 0,
+          whatsapp: driver.whatsapp || '',
+          nequi_phone: driver.nequi_phone || '',
           base_fare: driver.base_fare || 2000,
           intercity_fare: driver.intercity_fare || 5000,
           rural_fare: driver.rural_fare || 4000,

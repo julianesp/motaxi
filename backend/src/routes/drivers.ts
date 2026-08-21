@@ -120,8 +120,9 @@ driverRoutes.get('/profile', async (c) => {
                 d.is_available, d.verification_status, d.rating, d.total_trips,
                 d.current_latitude, d.current_longitude, d.last_location_update,
                 d.municipality, d.accepts_intercity_trips, d.accepts_rural_trips,
-                d.night_only, d.weekend_daytime, d.whatsapp, d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
-                d.profile_completed, d.profile_skipped_at
+                d.night_only, d.weekend_daytime, d.whatsapp, d.nequi_phone, d.nequi_qr_key,
+                d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
+                d.profile_completed, d.profile_skipped_at, d.vehicle_types
          FROM drivers d WHERE d.id = ?`
       ).bind(user.id).first();
 

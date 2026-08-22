@@ -17,6 +17,16 @@ self.addEventListener('push', (event) => {
     data = { title: 'MoTaxi', body: event.data ? event.data.text() : 'Nueva notificación' };
   }
 
+  // Viaje ya tomado por otro conductor — cerrar la notificación sin mostrar nada nuevo
+  if (data.data?.type === 'trip_taken') {
+    event.waitUntil(
+      self.registration.getNotifications({ tag: data.tag }).then(notifications => {
+        notifications.forEach(n => n.close());
+      })
+    );
+    return;
+  }
+
   const title = data.title || 'MoTaxi';
   const options = {
     body: data.body || '',
@@ -24,12 +34,12 @@ self.addEventListener('push', (event) => {
     badge: '/logo.png',
     tag: data.tag || 'motaxi-notification',
     data: data.data || {},
-    requireInteraction: data.data?.type === 'new_trip', // Mantener visible para viajes nuevos
+    requireInteraction: data.data?.type === 'new_trip',
     actions: data.data?.type === 'new_trip'
       ? [{ action: 'open', title: 'Ver viaje' }]
       : [],
     vibrate: [200, 100, 200, 100, 200],
-    silent: false, // Usar el sonido del sistema del dispositivo
+    silent: false,
   };
 
   event.waitUntil(self.registration.showNotification(title, options));

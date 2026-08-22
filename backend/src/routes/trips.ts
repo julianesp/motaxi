@@ -483,6 +483,36 @@ tripRoutes.put('/:id/accept', async (c) => {
       );
     }
 
+    // Cerrar la notificación de "nuevo viaje" en todos los conductores que la tienen visible
+    // Se envía una push con el mismo tag y silent:true — el navegador reemplaza y descarta la anterior
+    if (c.env.VAPID_PUBLIC_KEY && c.env.VAPID_PRIVATE_KEY) {
+      const allSubs = await c.env.DB.prepare(
+        `SELECT wps.endpoint, wps.p256dh, wps.auth
+         FROM web_push_subscriptions wps
+         JOIN drivers d ON d.id = wps.user_id
+         WHERE d.verification_status = 'approved' AND wps.user_id != ?`
+      ).bind(user.id).all();
+
+      const closePayload = {
+        title: 'MoTaxi',
+        body: '',
+        tag: `trip-${tripId}`,
+        data: { type: 'trip_taken', tripId },
+        silent: true,
+        requireInteraction: false,
+      };
+
+      const closes = (allSubs.results || []).map((sub: any) =>
+        sendWebPush(
+          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+          closePayload,
+          c.env.VAPID_PUBLIC_KEY!,
+          c.env.VAPID_PRIVATE_KEY!
+        ).catch(() => {})
+      );
+      c.executionCtx?.waitUntil(Promise.all(closes));
+    }
+
     const updatedTrip = await c.env.DB.prepare('SELECT * FROM trips WHERE id = ?')
       .bind(tripId)
       .first();

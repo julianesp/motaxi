@@ -692,22 +692,15 @@ analyticsRoutes.post('/hotspots', async (c) => {
 
     // Notificar a conductores premium activos
     const EXEMPT = ['julii1295@gmail.com', 'admin@neurai.dev'];
+    // Temporalmente: notificar a TODOS los conductores verificados para que conozcan la función
     const drivers = await c.env.DB.prepare(
       `SELECT u.id, u.telegram_chat_id, wps.endpoint, wps.p256dh, wps.auth
-       FROM driver_premium dp
-       JOIN users u ON u.id = dp.user_id
-       LEFT JOIN web_push_subscriptions wps ON wps.user_id = u.id
-       WHERE dp.feature = 'demand_prediction'
-         AND dp.status = 'active'
-         AND (dp.current_period_end IS NULL OR dp.current_period_end > ?)
-       UNION
-       SELECT u.id, u.telegram_chat_id, wps.endpoint, wps.p256dh, wps.auth
        FROM users u
-       LEFT JOIN web_push_subscriptions wps ON wps.user_id = u.id
        JOIN drivers d ON d.id = u.id
-       WHERE u.email IN ('${EXEMPT.join("','")}')
-         AND d.verification_status = 'approved'`
-    ).bind(now).all();
+       LEFT JOIN web_push_subscriptions wps ON wps.user_id = u.id
+       WHERE d.verification_status = 'approved'
+         AND d.is_available = 1`
+    ).all();
 
     const topHotspot = body.hotspots.sort((a: any, b: any) => b.score - a.score)[0];
     if (topHotspot) {
@@ -750,21 +743,13 @@ analyticsRoutes.post('/hotspots', async (c) => {
 
 /**
  * GET /analytics/hotspots
- * Hotspots activos para mostrar en el mapa del conductor (premium o exento).
+ * Hotspots activos para mostrar en el mapa del conductor.
+ * Temporalmente abierto a todos los conductores verificados para que conozcan la función.
  */
 analyticsRoutes.get('/hotspots', authMiddleware, async (c) => {
   try {
     const user = c.get('user');
-    const EXEMPT = ['julii1295@gmail.com', 'admin@neurai.dev'];
-    if (!EXEMPT.includes(user.email?.toLowerCase())) {
-      const now = Math.floor(Date.now() / 1000);
-      const premium = await c.env.DB.prepare(
-        `SELECT id FROM driver_premium
-         WHERE user_id = ? AND feature = 'demand_prediction'
-           AND status = 'active' AND current_period_end > ?`
-      ).bind(user.id, now).first();
-      if (!premium) return c.json({ error: 'premium_required' }, 402);
-    }
+    if (user.role !== 'driver') return c.json({ error: 'Solo conductores' }, 403);
     const now = Math.floor(Date.now() / 1000);
     const hotspots = await c.env.DB.prepare(
       `SELECT latitude, longitude, radius_meters, score, trip_count, label, hour_of_day, day_of_week

@@ -197,8 +197,12 @@ tripRoutes.get('/active', async (c) => {
       });
     }
 
+    // Bounding box del Alto Putumayo (Valle de Sibundoy y alrededores)
+    // lat: 0.9° – 1.35°  |  lon: -77.05° – -76.65°
+    const LAT_MIN = 0.9, LAT_MAX = 1.35, LON_MIN = -77.05, LON_MAX = -76.65;
+
     // Obtener solicitudes disponibles (estado 'requested' sin conductor asignado)
-    // Incluye ubicación y género del pasajero para mostrar en el mapa del conductor
+    // Filtra por bounding box del Alto Putumayo para evitar viajes de otras zonas
     const availableTrips = await c.env.DB.prepare(
       `SELECT
         t.*,
@@ -209,9 +213,11 @@ tripRoutes.get('/active', async (c) => {
        JOIN users u ON t.passenger_id = u.id
        WHERE t.status = 'requested'
          AND t.driver_id IS NULL
+         AND t.pickup_latitude BETWEEN ? AND ?
+         AND t.pickup_longitude BETWEEN ? AND ?
        ORDER BY t.created_at DESC
        LIMIT 50`
-    ).all();
+    ).bind(LAT_MIN, LAT_MAX, LON_MIN, LON_MAX).all();
 
     // Calcular distancia del conductor a cada punto de recogida
     const tripsWithDistance = (availableTrips.results || []).map((trip: any) => {

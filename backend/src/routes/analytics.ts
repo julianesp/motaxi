@@ -624,3 +624,154 @@ analyticsRoutes.get('/ai-data-status', authMiddleware, async (c) => {
     return c.json({ error: error.message || 'Failed to get AI data status' }, 500);
   }
 });
+
+/**
+ * GET /analytics/trips-export
+ * Exporta viajes históricos con GPS para que el motor Python los consuma.
+ * Protegido con INTERNAL_API_SECRET (header x-internal-secret).
+ */
+analyticsRoutes.get('/trips-export', async (c) => {
+  const secret = c.req.header('x-internal-secret');
+  if (!secret || secret !== c.env.INTERNAL_API_SECRET) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+  try {
+    const days = Math.min(parseInt(c.req.query('days') || '90'), 365);
+    const since = Math.floor(Date.now() / 1000) - days * 86400;
+    const rows = await c.env.DB.prepare(
+      `SELECT pickup_latitude, pickup_longitude,
+              strftime('%w', created_at, 'unixepoch', '-5 hours') AS dow,
+              strftime('%H', created_at, 'unixepoch', '-5 hours') AS hour
+       FROM trips
+       WHERE pickup_latitude IS NOT NULL
+         AND pickup_longitude IS NOT NULL
+         AND created_at >= ?
+         AND status IN ('completed','in_progress','accepted')
+       ORDER BY created_at DESC
+       LIMIT 5000`
+    ).bind(since).all();
+    return c.json({ trips: rows.results });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * POST /analytics/hotspots
+ * El motor Python escribe los hotspots calculados con DBSCAN.
+ * Protegido con INTERNAL_API_SECRET.
+ */
+analyticsRoutes.post('/hotspots', async (c) => {
+  const secret = c.req.header('x-internal-secret');
+  if (!secret || secret !== c.env.INTERNAL_API_SECRET) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+  try {
+    const body = await c.req.json() as { hotspots: any[] };
+    if (!Array.isArray(body.hotspots)) return c.json({ error: 'Invalid payload' }, 400);
+
+    // Borrar hotspots anteriores y reemplazar con los nuevos
+    await c.env.DB.prepare('DELETE FROM ai_hotspots').run();
+
+    const now = Math.floor(Date.now() / 1000);
+    const validUntil = now + 2 * 3600; // válidos 2 horas
+
+    for (const h of body.hotspots) {
+      const id = crypto.randomUUID();
+      await c.env.DB.prepare(
+        `INSERT INTO ai_hotspots (id, latitude, longitude, radius_meters, score, trip_count,
+          hour_of_day, day_of_week, label, computed_at, valid_until)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        id, h.latitude, h.longitude, h.radius_meters ?? 250,
+        h.score, h.trip_count,
+        h.hour_of_day ?? null, h.day_of_week ?? null,
+        h.label ?? null, now, validUntil
+      ).run();
+    }
+
+    // Notificar a conductores premium activos
+    const EXEMPT = ['julii1295@gmail.com', 'admin@neurai.dev'];
+    const drivers = await c.env.DB.prepare(
+      `SELECT u.id, u.telegram_chat_id, wps.endpoint, wps.p256dh, wps.auth
+       FROM driver_premium dp
+       JOIN users u ON u.id = dp.user_id
+       LEFT JOIN web_push_subscriptions wps ON wps.user_id = u.id
+       WHERE dp.feature = 'demand_prediction'
+         AND dp.status = 'active'
+         AND (dp.current_period_end IS NULL OR dp.current_period_end > ?)
+       UNION
+       SELECT u.id, u.telegram_chat_id, wps.endpoint, wps.p256dh, wps.auth
+       FROM users u
+       LEFT JOIN web_push_subscriptions wps ON wps.user_id = u.id
+       JOIN drivers d ON d.id = u.id
+       WHERE u.email IN ('${EXEMPT.join("','")}')
+         AND d.verification_status = 'approved'`
+    ).bind(now).all();
+
+    const topHotspot = body.hotspots.sort((a: any, b: any) => b.score - a.score)[0];
+    if (topHotspot) {
+      const label = topHotspot.label || `${topHotspot.latitude.toFixed(4)}, ${topHotspot.longitude.toFixed(4)}`;
+      const notifTitle = '🔥 Zona con alta demanda ahora';
+      const notifBody = `Hay pasajeros esperando cerca de: ${label}. ¡Ve ahora!`;
+
+      for (const row of (drivers.results || []) as any[]) {
+        // Web Push
+        if (row.endpoint && c.env.VAPID_PUBLIC_KEY && c.env.VAPID_PRIVATE_KEY) {
+          const { sendWebPush } = await import('../services/web-push');
+          c.executionCtx?.waitUntil(
+            sendWebPush(
+              { endpoint: row.endpoint, p256dh: row.p256dh, auth: row.auth },
+              { title: notifTitle, body: notifBody, icon: '/logo.png', tag: 'hotspot' },
+              c.env.VAPID_PUBLIC_KEY,
+              c.env.VAPID_PRIVATE_KEY
+            ).catch(() => {})
+          );
+        }
+        // Telegram
+        if (row.telegram_chat_id && c.env.TELEGRAM_BOT_TOKEN) {
+          const { TelegramService } = await import('../services/telegram');
+          c.executionCtx?.waitUntil(
+            TelegramService.sendMessage(
+              c.env.TELEGRAM_BOT_TOKEN,
+              row.telegram_chat_id,
+              `🔥 *Zona caliente detectada*\n📍 ${label}\nHay pasajeros esperando cerca. ¡Dirígete ahora!`
+            ).catch(() => {})
+          );
+        }
+      }
+    }
+
+    return c.json({ success: true, count: body.hotspots.length });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * GET /analytics/hotspots
+ * Hotspots activos para mostrar en el mapa del conductor (premium o exento).
+ */
+analyticsRoutes.get('/hotspots', authMiddleware, async (c) => {
+  try {
+    const user = c.get('user');
+    const EXEMPT = ['julii1295@gmail.com', 'admin@neurai.dev'];
+    if (!EXEMPT.includes(user.email?.toLowerCase())) {
+      const now = Math.floor(Date.now() / 1000);
+      const premium = await c.env.DB.prepare(
+        `SELECT id FROM driver_premium
+         WHERE user_id = ? AND feature = 'demand_prediction'
+           AND status = 'active' AND current_period_end > ?`
+      ).bind(user.id, now).first();
+      if (!premium) return c.json({ error: 'premium_required' }, 402);
+    }
+    const now = Math.floor(Date.now() / 1000);
+    const hotspots = await c.env.DB.prepare(
+      `SELECT latitude, longitude, radius_meters, score, trip_count, label, hour_of_day, day_of_week
+       FROM ai_hotspots WHERE valid_until > ? ORDER BY score DESC LIMIT 10`
+    ).bind(now).all();
+    return c.json({ hotspots: hotspots.results });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});

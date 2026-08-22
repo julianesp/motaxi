@@ -1,0 +1,30 @@
+name: Zonas calientes de demanda (IA)
+
+on:
+  schedule:
+    # Cada hora en punto (hora UTC — equivale a cada hora en punto Colombia)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Permite ejecutar manualmente desde GitHub
+
+jobs:
+  compute-hotspots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: pip install scikit-learn numpy requests
+
+      - name: Calcular zonas calientes y notificar
+        env:
+          API_URL: ${{ secrets.MOTAXI_API_URL }}
+          INTERNAL_SECRET: ${{ secrets.MOTAXI_INTERNAL_SECRET }}
+        run: python .github/scripts/compute_hotspots.py

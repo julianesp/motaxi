@@ -80,7 +80,6 @@ export default function CompleteProfilePage() {
   const vehicleOptions = [
     { value: "moto", label: "Moto", emoji: "🏍️" },
     { value: "piaggio", label: "Piaggio", emoji: "🛺" },
-    { value: "taxi", label: "Taxi", emoji: "🚖" },
     { value: "carro", label: "Van / Carro", emoji: "🚐" },
   ];
 

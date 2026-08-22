@@ -285,17 +285,28 @@ export default function HomePage() {
             <div className="text-white flex flex-col gap-7">
               <div>
                 <span className="px-4 py-2 bg-green-500 bg-opacity-30 rounded-full text-sm font-semibold backdrop-blur-sm text-white border border-green-400">
-                  Disponible donde estés
+                  Alto Putumayo · Rápido y confiable
                 </span>
               </div>
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-                Tu transporte,
-                <br />a un toque
+                Envíos en moto,
+                <br />al instante
               </h1>
               <p className="text-xl text-white max-w-lg">
-                Pide tu moto desde donde estés. Conductores cercanos te muestran
-                su distancia y tarifa para que elijas el que más te convenga.
+                Manda paquetes a cualquier punto del Valle de Sibundoy en minutos.
+                Motos disponibles ahora mismo — elige conductor, precio y sigue tu envío en tiempo real.
               </p>
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-sm text-white">
+                  <span>📦</span><span>Envíos de paquetes</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-sm text-white">
+                  <span>🚛</span><span>Cargas y trasteos</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-sm text-white">
+                  <span>🏍️</span><span>Transporte de personas</span>
+                </div>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 {user ? (
                   <button
@@ -1285,6 +1296,93 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Guías de uso */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="inline-block bg-[#008000]/10 text-[#008000] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+              ¿Cómo funciona?
+            </span>
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100">
+              Guías de uso
+            </h2>
+            <p className="mt-3 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+              Todo lo que necesitas saber para enviar y recibir paquetes con MoTaxi.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Guía pasajero — envío */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="bg-gradient-to-r from-[#008000] to-[#42CE1D] px-6 py-4 flex items-center gap-3">
+                <span className="text-3xl">📦</span>
+                <div>
+                  <p className="text-white font-bold text-lg">Cómo enviar un paquete</p>
+                  <p className="text-green-100 text-sm">Para clientes y remitentes</p>
+                </div>
+              </div>
+              <ol className="p-6 space-y-4">
+                {[
+                  { n: 1, icon: "📱", title: "Regístrate o inicia sesión", desc: "Crea tu cuenta gratuita en segundos con tu número de celular." },
+                  { n: 2, icon: "📍", title: "Ingresa los puntos del envío", desc: "Selecciona de dónde recogen el paquete y a dónde lo llevan." },
+                  { n: 3, icon: "👤", title: "Agrega los datos del destinatario", desc: "Nombre y teléfono de quien lo recibe para que el conductor pueda coordinar." },
+                  { n: 4, icon: "📸", title: "Toma una foto del paquete", desc: "Opcional pero recomendado — así el conductor sabe exactamente qué va a recoger." },
+                  { n: 5, icon: "🏍️", title: "Elige conductor y confirma", desc: "Ve los conductores disponibles con su tarifa. Selecciona el que más te convenga y solicita." },
+                  { n: 6, icon: "📲", title: "Sigue el envío en tiempo real", desc: "Monitorea en el mapa dónde está tu paquete hasta que llegue al destino." },
+                ].map(s => (
+                  <li key={s.n} className="flex gap-4">
+                    <div className="w-8 h-8 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[#008000] text-sm">{s.n}</div>
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5"><span>{s.icon}</span>{s.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{s.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* Guía conductor */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 flex items-center gap-3">
+                <span className="text-3xl">🏍️</span>
+                <div>
+                  <p className="text-white font-bold text-lg">Cómo recibir pedidos</p>
+                  <p className="text-gray-400 text-sm">Para conductores (mototaxistas)</p>
+                </div>
+              </div>
+              <ol className="p-6 space-y-4">
+                {[
+                  { n: 1, icon: "✅", title: "Regístrate y espera verificación", desc: "El equipo de MoTaxi revisa tu documentación. Normalmente en menos de 24 horas." },
+                  { n: 2, icon: "🟢", title: "Activa tu disponibilidad", desc: "En tu dashboard activa el interruptor verde para que te lleguen solicitudes." },
+                  { n: 3, icon: "🔔", title: "Recibe la notificación del pedido", desc: "Te llega una alerta con el origen, destino, peso estimado y tarifa del envío." },
+                  { n: 4, icon: "📦", title: "Revisa los detalles del paquete", desc: "Ve la foto, el tamaño y los datos del destinatario antes de aceptar." },
+                  { n: 5, icon: "🚀", title: "Acepta y dirígete al punto de recogida", desc: "El mapa te guía hasta donde está el remitente para recoger el paquete." },
+                  { n: 6, icon: "💵", title: "Entrega y cobra", desc: "Lleva el paquete al destino. El pago es en efectivo o Nequi directamente al terminar." },
+                ].map(s => (
+                  <li key={s.n} className="flex gap-4">
+                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-gray-600 dark:text-gray-300 text-sm">{s.n}</div>
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5"><span>{s.icon}</span>{s.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{s.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          {/* CTA central */}
+          <div className="mt-10 text-center">
+            <button
+              onClick={() => router.push('/auth/register')}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-[#42CE1D] text-white font-bold rounded-xl shadow-lg hover:bg-[#35a818] transition-colors"
+            >
+              <span>📦</span> Enviar mi primer paquete
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* Beneficios Section */}
       <section className="py-24 bg-white dark:bg-gray-950">

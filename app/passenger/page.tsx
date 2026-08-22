@@ -203,6 +203,14 @@ export default function PassengerHomePage() {
   const [deliveryNote, setDeliveryNote] = useState("");
   const [homePickup, setHomePickup] = useState(false);
 
+  // Campos de envío
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [packageSize, setPackageSize] = useState<"small" | "medium" | "large">("small");
+  const [packagePhotoKey, setPackagePhotoKey] = useState<string | null>(null);
+  const [packagePhotoPreview, setPackagePhotoPreview] = useState<string | null>(null);
+  const [isUploadingPackagePhoto, setIsUploadingPackagePhoto] = useState(false);
+
   // Estado para conductores disponibles y favoritos
   const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<NearbyDriver | null>(
@@ -524,6 +532,42 @@ export default function PassengerHomePage() {
     setPassengerCustomPrice(next);
   };
 
+  const handlePackagePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({ icon: 'warning', title: 'Imagen muy grande', text: 'Máximo 5MB.', confirmButtonColor: '#008000' });
+      return;
+    }
+    // Vista previa local inmediata
+    const reader = new FileReader();
+    reader.onloadend = () => setPackagePhotoPreview(reader.result as string);
+    reader.readAsDataURL(file);
+
+    // Subir al backend
+    setIsUploadingPackagePhoto(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+      const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
+      const fd = new FormData();
+      fd.append('photo', file);
+      const res = await fetch(`${API_URL}/trips/package-photo`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPackagePhotoKey(data.image_key);
+      }
+    } catch {
+      // silencioso — la foto es opcional
+    } finally {
+      setIsUploadingPackagePhoto(false);
+    }
+  };
+
   const handleRequestTrip = async () => {
     if (
       !pickup.latitude ||
@@ -605,6 +649,12 @@ export default function PassengerHomePage() {
         ...(tripMode === "delivery" && deliveryNote.trim()
           ? { delivery_note: deliveryNote.trim() }
           : {}),
+        ...(tripMode === "delivery" ? {
+          recipient_name: recipientName.trim() || undefined,
+          recipient_phone: recipientPhone.trim() || undefined,
+          package_size: packageSize,
+          package_photo_key: packagePhotoKey || undefined,
+        } : {}),
         ...(selectedDriver ? { preferred_driver_id: selectedDriver.id } : {}),
       });
 
@@ -1625,26 +1675,110 @@ export default function PassengerHomePage() {
                   </label>
                 )}
 
-                {/* Campo de nota para envío de paquete */}
+                {/* Detalles completos del envío */}
                 {tripMode === "delivery" && (
-                  <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-2xl p-3 space-y-2">
+                  <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-2xl p-3 space-y-3">
                     <div className="flex items-center gap-2">
                       <span>📦</span>
-                      <span className="text-sm font-semibold text-[#008000]">
-                        Detalles del paquete
-                      </span>
+                      <span className="text-sm font-semibold text-[#008000]">Detalles del envío</span>
                     </div>
-                    <textarea
-                      value={deliveryNote}
-                      onChange={(e) => setDeliveryNote(e.target.value)}
-                      placeholder="Ej: Caja pequeña de ropa, llama al llegar · Nombre del destinatario: Persona · Frágil"
-                      rows={3}
-                      maxLength={300}
-                      className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 resize-none placeholder-gray-400"
-                    />
-                    <p className="text-xs text-gray-400 text-right">
-                      {deliveryNote.length}/300
-                    </p>
+
+                    {/* Tamaño del paquete */}
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 mb-1.5">Tamaño del paquete</p>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {([
+                          { value: "small", label: "Pequeño", sub: "Cabe en una mochila", emoji: "🎁" },
+                          { value: "medium", label: "Mediano", sub: "Caja normal", emoji: "📦" },
+                          { value: "large", label: "Grande", sub: "Difícil de cargar", emoji: "🗃️" },
+                        ] as const).map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setPackageSize(opt.value)}
+                            className={`flex flex-col items-center py-2 px-1 rounded-xl border-2 text-center transition-all ${
+                              packageSize === opt.value
+                                ? "border-[#008000] bg-white"
+                                : "border-transparent bg-white/60"
+                            }`}
+                          >
+                            <span className="text-xl">{opt.emoji}</span>
+                            <span className={`text-xs font-semibold mt-0.5 ${packageSize === opt.value ? "text-[#008000]" : "text-gray-600"}`}>{opt.label}</span>
+                            <span className="text-[10px] text-gray-400">{opt.sub}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Destinatario */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-xs font-medium text-gray-600 mb-1">Nombre del destinatario</p>
+                        <input
+                          type="text"
+                          value={recipientName}
+                          onChange={e => setRecipientName(e.target.value)}
+                          placeholder="Ej: Juan Pérez"
+                          className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 placeholder-gray-400"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-600 mb-1">Teléfono del destinatario</p>
+                        <input
+                          type="tel"
+                          value={recipientPhone}
+                          onChange={e => setRecipientPhone(e.target.value)}
+                          placeholder="Ej: 3001234567"
+                          className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 placeholder-gray-400"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Nota del paquete */}
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 mb-1">Descripción <span className="font-normal text-gray-400">(opcional)</span></p>
+                      <textarea
+                        value={deliveryNote}
+                        onChange={(e) => setDeliveryNote(e.target.value)}
+                        placeholder="Ej: Frágil · color azul · llama al llegar"
+                        rows={2}
+                        maxLength={300}
+                        className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 resize-none placeholder-gray-400"
+                      />
+                      <p className="text-xs text-gray-400 text-right">{deliveryNote.length}/300</p>
+                    </div>
+
+                    {/* Foto del paquete */}
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 mb-1">Foto del paquete <span className="font-normal text-gray-400">(opcional)</span></p>
+                      {packagePhotoPreview ? (
+                        <div className="relative">
+                          <img src={packagePhotoPreview} alt="Paquete" className="w-full h-32 object-cover rounded-xl" />
+                          {isUploadingPackagePhoto && (
+                            <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
+                              <svg className="animate-spin w-6 h-6 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => { setPackagePhotoPreview(null); setPackagePhotoKey(null); }}
+                            className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center"
+                          >
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center gap-2 bg-white border border-dashed border-[#008000]/40 rounded-xl py-3 cursor-pointer hover:bg-white/80 transition-colors">
+                          <svg className="w-5 h-5 text-[#008000]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          </svg>
+                          <span className="text-xs text-[#008000] font-medium">Tomar o seleccionar foto</span>
+                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePackagePhotoSelect} />
+                        </label>
+                      )}
+                    </div>
                   </div>
                 )}
 

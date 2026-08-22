@@ -16,6 +16,34 @@ tripRoutes.use('/:id/status', subscriptionMiddleware);
 // /current-driver NO requiere suscripción: el conductor debe poder ver su viaje asignado siempre
 
 /**
+ * POST /trips/package-photo
+ * Subir foto del paquete antes de crear el viaje (pasajero)
+ */
+tripRoutes.post('/package-photo', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'passenger') return c.json({ error: 'Solo pasajeros' }, 403);
+    if (!c.env.IMAGES) return c.json({ error: 'Almacenamiento no configurado' }, 500);
+
+    const body = await c.req.parseBody();
+    const file = body['photo'] as File | undefined;
+    if (!file || typeof file === 'string') return c.json({ error: 'Se requiere una imagen' }, 400);
+    if (!file.type.startsWith('image/')) return c.json({ error: 'Formato inválido' }, 400);
+    if (file.size > 5 * 1024 * 1024) return c.json({ error: 'Máximo 5MB' }, 400);
+
+    const id = crypto.randomUUID();
+    const ext = file.type.split('/')[1] || 'jpg';
+    const imageKey = `package-photos/${user.id}/${id}.${ext}`;
+    await c.env.IMAGES.put(imageKey, await file.arrayBuffer(), {
+      httpMetadata: { contentType: file.type },
+    });
+    return c.json({ success: true, image_key: imageKey });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error al subir foto' }, 500);
+  }
+});
+
+/**
  * POST /trips
  * Crear nuevo viaje (pasajero)
  */
@@ -36,6 +64,10 @@ tripRoutes.post('/', async (c) => {
       trip_type = 'ride', // 'ride' o 'delivery'
       delivery_note,      // Nota/descripción del paquete (solo para delivery)
       home_pickup = false, // El pasajero solicita que lo vayan a recoger a casa: +$1.000
+      recipient_name,     // Nombre del destinatario (envíos)
+      recipient_phone,    // Teléfono del destinatario (envíos)
+      package_size = 'small', // Tamaño: 'small' | 'medium' | 'large'
+      package_photo_key,  // Clave R2 de la foto del paquete (subida antes del viaje)
     } = body;
 
     if (user.role !== 'passenger') {
@@ -53,8 +85,9 @@ tripRoutes.post('/', async (c) => {
       `INSERT INTO trips (
         id, passenger_id, pickup_latitude, pickup_longitude, pickup_address,
         dropoff_latitude, dropoff_longitude, dropoff_address, fare, distance_km, status,
-        trip_type, delivery_note, home_pickup
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?, ?)`
+        trip_type, delivery_note, home_pickup,
+        recipient_name, recipient_phone, package_size, package_photo_key
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?, ?, ?, ?, ?, ?)`
     )
       .bind(
         tripId,
@@ -69,7 +102,11 @@ tripRoutes.post('/', async (c) => {
         distance_km,
         trip_type,
         delivery_note || null,
-        homePickupFlag
+        homePickupFlag,
+        recipient_name || null,
+        recipient_phone || null,
+        trip_type === 'delivery' ? (package_size || 'small') : null,
+        package_photo_key || null
       )
       .run();
 

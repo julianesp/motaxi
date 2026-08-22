@@ -958,17 +958,40 @@ export default function DriverHomePage() {
                             )}
 
                             {/* Badge de envío de paquete */}
-                            {trip.trip_type === 'delivery' && (
-                              <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 mb-3">
-                                <span className="text-lg">📦</span>
-                                <div className="flex-1 min-w-0">
-                                  <span className="text-xs font-bold text-orange-700 uppercase tracking-wide">Envío de paquete</span>
+                            {trip.trip_type === 'delivery' && (() => {
+                              const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+                              const sizeLabel: Record<string, string> = { small: '🎁 Pequeño', medium: '📦 Mediano', large: '🗃️ Grande' };
+                              return (
+                                <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 mb-3 space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg">📦</span>
+                                    <span className="text-xs font-bold text-orange-700 uppercase tracking-wide">Envío de paquete</span>
+                                    {trip.package_size && (
+                                      <span className="ml-auto text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">{sizeLabel[trip.package_size] ?? trip.package_size}</span>
+                                    )}
+                                  </div>
+                                  {trip.package_photo_key && (
+                                    <img src={`${API_URL}/images/${trip.package_photo_key}`} alt="Paquete" className="w-full h-28 object-cover rounded-lg" />
+                                  )}
+                                  {(trip.recipient_name || trip.recipient_phone) && (
+                                    <div className="flex items-center gap-3 bg-white rounded-lg px-2 py-1.5">
+                                      <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                      </svg>
+                                      <div className="text-xs">
+                                        {trip.recipient_name && <p className="font-semibold text-gray-800">{trip.recipient_name}</p>}
+                                        {trip.recipient_phone && (
+                                          <a href={`tel:${trip.recipient_phone}`} className="text-orange-600 font-medium">{trip.recipient_phone}</a>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
                                   {trip.delivery_note && (
-                                    <p className="text-xs text-orange-600 mt-0.5 line-clamp-2">{trip.delivery_note}</p>
+                                    <p className="text-xs text-orange-600 line-clamp-2">{trip.delivery_note}</p>
                                   )}
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
 
                             {/* Badge de recogida a domicilio */}
                             {trip.home_pickup === 1 && (

@@ -388,6 +388,40 @@ tripRoutes.get('/current-driver', async (c) => {
 });
 
 /**
+ * POST /trips/:id/waypoint
+ * Registrar punto intermedio de ruta (conductor durante el viaje)
+ * Se llama periódicamente desde el frontend del conductor
+ */
+tripRoutes.post('/:id/waypoint', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') return c.json({ error: 'Solo conductores' }, 403);
+
+    const tripId = c.req.param('id');
+    const { latitude, longitude } = await c.req.json();
+
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+      return c.json({ error: 'Se requieren latitude y longitude numéricos' }, 400);
+    }
+
+    // Verificar que el viaje pertenece al conductor y está en progreso
+    const trip = await c.env.DB.prepare(
+      `SELECT id FROM trips WHERE id = ? AND driver_id = ? AND status IN ('accepted', 'in_progress', 'driver_arriving')`
+    ).bind(tripId, user.id).first();
+
+    if (!trip) return c.json({ error: 'Viaje no encontrado o no activo' }, 404);
+
+    await c.env.DB.prepare(
+      `INSERT INTO trip_waypoints (trip_id, latitude, longitude) VALUES (?, ?, ?)`
+    ).bind(tripId, latitude, longitude).run();
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Error al registrar waypoint' }, 500);
+  }
+});
+
+/**
  * GET /trips/history
  * Obtener historial de viajes del usuario
  */

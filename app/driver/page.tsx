@@ -271,6 +271,10 @@ export default function DriverHomePage() {
   useEffect(() => {
     // Obtener ubicación actual del conductor y enviarla al backend
     if (navigator.geolocation && user?.role === 'driver') {
+      // Throttle de waypoints: registrar como máximo 1 cada 30 segundos por viaje
+      let lastWaypointAt = 0;
+      const WAYPOINT_INTERVAL_MS = 30_000;
+
       const watchId = navigator.geolocation.watchPosition(
         async (position) => {
           const newLocation = {
@@ -281,8 +285,18 @@ export default function DriverHomePage() {
 
           // Actualizar ubicación en el backend
           try {
-            const { driversAPI } = await import('@/lib/api-client');
+            const { driversAPI, tripsAPI } = await import('@/lib/api-client');
             await driversAPI.updateLocation(newLocation.lat, newLocation.lng);
+
+            // Registrar waypoint de ruta si hay viaje activo en progreso o llegando
+            const trip = activeTripRef.current;
+            if (trip && (trip.status === 'in_progress' || trip.status === 'driver_arriving')) {
+              const now = Date.now();
+              if (now - lastWaypointAt >= WAYPOINT_INTERVAL_MS) {
+                lastWaypointAt = now;
+                tripsAPI.recordWaypoint(trip.id, newLocation.lat, newLocation.lng).catch(() => {});
+              }
+            }
           } catch (error) {
             console.error('Error updating location:', error);
           }

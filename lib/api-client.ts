@@ -223,6 +223,11 @@ export const tripsAPI = {
     }
     return null;
   },
+
+  recordWaypoint: async (tripId: string, latitude: number, longitude: number) => {
+    const response = await apiClient.post(`/trips/${tripId}/waypoint`, { latitude, longitude });
+    return response.data;
+  },
 };
 
 // API de conductores

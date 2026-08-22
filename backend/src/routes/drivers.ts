@@ -27,6 +27,39 @@ driverRoutes.get('/photos/public', async (c) => {
 });
 
 /**
+ * GET /drivers/:id/public
+ * Perfil público de un conductor (sin autenticación)
+ */
+driverRoutes.get('/:id/public', async (c) => {
+  try {
+    const driverId = c.req.param('id');
+
+    const row = await c.env.DB.prepare(
+      `SELECT u.id, u.full_name, u.profile_image,
+              d.vehicle_model, d.vehicle_color, d.vehicle_plate, d.vehicle_types,
+              d.rating, d.total_trips, d.municipality, d.verification_status,
+              d.is_available, d.whatsapp
+       FROM users u
+       JOIN drivers d ON d.id = u.id
+       WHERE u.id = ? AND d.verification_status = 'approved'`
+    ).bind(driverId).first<any>();
+
+    if (!row) return c.json({ error: 'Driver not found' }, 404);
+
+    const vehiclePhotos = await c.env.DB.prepare(
+      `SELECT id, image_key, caption, created_at
+       FROM driver_vehicle_photos
+       WHERE driver_id = ? AND is_visible = 1
+       ORDER BY created_at DESC`
+    ).bind(driverId).all();
+
+    return c.json({ driver: row, vehicle_photos: vehiclePhotos.results });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get driver profile' }, 500);
+  }
+});
+
+/**
  * POST /drivers/photos/:id/like
  * Dar like a una foto (anónimo, sin autenticación)
  */
@@ -911,5 +944,100 @@ driverRoutes.delete('/photos/:id', async (c) => {
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message || 'Failed to delete photo' }, 500);
+  }
+});
+
+/**
+ * GET /drivers/vehicle-photos/my
+ * Listar fotos del vehículo del conductor autenticado
+ */
+driverRoutes.get('/vehicle-photos/my', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') return c.json({ error: 'Solo conductores' }, 403);
+
+    const photos = await c.env.DB.prepare(
+      `SELECT id, image_key, caption, created_at
+       FROM driver_vehicle_photos
+       WHERE driver_id = ? AND is_visible = 1
+       ORDER BY created_at DESC`
+    ).bind(user.id).all();
+
+    return c.json({ photos: photos.results });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get vehicle photos' }, 500);
+  }
+});
+
+/**
+ * POST /drivers/vehicle-photos
+ * Subir foto del vehículo
+ */
+driverRoutes.post('/vehicle-photos', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') return c.json({ error: 'Solo conductores' }, 403);
+
+    const body = await c.req.parseBody();
+    const file = body['photo'] as File | undefined;
+    const caption = typeof body['caption'] === 'string' ? body['caption'].trim() : null;
+
+    if (!file || typeof file === 'string') return c.json({ error: 'Se requiere una imagen' }, 400);
+    if (!file.type.startsWith('image/')) return c.json({ error: 'Formato inválido' }, 400);
+    if (file.size > 5 * 1024 * 1024) return c.json({ error: 'La imagen no puede superar 5MB' }, 400);
+
+    const count = await c.env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM driver_vehicle_photos WHERE driver_id = ? AND is_visible = 1'
+    ).bind(user.id).first<{ cnt: number }>();
+
+    if ((count?.cnt ?? 0) >= 10) {
+      return c.json({ error: 'Máximo 10 fotos de vehículo. Elimina alguna antes de subir.' }, 400);
+    }
+
+    if (!c.env.IMAGES) return c.json({ error: 'Almacenamiento no configurado' }, 500);
+
+    const id = crypto.randomUUID();
+    const ext = file.type.split('/')[1] || 'jpg';
+    const imageKey = `driver-vehicle-photos/${user.id}/${id}.${ext}`;
+
+    await c.env.IMAGES.put(imageKey, await file.arrayBuffer(), {
+      httpMetadata: { contentType: file.type },
+    });
+
+    await c.env.DB.prepare(
+      'INSERT INTO driver_vehicle_photos (id, driver_id, image_key, caption, created_at) VALUES (?, ?, ?, ?, unixepoch())'
+    ).bind(id, user.id, imageKey, caption).run();
+
+    return c.json({ success: true, id, image_key: imageKey });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to upload vehicle photo' }, 500);
+  }
+});
+
+/**
+ * DELETE /drivers/vehicle-photos/:id
+ * Eliminar una foto del vehículo propia
+ */
+driverRoutes.delete('/vehicle-photos/:id', async (c) => {
+  try {
+    const user = c.get('user');
+    if (user.role !== 'driver') return c.json({ error: 'Solo conductores' }, 403);
+
+    const photoId = c.req.param('id');
+    const photo = await c.env.DB.prepare(
+      'SELECT image_key FROM driver_vehicle_photos WHERE id = ? AND driver_id = ?'
+    ).bind(photoId, user.id).first<{ image_key: string }>();
+
+    if (!photo) return c.json({ error: 'Foto no encontrada' }, 404);
+
+    if (c.env.IMAGES) await c.env.IMAGES.delete(photo.image_key);
+
+    await c.env.DB.prepare(
+      'DELETE FROM driver_vehicle_photos WHERE id = ? AND driver_id = ?'
+    ).bind(photoId, user.id).run();
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to delete vehicle photo' }, 500);
   }
 });

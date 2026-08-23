@@ -271,7 +271,6 @@ function RegisterForm() {
                     {[
                       { value: "moto", label: "Moto", emoji: "🏍️" },
                       { value: "piaggio", label: "Piaggio", emoji: "🛺" },
-                      { value: "taxi", label: "Taxi", emoji: "🚖" },
                       { value: "carro", label: "Van / Carro", emoji: "🚐" },
                     ].map((v) => (
                       <button

@@ -598,7 +598,18 @@ driverRoutes.get('/nearby', async (c) => {
     const lng = parseFloat(c.req.query('lng') || '0');
     const vehicleType = c.req.query('vehicle_type'); // 'moto' | 'carro' | undefined
 
-    let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'`;
+    // Bounding box del Alto Putumayo (Valle de Sibundoy)
+    const BBOX = { latMin: 0.9, latMax: 1.35, lonMin: -77.05, lonMax: -76.65 };
+
+    // Solo conductores dentro de la zona de operación (o sin ubicación registrada aún)
+    let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'
+      AND (
+        d.current_latitude IS NULL OR d.current_longitude IS NULL
+        OR (
+          d.current_latitude  BETWEEN ${BBOX.latMin} AND ${BBOX.latMax}
+          AND d.current_longitude BETWEEN ${BBOX.lonMin} AND ${BBOX.lonMax}
+        )
+      )`;
 
     // Ocultar conductores nocturnos fuera de su horario (6:00pm–6:00am, UTC-5 Colombia)
     const now = new Date();

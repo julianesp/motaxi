@@ -1747,25 +1747,25 @@ export default function DriverProfilePage() {
                   {vehiclePhotos.map(photo => {
                     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
                     return (
-                      <div key={photo.id} className="relative group rounded-lg overflow-hidden aspect-square">
+                      <div key={photo.id} className="relative rounded-lg overflow-hidden aspect-square">
                         <img
                           src={`${API_URL}/images/${photo.image_key}`}
                           alt={photo.caption || 'Foto del vehículo'}
                           className="w-full h-full object-cover"
                         />
-                        {photo.caption && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <p className="text-white text-xs truncate">{photo.caption}</p>
-                          </div>
-                        )}
-                        <button
-                          onClick={() => handleDeleteVehiclePhoto(photo.id)}
-                          className="absolute top-1 right-1 w-6 h-6 bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1.5 py-1 flex items-center justify-between gap-1">
+                          {photo.caption && (
+                            <p className="text-white text-xs truncate flex-1">{photo.caption}</p>
+                          )}
+                          <button
+                            onClick={() => handleDeleteVehiclePhoto(photo.id)}
+                            className="ml-auto flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
+                          >
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     );
                   })}

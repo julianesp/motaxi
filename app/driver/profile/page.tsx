@@ -1436,7 +1436,7 @@ export default function DriverProfilePage() {
             {/* Grid 2 columnas */}
             <div className="grid grid-cols-2 gap-3">
               {/* Publicar ruta compartida — solo para taxis */}
-              {driverInfo.vehicle_types === 'taxi' && (
+              {driverInfo?.vehicle_types === 'taxi' && (
                 <button
                   onClick={() => router.push('/driver/shared-route')}
                   className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"

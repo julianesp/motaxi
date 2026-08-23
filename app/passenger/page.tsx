@@ -1792,8 +1792,8 @@ export default function PassengerHomePage() {
                   <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
                     {/* Lista de conductores */}
                     {nearbyDrivers.length > 0 && (
-                      <div className="divide-y divide-gray-50">
-                        {sortedNearbyDrivers.slice(0, 4).map((driver) => {
+                      <div className="divide-y divide-gray-50 max-h-[60vh] overflow-y-auto">
+                        {sortedNearbyDrivers.map((driver) => {
                           const driverFare =
                             calcFare(
                               driver.base_fare,
@@ -1918,11 +1918,6 @@ export default function PassengerHomePage() {
                             </div>
                           );
                         })}
-                        {nearbyDrivers.length > 4 && (
-                          <p className="text-xs text-center text-gray-400 py-1.5">
-                            +{nearbyDrivers.length - 4} más disponibles
-                          </p>
-                        )}
                       </div>
                     )}
 

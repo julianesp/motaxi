@@ -1435,16 +1435,18 @@ export default function DriverProfilePage() {
           <div className="mt-6">
             {/* Grid 2 columnas */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Publicar ruta compartida */}
-              <button
-                onClick={() => router.push('/driver/shared-route')}
-                className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
-              >
-                <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-                <span className="text-sm font-medium text-gray-800">Publicar ruta</span>
-              </button>
+              {/* Publicar ruta compartida — solo para taxis */}
+              {driverInfo.vehicle_types === 'taxi' && (
+                <button
+                  onClick={() => router.push('/driver/shared-route')}
+                  className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
+                >
+                  <svg className="w-7 h-7 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-800">Publicar ruta</span>
+                </button>
+              )}
 
               {/* Ganancias */}
               <button

@@ -27,6 +27,28 @@ driverRoutes.get('/photos/public', async (c) => {
 });
 
 /**
+ * GET /drivers/registered
+ * Conductores verificados con su foto y municipio (para las burbujas de la homepage)
+ * No requiere autenticación — debe ir ANTES del authMiddleware
+ */
+driverRoutes.get('/registered', async (c) => {
+  try {
+    const drivers = await c.env.DB.prepare(
+      `SELECT u.id, u.full_name, u.profile_image, d.municipality, d.vehicle_types
+       FROM drivers d
+       JOIN users u ON d.id = u.id
+       WHERE d.verification_status = 'approved'
+       ORDER BY d.total_trips DESC, u.full_name ASC
+       LIMIT 40`
+    ).all();
+
+    return c.json({ drivers: drivers.results || [] });
+  } catch (error: any) {
+    return c.json({ error: error.message || 'Failed to get registered drivers' }, 500);
+  }
+});
+
+/**
  * GET /drivers/:id/public
  * Perfil público de un conductor (sin autenticación)
  */

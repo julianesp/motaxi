@@ -34,6 +34,12 @@ const LandingMap = dynamic(() => import("@/components/LandingMap"), {
   ),
 });
 
+// Burbujas de conductores registrados — animación client-side, sin SSR
+const RegisteredDriversBubbles = dynamic(
+  () => import("@/components/RegisteredDriversBubbles"),
+  { ssr: false },
+);
+
 export default function HomePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -765,6 +771,11 @@ export default function HomePage() {
               </div>
             );
           })()}
+
+          {/* Burbujas de conductores registrados */}
+          <div className="mt-16">
+            <RegisteredDriversBubbles />
+          </div>
         </div>
 
         {/* Wave separator */}

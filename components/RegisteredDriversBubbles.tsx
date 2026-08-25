@@ -29,6 +29,22 @@ function initials(full: string): string {
   return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
 }
 
+// Etiqueta y emoji del tipo de vehículo que maneja el conductor
+function vehicleLabel(t?: string | null): { emoji: string; text: string } {
+  switch (t) {
+    case "taxi":
+      return { emoji: "🚕", text: "Taxi" };
+    case "carro":
+    case "particular":
+      return { emoji: "🚗", text: "Carro" };
+    case "piaggio":
+      return { emoji: "🛺", text: "Piaggio" };
+    case "moto":
+    default:
+      return { emoji: "🏍️", text: "Moto" };
+  }
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 
 // Ancho de cada tarjeta de conductor (px), incluye separación
@@ -167,6 +183,10 @@ export default function RegisteredDriversBubbles() {
                   />
                 </svg>
                 {formatMunicipality(driver.municipality)}
+              </p>
+              <p className="mt-0.5 flex items-center justify-center gap-1 text-[10px] text-white/70 font-medium">
+                <span>{vehicleLabel(driver.vehicle_types).emoji}</span>
+                {vehicleLabel(driver.vehicle_types).text}
               </p>
             </div>
           ))}

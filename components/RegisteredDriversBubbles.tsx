@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface RegisteredDriver {
   id: string;
@@ -19,37 +19,29 @@ function formatMunicipality(m?: string | null): string {
     .join(" ");
 }
 
-// Primer nombre + inicial del apellido, y solo iniciales para el avatar
-function firstName(full: string): string {
-  return full.trim().split(/\s+/)[0] || full;
+// Nombre y apellido (máx. 2 palabras) y solo iniciales para el avatar
+function nameAndSurname(full: string): string {
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(" ") || full;
 }
 function initials(full: string): string {
-  const parts = full.trim().split(/\s+/);
+  const parts = full.trim().split(/\s+/).filter(Boolean);
   return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
-}
-
-interface Bubble {
-  driver: RegisteredDriver;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  r: number;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 
+// Ancho de cada tarjeta de conductor (px), incluye separación
+const ITEM_WIDTH = 140;
+const SPEED = 40; // px por segundo hacia la izquierda
+
 export default function RegisteredDriversBubbles() {
   const [drivers, setDrivers] = useState<RegisteredDriver[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const bubblesRef = useRef<Bubble[]>([]);
-  const nodesRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const trackRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
-  const sizeRef = useRef({ w: 0, h: 0 });
-
-  // Modal rotativo de ubicación
-  const [modalIndex, setModalIndex] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
+  const offsetRef = useRef(0);
+  const lastTsRef = useRef<number | null>(null);
+  const pausedRef = useRef(false);
 
   // ── Cargar conductores registrados ──────────────────────────────
   useEffect(() => {
@@ -61,224 +53,102 @@ export default function RegisteredDriversBubbles() {
       .catch(() => {});
   }, []);
 
-  // ── Física de burbujas ──────────────────────────────────────────
-  const measure = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    sizeRef.current = { w: el.clientWidth, h: el.clientHeight };
-  }, []);
-
+  // ── Desplazamiento continuo hacia la izquierda (marquee infinito) ──
   useEffect(() => {
     if (!drivers.length) return;
-    measure();
-    const { w, h } = sizeRef.current;
-    if (!w || !h) return;
 
-    // Radio de burbuja según cantidad — más conductores, burbujas más pequeñas
-    const r = drivers.length > 18 ? 26 : drivers.length > 10 ? 32 : 38;
+    // Ancho de una "vuelta" completa (una copia de la lista)
+    const loopWidth = drivers.length * ITEM_WIDTH;
 
-    bubblesRef.current = drivers.map((driver, i) => {
-      const angle = (i / drivers.length) * Math.PI * 2;
-      return {
-        driver,
-        x: r + Math.random() * (w - 2 * r),
-        y: r + Math.random() * (h - 2 * r),
-        vx: Math.cos(angle) * (0.35 + Math.random() * 0.35),
-        vy: Math.sin(angle) * (0.35 + Math.random() * 0.35),
-        r,
-      };
-    });
+    const step = (ts: number) => {
+      if (lastTsRef.current == null) lastTsRef.current = ts;
+      const dt = (ts - lastTsRef.current) / 1000;
+      lastTsRef.current = ts;
 
-    const step = () => {
-      const { w, h } = sizeRef.current;
-      const bubbles = bubblesRef.current;
-
-      // Mover + rebotar contra paredes
-      for (const b of bubbles) {
-        b.x += b.vx;
-        b.y += b.vy;
-        if (b.x - b.r < 0) {
-          b.x = b.r;
-          b.vx = Math.abs(b.vx);
-        } else if (b.x + b.r > w) {
-          b.x = w - b.r;
-          b.vx = -Math.abs(b.vx);
-        }
-        if (b.y - b.r < 0) {
-          b.y = b.r;
-          b.vy = Math.abs(b.vy);
-        } else if (b.y + b.r > h) {
-          b.y = h - b.r;
-          b.vy = -Math.abs(b.vy);
+      if (!pausedRef.current) {
+        offsetRef.current += SPEED * dt;
+        // Cuando avanzó una lista completa, resetea sin salto visible
+        if (offsetRef.current >= loopWidth) {
+          offsetRef.current -= loopWidth;
         }
       }
 
-      // Colisiones entre burbujas — rebote elástico (masa igual)
-      for (let i = 0; i < bubbles.length; i++) {
-        for (let j = i + 1; j < bubbles.length; j++) {
-          const a = bubbles[i];
-          const c = bubbles[j];
-          const dx = c.x - a.x;
-          const dy = c.y - a.y;
-          const dist = Math.hypot(dx, dy) || 0.001;
-          const minDist = a.r + c.r;
-          if (dist < minDist) {
-            // Separar para que no se solapen
-            const overlap = (minDist - dist) / 2;
-            const nx = dx / dist;
-            const ny = dy / dist;
-            a.x -= nx * overlap;
-            a.y -= ny * overlap;
-            c.x += nx * overlap;
-            c.y += ny * overlap;
-            // Intercambiar componente de velocidad sobre el eje de colisión
-            const va = a.vx * nx + a.vy * ny;
-            const vc = c.vx * nx + c.vy * ny;
-            const diff = vc - va;
-            a.vx += diff * nx;
-            a.vy += diff * ny;
-            c.vx -= diff * nx;
-            c.vy -= diff * ny;
-          }
-        }
+      const track = trackRef.current;
+      if (track) {
+        track.style.transform = `translateX(${-offsetRef.current}px)`;
       }
-
-      // Pintar posiciones en el DOM
-      for (const b of bubbles) {
-        const node = nodesRef.current.get(b.driver.id);
-        if (node) {
-          node.style.transform = `translate(${b.x - b.r}px, ${b.y - b.r}px)`;
-        }
-      }
-
       rafRef.current = requestAnimationFrame(step);
     };
 
     rafRef.current = requestAnimationFrame(step);
-
-    const onResize = () => measure();
-    window.addEventListener("resize", onResize);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("resize", onResize);
-    };
-  }, [drivers, measure]);
-
-  // ── Modal rotativo cada 2s (uno se cierra mientras el siguiente entra) ──
-  useEffect(() => {
-    if (!drivers.length) return;
-    let active = true;
-
-    // Aparecer el primero
-    const showTimeout = setTimeout(() => active && setModalVisible(true), 400);
-
-    const interval = setInterval(() => {
-      if (!active) return;
-      // Cerrar el actual
-      setModalVisible(false);
-      // Mientras se cierra (250ms), preparar el siguiente y abrirlo
-      setTimeout(() => {
-        if (!active) return;
-        setModalIndex((i) => (i + 1) % drivers.length);
-        setModalVisible(true);
-      }, 260);
-    }, 2000);
-
-    return () => {
-      active = false;
-      clearTimeout(showTimeout);
-      clearInterval(interval);
+      lastTsRef.current = null;
     };
   }, [drivers]);
 
   if (!drivers.length) return null;
 
-  const modalDriver = drivers[modalIndex % drivers.length];
+  // Duplicamos la lista para que el loop sea continuo (al salir uno por la
+  // izquierda, la segunda copia ya lo trae de nuevo por la derecha)
+  const loopDrivers = [...drivers, ...drivers];
 
   return (
     <div className="w-full">
-      <div className="text-center mb-6">
+      <div className="text-center mb-8">
         <h2 className="text-3xl lg:text-4xl font-bold text-white">
           Conductores registrados
         </h2>
         <p className="mt-2 text-white/70 max-w-xl mx-auto">
-          Estos son algunos de los mototaxistas verificados que operan en el
-          Valle de Sibundoy
+          Estos son los mototaxistas verificados que operan en el Valle de
+          Sibundoy
         </p>
       </div>
 
+      {/* Carril con máscara: se desvanece en los bordes izq/der */}
       <div
-        ref={containerRef}
-        className="relative mx-auto w-full max-w-3xl h-[360px] rounded-3xl overflow-hidden border border-white/15 bg-white/5 backdrop-blur-sm"
+        className="relative w-full overflow-hidden py-4"
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        }}
+        onMouseEnter={() => (pausedRef.current = true)}
+        onMouseLeave={() => (pausedRef.current = false)}
       >
-        {/* Burbujas */}
-        {drivers.map((driver) => (
-          <div
-            key={driver.id}
-            ref={(el) => {
-              if (el) nodesRef.current.set(driver.id, el);
-              else nodesRef.current.delete(driver.id);
-            }}
-            className="absolute top-0 left-0 will-change-transform"
-            style={{ transform: "translate(-100px, -100px)" }}
-          >
-            <div
-              className="rounded-full overflow-hidden ring-2 ring-[#42CE1D]/80 shadow-lg bg-[#008000] flex items-center justify-center select-none"
-              style={{
-                width:
-                  drivers.length > 18 ? 52 : drivers.length > 10 ? 64 : 76,
-                height:
-                  drivers.length > 18 ? 52 : drivers.length > 10 ? 64 : 76,
-              }}
-              title={driver.full_name}
-            >
-              {driver.profile_image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={driver.profile_image}
-                  alt={driver.full_name}
-                  className="w-full h-full object-cover"
-                  draggable={false}
-                />
-              ) : (
-                <span className="text-white font-bold text-lg">
-                  {initials(driver.full_name)}
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {/* Modal rotativo de ubicación — un solo conductor a la vez */}
         <div
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none transition-all duration-300 ease-out"
-          style={{
-            opacity: modalVisible ? 1 : 0,
-            transform: `translateX(-50%) translateY(${modalVisible ? "0" : "-12px"}) scale(${modalVisible ? 1 : 0.92})`,
-          }}
+          ref={trackRef}
+          className="flex will-change-transform"
+          style={{ width: "max-content" }}
         >
-          <div className="flex items-center gap-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-2xl shadow-2xl px-4 py-2.5 border border-[#42CE1D]/40">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden bg-[#008000] flex items-center justify-center ring-2 ring-[#42CE1D]">
-              {modalDriver?.profile_image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={modalDriver.profile_image}
-                  alt={modalDriver.full_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-white font-bold text-sm">
-                  {modalDriver ? initials(modalDriver.full_name) : ""}
-                </span>
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight truncate max-w-[160px]">
-                {modalDriver ? firstName(modalDriver.full_name) : ""}
+          {loopDrivers.map((driver, i) => (
+            <div
+              key={`${driver.id}-${i}`}
+              className="flex flex-col items-center flex-shrink-0 px-2"
+              style={{ width: ITEM_WIDTH }}
+            >
+              <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-[#42CE1D]/80 shadow-lg bg-[#008000] flex items-center justify-center select-none">
+                {driver.profile_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={driver.profile_image}
+                    alt={driver.full_name}
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <span className="text-white font-bold text-xl">
+                    {initials(driver.full_name)}
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-[11px] leading-tight font-semibold text-white text-center max-w-[132px] truncate w-full">
+                {nameAndSurname(driver.full_name)}
               </p>
-              <p className="flex items-center gap-1 text-xs text-[#008000] font-semibold">
+              <p className="flex items-center justify-center gap-0.5 text-[10px] text-[#42CE1D] font-medium">
                 <svg
-                  className="w-3.5 h-3.5 flex-shrink-0"
+                  className="w-2.5 h-2.5 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -296,10 +166,10 @@ export default function RegisteredDriversBubbles() {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                {formatMunicipality(modalDriver?.municipality)}
+                {formatMunicipality(driver.municipality)}
               </p>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

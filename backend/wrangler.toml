@@ -10,7 +10,9 @@ account_id = "b85347650ec6de9ad5b2873c3389d0e6"
 
 # Variables de entorno
 [vars]
-JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
+# JWT_SECRET se configura como secret cifrado en producción:
+#   wrangler secret put JWT_SECRET
+# (no debe ir aquí en texto plano; rotado el 2026-09-09)
 # CORS_ORIGIN permite requests desde el dominio principal
 # En desarrollo permite localhost, en producción usa motaxi.dev
 CORS_ORIGIN = "https://motaxi.dev,https://www.motaxi.dev,http://localhost:3000"
@@ -40,8 +42,9 @@ binding = "DB"
 database_name = "motaxi-db"
 database_id = "459371b9-0ba7-4864-9369-51ab7e461c08"
 
-[dev]
-remote = true
+# Para desarrollar contra los recursos remotos (misma D1 en producción) usar:
+#   wrangler dev --remote
+# (el campo [dev] remote ya no se soporta en wrangler 4.x; se pasa como flag)
 
 # Configuración de R2 para almacenamiento de imágenes (opcional - para futuro uso)
 [[r2_buckets]]

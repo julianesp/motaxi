@@ -87,6 +87,12 @@ export class AuthUtils {
 
 const EXEMPT_EMAILS = ['julii1295@gmail.com', 'alexriob@gmail.com', 'admin@neurai.dev'];
 
+// Uso gratuito general: mientras esté en false, ningún conductor requiere
+// suscripción activa (motos, piaggio, taxi, etc.) y el cron de renovación no
+// expira ni bloquea cuentas. Poner en true para volver a exigir la suscripción
+// a los conductores de taxi cuando se confirme el cobro.
+export const SUBSCRIPTIONS_ENABLED = false;
+
 /**
  * Middleware de suscripción para rutas de conductor
  * Bloquea si el trial expiró y no tiene suscripción activa
@@ -94,6 +100,12 @@ const EXEMPT_EMAILS = ['julii1295@gmail.com', 'alexriob@gmail.com', 'admin@neura
 export async function subscriptionMiddleware(c: any, next: any) {
   const user = c.get('user');
   if (!user || user.role !== 'driver') {
+    await next();
+    return;
+  }
+
+  // Uso gratuito: no se exige suscripción a nadie por ahora.
+  if (!SUBSCRIPTIONS_ENABLED) {
     await next();
     return;
   }

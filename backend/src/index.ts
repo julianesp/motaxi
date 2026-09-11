@@ -16,6 +16,7 @@ import { sharedRouteRoutes } from './routes/shared_routes';
 import { municipalityRoutes } from './routes/municipalities';
 import { passkeyRoutes } from './routes/passkeys';
 import { runSubscriptionRenewal } from './services/subscription-renewal';
+import { SUBSCRIPTIONS_ENABLED } from './utils/auth';
 
 export interface Env {
   DB: D1Database;
@@ -132,7 +133,13 @@ export default {
       return;
     }
 
-    // Por defecto (cron diario): renovación de suscripciones
+    // Por defecto (cron diario): renovación de suscripciones.
+    // Mientras el uso sea gratuito no se ejecuta: evita expirar/bloquear
+    // cuentas y enviar avisos de cobro a conductores que hoy usan gratis.
+    if (!SUBSCRIPTIONS_ENABLED) {
+      console.log('[cron] Renovación de suscripciones omitida (uso gratuito).');
+      return;
+    }
     ctx.waitUntil(
       runSubscriptionRenewal(env).then(result => {
         console.log(`[cron] Suscripciones procesadas:`, result);

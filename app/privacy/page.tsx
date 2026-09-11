@@ -18,10 +18,27 @@ export default function PrivacyPage() {
       <div className="max-w-3xl mx-auto px-4 py-24">
         <div className="bg-white bg-opacity-90 dark:bg-gray-900/90 rounded-2xl shadow-2xl border border-[#008000] border-opacity-30 p-8 md:p-12 text-black dark:text-gray-100">
           <h1 className="text-3xl font-bold text-[#008000] dark:text-[#42CE1D] mb-2">Política de Privacidad</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">Última actualización: 22 de agosto de 2026</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">Última actualización: 11 de septiembre de 2026</p>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">1. Información que recopilamos</h2>
+            <h2 className="text-xl font-semibold mb-3">1. Responsable del tratamiento y marco legal</h2>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              MoTaxi es responsable del tratamiento de los datos personales que
+              recopila a través de su plataforma. El tratamiento se realiza
+              conforme a la <strong>Ley 1581 de 2012</strong> (Régimen de
+              Protección de Datos Personales — Habeas Data) y sus decretos
+              reglamentarios. Al usar MoTaxi autorizas el tratamiento de tus
+              datos personales en los términos aquí descritos. Para cualquier
+              solicitud relacionada con tus datos, escríbenos a{" "}
+              <a href="mailto:admin@neurai.dev" className="text-[#008000] hover:underline">
+                admin@neurai.dev
+              </a>
+              .
+            </p>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-3">2. Información que recopilamos</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               MoTaxi recopila la siguiente información cuando te registras y usas nuestra plataforma:
             </p>
@@ -36,14 +53,14 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">2. Cómo usamos tu información</h2>
+            <h2 className="text-xl font-semibold mb-3">3. Cómo usamos tu información</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               Usamos tu información exclusivamente para:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 pl-2">
-              <li>Conectar pasajeros con conductores en el Valle de Sibundoy</li>
-              <li>Mostrar tu ubicación durante un viaje activo al conductor o pasajero correspondiente</li>
-              <li>Registrar y conservar la ruta de cada viaje para tu historial y seguridad</li>
+              <li>Dar visibilidad y conectar a usuarios con conductores en el Alto Putumayo</li>
+              <li>Mostrar tu ubicación durante un servicio activo a la otra parte correspondiente (conductor o usuario)</li>
+              <li>Registrar y conservar la ruta de cada envío o servicio para tu historial y seguridad</li>
               <li>Analizar patrones de demanda (de forma agregada y anónima) con inteligencia artificial</li>
               <li>Recomendar a los conductores zonas con alta demanda de servicios</li>
               <li>Enviar notificaciones relacionadas con tus viajes</li>
@@ -55,7 +72,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">3. Ubicación y rastreo de rutas</h2>
+            <h2 className="text-xl font-semibold mb-3">4. Ubicación y rastreo de rutas</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               MoTaxi accede a tu ubicación en tiempo real durante los viajes activos y la comparte únicamente
               con la otra parte del viaje (conductor o pasajero). Adicionalmente, almacenamos de forma permanente:
@@ -73,7 +90,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">4. Análisis de demanda con inteligencia artificial</h2>
+            <h2 className="text-xl font-semibold mb-3">5. Análisis de demanda con inteligencia artificial</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               MoTaxi utiliza los datos históricos de rutas y ubicaciones de viajes (de forma agregada y anónima)
               para alimentar un sistema de inteligencia artificial que analiza patrones de demanda en el Valle de Sibundoy.
@@ -93,7 +110,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">5. Inicio de sesión con Google</h2>
+            <h2 className="text-xl font-semibold mb-3">6. Inicio de sesión con Google</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
               Si eliges iniciar sesión con Google, recibimos tu nombre y correo electrónico desde tu cuenta de Google.
               No tenemos acceso a tu contraseña de Google ni a otros datos de tu cuenta. Esta información se usa
@@ -102,7 +119,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">6. Seguridad</h2>
+            <h2 className="text-xl font-semibold mb-3">7. Seguridad</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
               Protegemos tu información mediante tokens de autenticación seguros (JWT) y comunicaciones cifradas
               (HTTPS). Sin embargo, ningún sistema es 100% seguro. Te recomendamos usar contraseñas únicas y no
@@ -111,14 +128,17 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">7. Tus derechos</h2>
+            <h2 className="text-xl font-semibold mb-3">8. Tus derechos (Habeas Data)</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Tienes derecho a:
+              Conforme a la Ley 1581 de 2012, como titular de los datos tienes
+              derecho a:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 pl-2">
-              <li>Acceder a los datos que tenemos sobre ti</li>
-              <li>Solicitar la corrección de datos incorrectos</li>
-              <li>Solicitar la eliminación de tu cuenta y datos asociados</li>
+              <li>Conocer y acceder a los datos que tenemos sobre ti</li>
+              <li>Actualizar y rectificar datos incorrectos, inexactos o desactualizados</li>
+              <li>Solicitar prueba de la autorización otorgada para su tratamiento</li>
+              <li>Revocar la autorización y solicitar la supresión de tu cuenta y datos asociados, salvo cuando exista un deber legal de conservarlos</li>
+              <li>Presentar quejas ante la Superintendencia de Industria y Comercio (SIC) por infracciones a la ley de protección de datos</li>
             </ul>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-3">
               Para ejercer estos derechos, contáctanos en{" "}
@@ -130,7 +150,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">8. Menores de edad</h2>
+            <h2 className="text-xl font-semibold mb-3">9. Menores de edad</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
               MoTaxi no está dirigida a personas menores de 18 años. No recopilamos conscientemente información
               de menores. Si detectamos una cuenta de un menor, la eliminaremos de inmediato.
@@ -138,13 +158,13 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-3">9. Contacto</h2>
+            <h2 className="text-xl font-semibold mb-3">10. Contacto</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
               Si tienes preguntas sobre esta política, escríbenos a{" "}
               <a href="mailto:admin@neurai.dev" className="text-[#008000] hover:underline">
                 admin@neurai.dev
               </a>
-              . Estamos ubicados en el Valle de Sibundoy, Putumayo, Colombia.
+              . Estamos ubicados en el Alto Putumayo, Colombia.
             </p>
           </section>
         </div>

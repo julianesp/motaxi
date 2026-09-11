@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
+import { COVERAGE_BOUNDS } from '../utils/coverage';
 
 export const driverRoutes = new Hono<{ Bindings: Env }>();
 
@@ -620,8 +621,8 @@ driverRoutes.get('/nearby', async (c) => {
     const lng = parseFloat(c.req.query('lng') || '0');
     const vehicleType = c.req.query('vehicle_type'); // 'moto' | 'carro' | undefined
 
-    // Bounding box del Alto Putumayo (Valle de Sibundoy)
-    const BBOX = { latMin: 0.9, latMax: 1.35, lonMin: -77.05, lonMax: -76.65 };
+    // Bounding box del Alto Putumayo — fuente única en utils/coverage.ts
+    const BBOX = COVERAGE_BOUNDS;
 
     // Solo conductores dentro de la zona de operación (o sin ubicación registrada aún)
     let whereClause = `d.is_available = 1 AND d.verification_status = 'approved'

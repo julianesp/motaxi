@@ -310,7 +310,7 @@ export default function HomePage() {
                   <span>🚛</span><span>Cargas y trasteos</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-sm text-white">
-                  <span>🏍️</span><span>Transporte de personas</span>
+                  <span>🏍️</span><span>Domicilios y mensajería</span>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -846,8 +846,8 @@ export default function HomePage() {
               Zonas de cobertura
             </h2>
             <p className="text-xl text-black dark:text-gray-200 max-w-2xl mx-auto">
-              Iniciamos en el Valle de Sibundoy, pero MoTaxi funciona desde
-              cualquier lugar donde haya conductores registrados cerca de ti
+              MoTaxi opera exclusivamente en los municipios del Alto Putumayo
+              (Valle de Sibundoy): Sibundoy, Santiago, Colón y San Francisco
             </p>
           </div>
 
@@ -1601,16 +1601,30 @@ export default function HomePage() {
                 Aviso sobre métodos de pago
               </h3>
               <p className="text-black dark:text-gray-200 leading-relaxed">
-                <strong>MoTaxi es una plataforma de conexión</strong> entre
-                conductores y pasajeros. El método de pago de cada viaje es
-                acordado directamente y de forma libre entre las partes
-                involucradas (efectivo, transferencia, u otro medio que
-                decidan).{" "}
+                <strong>
+                  MoTaxi es una plataforma tecnológica que solo da visibilidad
+                </strong>{" "}
+                y facilita el contacto entre conductores independientes y
+                usuarios en el Alto Putumayo. MoTaxi no es una empresa de
+                transporte, no presta el servicio, no posee vehículos y no
+                vincula laboralmente a los conductores. El método de pago de cada
+                servicio es acordado directa y libremente entre las partes
+                (efectivo, transferencia, u otro medio que decidan).{" "}
                 <strong>
                   MoTaxi no procesa, gestiona ni intermedia ningún pago
-                </strong>
-                , por lo que no asume responsabilidad alguna sobre las
-                transacciones económicas realizadas entre conductor y pasajero.
+                </strong>{" "}
+                y no asume responsabilidad sobre las transacciones ni sobre la
+                legalidad del servicio, la cual es responsabilidad exclusiva de
+                cada conductor conforme a la normativa de transporte colombiana.
+                Consulta nuestros{" "}
+                <a href="/terms" className="underline font-semibold">
+                  Términos y Condiciones
+                </a>{" "}
+                y la{" "}
+                <a href="/privacy" className="underline font-semibold">
+                  Política de Privacidad
+                </a>
+                .
               </p>
             </div>
           </div>
@@ -1734,7 +1748,7 @@ export default function HomePage() {
               ¿Listo para comenzar?
             </h2>
             <p className="text-xl text-green-100 dark:text-green-200/80 mb-8">
-              Únete a la revolución del transporte, desde cualquier lugar
+              Únete a la plataforma de domicilios y transporte del Alto Putumayo
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button

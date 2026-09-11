@@ -71,10 +71,11 @@ export const VALLE_SIBUNDOY_CENTER = {
   lng: -77.0,
 };
 
-// Límites aproximados del Valle
+// Bounding box del Alto Putumayo (Valle de Sibundoy y alrededores)
+// Fuente única de verdad: backend/src/utils/coverage.ts (COVERAGE_BOUNDS)
 export const VALLE_BOUNDS = {
-  north: 1.25,
-  south: 1.08,
-  east: -76.85,
-  west: -77.15,
+  north: 1.35,
+  south: 0.9,
+  east: -76.65,
+  west: -77.05,
 };

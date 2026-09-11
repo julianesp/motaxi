@@ -4,6 +4,7 @@ import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
 import { sendWebPush } from '../services/web-push';
 import { TelegramService } from '../services/telegram';
+import { isWithinCoverage, COVERAGE_LABEL, COVERAGE_BOUNDS } from '../utils/coverage';
 
 export const tripRoutes = new Hono<{ Bindings: Env }>();
 
@@ -72,6 +73,23 @@ tripRoutes.post('/', async (c) => {
 
     if (user.role !== 'passenger') {
       return c.json({ error: 'Only passengers can create trips' }, 403);
+    }
+
+    // Cobertura: MoTaxi opera exclusivamente en el Alto Putumayo.
+    // Se valida en el backend además del cliente para rechazar solicitudes
+    // hechas por fuera de la app o con la validación del cliente evadida.
+    const pickupOk = isWithinCoverage(pickup_latitude, pickup_longitude);
+    const dropoffOk = isWithinCoverage(dropoff_latitude, dropoff_longitude);
+    if (!pickupOk || !dropoffOk) {
+      return c.json(
+        {
+          error: `Fuera de la zona de cobertura. MoTaxi solo presta servicio dentro del ${COVERAGE_LABEL}.`,
+          out_of_coverage: true,
+          pickup_ok: pickupOk,
+          dropoff_ok: dropoffOk,
+        },
+        422
+      );
     }
 
     const HOME_PICKUP_SURCHARGE = 1000;
@@ -234,9 +252,8 @@ tripRoutes.get('/active', async (c) => {
       });
     }
 
-    // Bounding box del Alto Putumayo (Valle de Sibundoy y alrededores)
-    // lat: 0.9° – 1.35°  |  lon: -77.05° – -76.65°
-    const LAT_MIN = 0.9, LAT_MAX = 1.35, LON_MIN = -77.05, LON_MAX = -76.65;
+    // Bounding box del Alto Putumayo — fuente única en utils/coverage.ts
+    const { latMin: LAT_MIN, latMax: LAT_MAX, lonMin: LON_MIN, lonMax: LON_MAX } = COVERAGE_BOUNDS;
 
     // Obtener solicitudes disponibles (estado 'requested' sin conductor asignado)
     // Filtra por bounding box del Alto Putumayo para evitar viajes de otras zonas

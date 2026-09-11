@@ -5,6 +5,14 @@ import { COVERAGE_BOUNDS } from '../utils/coverage';
 
 export const driverRoutes = new Hono<{ Bindings: Env }>();
 
+// SOAT obligatorio con período de gracia.
+// SOAT_GRACE_CUTOFF: fecha (epoch s) a partir de la cual el SOAT es obligatorio.
+//   Conductores registrados antes de esta fecha tienen SOAT_GRACE_PERIOD_SECONDS
+//   contados desde el corte para subirlo. Los registrados después, ese mismo
+//   plazo desde su registro. 1789084800 = 2026-09-11 00:00 UTC.
+const SOAT_GRACE_CUTOFF = 1789084800;
+const SOAT_GRACE_PERIOD_SECONDS = 30 * 24 * 60 * 60; // 30 días
+
 /**
  * GET /drivers/photos/public
  * Fotos públicas recientes de todos los conductores (para la homepage)
@@ -412,43 +420,73 @@ driverRoutes.put('/availability', async (c) => {
       return c.json({ error: 'Only drivers can update availability' }, 403);
     }
 
-    // Verificar si el perfil está completo antes de permitir activarse
+    // Verificar que el perfil esté completo antes de permitir activarse.
+    // Se exige que el conductor haya registrado todos sus campos obligatorios.
     if (isAvailable) {
       const driver = await c.env.DB.prepare(
-        'SELECT profile_completed, verification_status, vehicle_plate, license_number FROM drivers WHERE id = ?'
+        `SELECT d.profile_completed, d.verification_status, d.vehicle_plate, d.vehicle_model,
+                d.vehicle_color, d.license_number, d.municipality, d.soat_image_url,
+                u.created_at AS created_at
+         FROM drivers d JOIN users u ON u.id = d.id
+         WHERE d.id = ?`
       )
         .bind(user.id)
-        .first<{ profile_completed: number; verification_status: string; vehicle_plate: string; license_number: string }>();
+        .first<{
+          profile_completed: number;
+          verification_status: string;
+          vehicle_plate: string;
+          vehicle_model: string;
+          vehicle_color: string;
+          license_number: string;
+          municipality: string | null;
+          soat_image_url: string | null;
+          created_at: number | null;
+        }>();
 
-      // TODO: Reactivar cuando haya suficientes conductores y pasajeros registrados.
-      // if (!driver) {
-      //   await c.env.DB.prepare(
-      //     `INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, verification_status, is_available, profile_completed)
-      //      VALUES (?, ?, ?, '', '', 'pending', 0, 0)`
-      //   ).bind(user.id, `tmp_${user.id}`, `tmp_${user.id}`).run();
-      //   return c.json({
-      //     error: 'Debes completar tu perfil antes de activarte',
-      //     profileIncomplete: true
-      //   }, 400);
-      // }
+      if (!driver) {
+        return c.json({ error: 'Perfil de conductor no encontrado', profileIncomplete: true }, 400);
+      }
 
-      // TODO: Reactivar cuando haya suficientes conductores y pasajeros registrados.
-      // if (!driver.profile_completed) {
-      //   return c.json({
-      //     error: 'Debes completar tu perfil antes de activarte',
-      //     profileIncomplete: true
-      //   }, 400);
-      // }
+      // Un valor es "PENDING" si está vacío o usa los prefijos autogenerados por el sistema.
+      const isPending = (val: string | null | undefined) =>
+        !val ||
+        val.trim() === '' ||
+        val.startsWith('PENDING') ||
+        val.startsWith('tmp_') ||
+        val.startsWith('P-') ||
+        val.startsWith('L-');
 
-      // TODO: Reactivar cuando haya suficientes conductores y pasajeros registrados.
-      // Verificar que placa y licencia sean datos reales (no valores PENDING generados automáticamente)
-      // const isPending = (val: string) => !val || val.startsWith('PENDING') || val.startsWith('tmp_') || val.startsWith('P-') || val.startsWith('L-');
-      // if (isPending(driver.vehicle_plate) || isPending(driver.license_number)) {
-      //   return c.json({
-      //     error: 'Debes registrar tu placa y número de licencia reales antes de activarte. Los pasajeros dependen de esta información para su seguridad.',
-      //     missingVehicleInfo: true
-      //   }, 400);
-      // }
+      // Campos obligatorios del vehículo y del conductor.
+      const missing: string[] = [];
+      if (isPending(driver.vehicle_plate)) missing.push('placa');
+      if (isPending(driver.vehicle_model)) missing.push('modelo del vehículo');
+      if (isPending(driver.vehicle_color)) missing.push('color del vehículo');
+      if (isPending(driver.license_number)) missing.push('número de licencia');
+      if (isPending(driver.municipality)) missing.push('municipio');
+
+      if (missing.length > 0) {
+        return c.json({
+          error: `Debes completar tu perfil antes de activarte. Faltan: ${missing.join(', ')}. Los pasajeros dependen de esta información para su seguridad.`,
+          profileIncomplete: true,
+          missingFields: missing,
+        }, 400);
+      }
+
+      // SOAT obligatorio con período de gracia: los conductores registrados antes
+      // de la fecha de corte tienen plazo para subirlo; los nuevos deben subirlo ya.
+      if (!driver.soat_image_url || driver.soat_image_url.trim() === '') {
+        const nowSec = Math.floor(Date.now() / 1000);
+        const createdAt = driver.created_at ?? nowSec;
+        const graceEnds = createdAt < SOAT_GRACE_CUTOFF
+          ? SOAT_GRACE_CUTOFF + SOAT_GRACE_PERIOD_SECONDS // conductores previos: plazo desde el corte
+          : createdAt + SOAT_GRACE_PERIOD_SECONDS;         // nuevos: plazo desde su registro
+        if (nowSec >= graceEnds) {
+          return c.json({
+            error: 'Debes subir la foto de tu SOAT vigente para poder activarte. Es un requisito legal en Colombia.',
+            soatRequired: true,
+          }, 400);
+        }
+      }
     }
 
     await c.env.DB.prepare('UPDATE drivers SET is_available = ? WHERE id = ?')

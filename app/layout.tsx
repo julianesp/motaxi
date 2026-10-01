@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import VehicleNoticeAlert from "@/components/VehicleNoticeAlert";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import Footer from "@/components/Footer/page";
@@ -190,7 +191,10 @@ export default function RootLayout({
             <OpenInBrowser />
             <InstallPWAModal />
             <GoogleMapsProvider>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <VehicleNoticeAlert />
+                {children}
+              </AuthProvider>
             </GoogleMapsProvider>
             <Footer />
           </ThemeProvider>

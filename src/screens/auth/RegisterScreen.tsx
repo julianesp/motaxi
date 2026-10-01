@@ -32,12 +32,13 @@ const RegisterScreen: React.FC<Props> = ({ route }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [vehicleType, setVehicleType] = useState<'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular'>('moto');
+  const [vehicleType, setVehicleType] = useState<'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular'>('carro');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
 
   const VEHICLE_OPTIONS: { value: 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular'; label: string; icon: string }[] = [
-    { value: 'moto', label: 'Mototaxi', icon: '🏍️' },
+    // Moto deshabilitada temporalmente (sin autorización de operación)
+    // { value: 'moto', label: 'Mototaxi', icon: '🏍️' },
     { value: 'taxi', label: 'Taxi', icon: '🚕' },
     { value: 'carro', label: 'Carro / Van', icon: '🚐' },
     { value: 'piaggio', label: 'Piaggio', icon: '🛻' },

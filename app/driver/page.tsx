@@ -1409,7 +1409,7 @@ export default function DriverHomePage() {
                 {onboardingStep === 1 && (
                   <div className="text-center space-y-5">
                     <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-full flex items-center justify-center mx-auto shadow-lg">
-                      <span className="text-4xl">🏍️</span>
+                      <span className="text-4xl">🚐</span>
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Bienvenido, {user?.full_name?.split(' ')[0]}!</h2>
@@ -1419,7 +1419,7 @@ export default function DriverHomePage() {
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 text-left space-y-3">
                       {[
-                        { icon: '🏍️', text: 'Datos de tu moto' },
+                        { icon: '🚐', text: 'Datos de tu vehículo' },
                         { icon: '📍', text: 'Tu municipio' },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center gap-3">
@@ -1484,7 +1484,8 @@ export default function DriverHomePage() {
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                           {([
-                            { value: 'moto' as const, icon: '🏍️', label: 'Mototaxi' },
+                            // Moto deshabilitada temporalmente (sin autorización de operación)
+                            // { value: 'moto' as const, icon: '🏍️', label: 'Mototaxi' },
                             { value: 'piaggio' as const, icon: '🛻', label: 'Piaggio' },
                             { value: 'taxi' as const, icon: '🚖', label: 'Taxi' },
                             { value: 'carro' as const, icon: '🚐', label: 'Van / Carro' },
@@ -1598,7 +1599,7 @@ export default function DriverHomePage() {
                       <div className="space-y-1 text-sm text-gray-700">
                         {profileData.vehicle_types && (
                           <div className="flex justify-between"><span className="text-gray-500">Tipo:</span><span className="font-medium capitalize">{
-                            { moto: '🏍️ Mototaxi', taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio' }[profileData.vehicle_types] || profileData.vehicle_types
+                            ({ taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio' } as Record<string, string>)[profileData.vehicle_types] || profileData.vehicle_types
                           }</span></div>
                         )}
                         <div className="flex justify-between"><span className="text-gray-500">Modelo:</span><span className="font-medium">{profileData.vehicle_model}</span></div>

@@ -17,23 +17,24 @@ const inter = Inter({ subsets: ["latin"], display: "swap", preload: true });
 
 export const metadata: Metadata = {
   manifest: "/manifest.json",
-  title: "MoTaxi - Mototaxi en el Valle de Sibundoy, Putumayo",
+  title: "MoTaxi - Transporte en el Valle de Sibundoy, Putumayo",
   description:
-    "Pide tu mototaxi en Sibundoy, Santiago, Colón y San Francisco (Putumayo, Colombia). Conectamos pasajeros con conductores de moto cerca de ti. Rápido, seguro y económico.",
+    "Pide tu transporte en Sibundoy, Santiago, Colón y San Francisco (Putumayo, Colombia). Conectamos pasajeros con conductores cerca de ti. Rápido, seguro y económico.",
   keywords: [
-    "mototaxi Valle de Sibundoy",
-    "mototaxi Sibundoy",
-    "mototaxi Alto Putumayo",
-    "mototaxi alto putumayo",
-    "mototaxi Santiago Putumayo",
-    "mototaxi Colón Putumayo",
-    "mototaxi San Francisco Putumayo",
-    "moto taxi Putumayo",
+    // Keywords de moto comentadas temporalmente (moto deshabilitada)
+    // "mototaxi Valle de Sibundoy",
+    // "mototaxi Sibundoy",
+    // "mototaxi Alto Putumayo",
+    // "mototaxi alto putumayo",
+    // "mototaxi Santiago Putumayo",
+    // "mototaxi Colón Putumayo",
+    // "mototaxi San Francisco Putumayo",
+    // "moto taxi Putumayo",
     "transporte Sibundoy",
-    "taxi moto Putumayo",
-    "mototaxista Valle de Sibundoy",
+    // "taxi moto Putumayo",
+    // "mototaxista Valle de Sibundoy",
     "transporte Valle de Sibundoy",
-    "moto taxi Colombia",
+    // "moto taxi Colombia",
     "MoTaxi",
   ],
   metadataBase: new URL("https://motaxi.dev"),
@@ -104,7 +105,7 @@ export default function RootLayout({
                 "@type": "LocalBusiness",
                 name: "MoTaxi",
                 description:
-                  "Servicio de mototaxi en el Valle de Sibundoy, Putumayo, Colombia. Conectamos pasajeros con conductores de moto en Sibundoy, Santiago, Colón y San Francisco.",
+                  "Servicio de transporte en el Valle de Sibundoy, Putumayo, Colombia. Conectamos pasajeros con conductores en Sibundoy, Santiago, Colón y San Francisco.",
                 url: "https://motaxi.dev",
                 logo: "https://motaxi.dev/logo.png",
                 image:

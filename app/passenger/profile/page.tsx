@@ -100,7 +100,7 @@ export default function PassengerProfilePage() {
       `,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: '🏍️ Sí, ser conductor',
+      confirmButtonText: '🚐 Sí, ser conductor',
       confirmButtonColor: '#008000',
       cancelButtonText: 'Cancelar',
       cancelButtonColor: '#6b7280',
@@ -554,7 +554,7 @@ export default function PassengerProfilePage() {
                 onClick={handleSwitchToDriver}
                 className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors border border-green-100 min-h-[90px]"
               >
-                <span className="text-2xl">🏍️</span>
+                <span className="text-2xl">🚐</span>
                 <span className="text-sm font-medium text-[#008000]">Ser Conductor</span>
               </button>
 

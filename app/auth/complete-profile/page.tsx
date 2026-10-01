@@ -78,7 +78,8 @@ export default function CompleteProfilePage() {
   };
 
   const vehicleOptions = [
-    { value: "moto", label: "Moto", emoji: "🏍️" },
+    // Moto deshabilitada temporalmente (sin autorización de operación)
+    // { value: "moto", label: "Moto", emoji: "🏍️" },
     { value: "piaggio", label: "Piaggio", emoji: "🛺" },
     { value: "carro", label: "Van / Carro", emoji: "🚐" },
   ];
@@ -117,7 +118,7 @@ export default function CompleteProfilePage() {
               <div className="grid grid-cols-2 gap-2">
                 {([
                   { value: "passenger", label: "Pasajero", emoji: "🧍" },
-                  { value: "driver", label: "Conductor", emoji: "🏍️" },
+                  { value: "driver", label: "Conductor", emoji: "🚐" },
                 ] as { value: Role; label: string; emoji: string }[]).map((r) => (
                   <button
                     key={r.value}

@@ -80,11 +80,12 @@ export default function LandingMap() {
     driverMarkersRef.current = [];
 
     const vehicleIcons: Record<string, string> = {
-      moto: '🏍️', taxi: '🚕', carro: '🚐', piaggio: '🛻', ambos: '🏍️',
+      // Moto deshabilitada temporalmente: moto: '🏍️', ambos: '🏍️'
+      taxi: '🚕', carro: '🚐', piaggio: '🛻',
     };
 
     activeDrivers.forEach((driver) => {
-      const icon = vehicleIcons[driver.vehicle_types || 'moto'] ?? '🏍️';
+      const icon = vehicleIcons[driver.vehicle_types || 'carro'] ?? '🚐';
       const dot = document.createElement('div');
       dot.style.cssText = `
         width: 28px; height: 28px;

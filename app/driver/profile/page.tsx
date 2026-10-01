@@ -150,7 +150,8 @@ export default function DriverProfilePage() {
     intercity_fare: '' as number | string,
     rural_fare: '' as number | string,
     per_km_fare: '' as number | string,
-    vehicle_types: 'moto' as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular',
+    // Moto deshabilitada temporalmente: el valor por defecto pasa de 'moto' a 'carro'
+    vehicle_types: 'carro' as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular',
     usual_hours: '',
     usual_origin: '',
     usual_destination: '',
@@ -220,7 +221,7 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || 5000,
           rural_fare: driver.rural_fare || 4000,
           per_km_fare: driver.per_km_fare || 500,
-          vehicle_types: driver.vehicle_types || 'moto',
+          vehicle_types: driver.vehicle_types || 'carro',
         });
 
         // Inicializar formData del conductor
@@ -240,7 +241,7 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || '',
           rural_fare: driver.rural_fare || '',
           per_km_fare: driver.per_km_fare || '',
-          vehicle_types: (driver.vehicle_types as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular') || 'moto',
+          vehicle_types: (driver.vehicle_types as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular') || 'carro',
           usual_hours: driver.usual_hours || '',
           usual_origin: driver.usual_origin || '',
           usual_destination: driver.usual_destination || '',
@@ -963,7 +964,8 @@ export default function DriverProfilePage() {
                       {isEditing ? (
                         <div className="grid grid-cols-2 gap-2">
                           {([
-                            { value: 'moto', label: '🏍️', desc: 'Mototaxi' },
+                            // Moto deshabilitada temporalmente (sin autorización de operación)
+                            // { value: 'moto', label: '🏍️', desc: 'Mototaxi' },
                             { value: 'taxi', label: '🚕', desc: 'Taxi' },
                             { value: 'carro', label: '🚐', desc: 'Carro / Van' },
                             { value: 'piaggio', label: '🛻', desc: 'Piaggio' },
@@ -987,7 +989,7 @@ export default function DriverProfilePage() {
                       ) : (
                         <div className="flex items-center">
                           <span className="text-gray-900">
-                            {({ moto: '🏍️ Mototaxi', taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio', particular: '🚗 Particular' } as Record<string, string>)[driverInfo.vehicle_types ?? ''] ?? '🏍️ Mototaxi'}
+                            {({ taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio', particular: '🚗 Particular' } as Record<string, string>)[driverInfo.vehicle_types ?? ''] ?? '🚐 Vehículo'}
                           </span>
                         </div>
                       )}
@@ -1637,7 +1639,7 @@ export default function DriverProfilePage() {
               </div>
             </div>
 
-            {/* Código QR para la moto */}
+            {/* Código QR para tu vehículo */}
             <div className="mt-3 bg-white rounded-xl shadow-md p-4">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -1646,8 +1648,8 @@ export default function DriverProfilePage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800">Código QR para tu moto</p>
-                  <p className="text-xs text-gray-500">Imprímelo y pégalo en tu moto para que los pasajeros entren al sitio al escanearlo.</p>
+                  <p className="font-semibold text-gray-800">Código QR para tu vehículo</p>
+                  <p className="text-xs text-gray-500">Imprímelo y pégalo en tu vehículo para que los pasajeros entren al sitio al escanearlo.</p>
                 </div>
               </div>
 
@@ -1689,7 +1691,7 @@ export default function DriverProfilePage() {
             <div className="mt-3 bg-white rounded-xl shadow-md p-4">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">🏍️</span>
+                  <span className="text-xl">🚐</span>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-800">Fotos de mi vehículo</p>

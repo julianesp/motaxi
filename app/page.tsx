@@ -295,22 +295,31 @@ export default function HomePage() {
                 </span>
               </div>
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-                Envíos en moto,
-                <br />al instante
+                {/* Moto deshabilitada temporalmente (sin autorización): "Envíos en moto," */}
+                Envíos y viajes,
+                <br />
+                al instante
               </h1>
               <p className="text-xl text-white max-w-lg">
-                Manda paquetes a cualquier punto del Valle de Sibundoy en minutos.
-                Motos disponibles ahora mismo — elige conductor, precio y sigue tu envío en tiempo real.
+                Manda paquetes a cualquier punto del Valle de Sibundoy en
+                minutos.
+                {/* Moto deshabilitada temporalmente: "Motos disponibles ahora mismo" */}
+                Conductores disponibles ahora mismo — elige conductor, precio y
+                sigue tu envío en tiempo real.
               </p>
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-sm text-white">
-                  <span>📦</span><span>Envíos de paquetes</span>
+                  <span>📦</span>
+                  <span>Envíos de paquetes</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-sm text-white">
-                  <span>🚛</span><span>Cargas y trasteos</span>
+                  <span>🚛</span>
+                  <span>Cargas y trasteos</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-sm text-white">
-                  <span>🏍️</span><span>Domicilios y mensajería</span>
+                  {/* Moto deshabilitada temporalmente: <span>🏍️</span> */}
+                  <span>🚐</span>
+                  <span>Domicilios y mensajería</span>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -604,7 +613,7 @@ export default function HomePage() {
                 ),
                 titulo: "Publica tu negocio en tu municipio",
                 descripcion:
-                  "Ingresa a tu municipio y sube la dirección y fotos de tu local. Otros usuarios podrán verte y pedir un mototaxi directamente a tu negocio.",
+                  "Ingresa a tu municipio y sube la dirección y fotos de tu local. Otros usuarios podrán verte y pedir un servicio de transporte directamente a tu negocio.",
                 boton: "Explorar",
                 accion: () => router.push("/municipio/santiago"),
               },
@@ -1319,7 +1328,8 @@ export default function HomePage() {
               Guías de uso
             </h2>
             <p className="mt-3 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
-              Todo lo que necesitas saber para enviar y recibir paquetes con MoTaxi.
+              Todo lo que necesitas saber para enviar y recibir paquetes con
+              MoTaxi.
             </p>
           </div>
 
@@ -1329,24 +1339,65 @@ export default function HomePage() {
               <div className="bg-gradient-to-r from-[#008000] to-[#42CE1D] px-6 py-4 flex items-center gap-3">
                 <span className="text-3xl">📦</span>
                 <div>
-                  <p className="text-white font-bold text-lg">Cómo enviar un paquete</p>
-                  <p className="text-green-100 text-sm">Para clientes y remitentes</p>
+                  <p className="text-white font-bold text-lg">
+                    Cómo enviar un paquete
+                  </p>
+                  <p className="text-green-100 text-sm">
+                    Para clientes y remitentes
+                  </p>
                 </div>
               </div>
               <ol className="p-6 space-y-4">
                 {[
-                  { n: 1, icon: "📱", title: "Regístrate o inicia sesión", desc: "Crea tu cuenta gratuita en segundos con tu número de celular." },
-                  { n: 2, icon: "📍", title: "Ingresa los puntos del envío", desc: "Selecciona de dónde recogen el paquete y a dónde lo llevan." },
-                  { n: 3, icon: "👤", title: "Agrega los datos del destinatario", desc: "Nombre y teléfono de quien lo recibe para que el conductor pueda coordinar." },
-                  { n: 4, icon: "📸", title: "Toma una foto del paquete", desc: "Opcional pero recomendado — así el conductor sabe exactamente qué va a recoger." },
-                  { n: 5, icon: "🏍️", title: "Elige conductor y confirma", desc: "Ve los conductores disponibles con su tarifa. Selecciona el que más te convenga y solicita." },
-                  { n: 6, icon: "📲", title: "Sigue el envío en tiempo real", desc: "Monitorea en el mapa dónde está tu paquete hasta que llegue al destino." },
-                ].map(s => (
+                  {
+                    n: 1,
+                    icon: "📱",
+                    title: "Regístrate o inicia sesión",
+                    desc: "Crea tu cuenta gratuita en segundos con tu número de celular.",
+                  },
+                  {
+                    n: 2,
+                    icon: "📍",
+                    title: "Ingresa los puntos del envío",
+                    desc: "Selecciona de dónde recogen el paquete y a dónde lo llevan.",
+                  },
+                  {
+                    n: 3,
+                    icon: "👤",
+                    title: "Agrega los datos del destinatario",
+                    desc: "Nombre y teléfono de quien lo recibe para que el conductor pueda coordinar.",
+                  },
+                  {
+                    n: 4,
+                    icon: "📸",
+                    title: "Toma una foto del paquete",
+                    desc: "Opcional pero recomendado — así el conductor sabe exactamente qué va a recoger.",
+                  },
+                  {
+                    n: 5,
+                    icon: "🚐" /* moto deshabilitada temporalmente: 🏍️ */,
+                    title: "Elige conductor y confirma",
+                    desc: "Ve los conductores disponibles con su tarifa. Selecciona el que más te convenga y solicita.",
+                  },
+                  {
+                    n: 6,
+                    icon: "📲",
+                    title: "Sigue el envío en tiempo real",
+                    desc: "Monitorea en el mapa dónde está tu paquete hasta que llegue al destino.",
+                  },
+                ].map((s) => (
                   <li key={s.n} className="flex gap-4">
-                    <div className="w-8 h-8 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[#008000] text-sm">{s.n}</div>
+                    <div className="w-8 h-8 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[#008000] text-sm">
+                      {s.n}
+                    </div>
                     <div>
-                      <p className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5"><span>{s.icon}</span>{s.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{s.desc}</p>
+                      <p className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                        <span>{s.icon}</span>
+                        {s.title}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        {s.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -1356,26 +1407,66 @@ export default function HomePage() {
             {/* Guía conductor */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 flex items-center gap-3">
-                <span className="text-3xl">🏍️</span>
+                {/* Moto deshabilitada temporalmente: <span className="text-3xl">🏍️</span> */}
+                <span className="text-3xl">🚐</span>
                 <div>
-                  <p className="text-white font-bold text-lg">Cómo recibir pedidos</p>
-                  <p className="text-gray-400 text-sm">Para conductores (mototaxistas)</p>
+                  <p className="text-white font-bold text-lg">
+                    Cómo recibir pedidos
+                  </p>
+                  <p className="text-gray-400 text-sm">Para conductores</p>
                 </div>
               </div>
               <ol className="p-6 space-y-4">
                 {[
-                  { n: 1, icon: "✅", title: "Regístrate y espera verificación", desc: "El equipo de MoTaxi revisa tu documentación. Normalmente en menos de 24 horas." },
-                  { n: 2, icon: "🟢", title: "Activa tu disponibilidad", desc: "En tu dashboard activa el interruptor verde para que te lleguen solicitudes." },
-                  { n: 3, icon: "🔔", title: "Recibe la notificación del pedido", desc: "Te llega una alerta con el origen, destino, peso estimado y tarifa del envío." },
-                  { n: 4, icon: "📦", title: "Revisa los detalles del paquete", desc: "Ve la foto, el tamaño y los datos del destinatario antes de aceptar." },
-                  { n: 5, icon: "🚀", title: "Acepta y dirígete al punto de recogida", desc: "El mapa te guía hasta donde está el remitente para recoger el paquete." },
-                  { n: 6, icon: "💵", title: "Entrega y cobra", desc: "Lleva el paquete al destino. El pago es en efectivo o Nequi directamente al terminar." },
-                ].map(s => (
+                  {
+                    n: 1,
+                    icon: "✅",
+                    title: "Regístrate y espera verificación",
+                    desc: "El equipo de MoTaxi revisa tu documentación. Normalmente en menos de 24 horas.",
+                  },
+                  {
+                    n: 2,
+                    icon: "🟢",
+                    title: "Activa tu disponibilidad",
+                    desc: "En tu dashboard activa el interruptor verde para que te lleguen solicitudes.",
+                  },
+                  {
+                    n: 3,
+                    icon: "🔔",
+                    title: "Recibe la notificación del pedido",
+                    desc: "Te llega una alerta con el origen, destino, peso estimado y tarifa del envío.",
+                  },
+                  {
+                    n: 4,
+                    icon: "📦",
+                    title: "Revisa los detalles del paquete",
+                    desc: "Ve la foto, el tamaño y los datos del destinatario antes de aceptar.",
+                  },
+                  {
+                    n: 5,
+                    icon: "🚀",
+                    title: "Acepta y dirígete al punto de recogida",
+                    desc: "El mapa te guía hasta donde está el remitente para recoger el paquete.",
+                  },
+                  {
+                    n: 6,
+                    icon: "💵",
+                    title: "Entrega y cobra",
+                    desc: "Lleva el paquete al destino. El pago es en efectivo o Nequi directamente al terminar.",
+                  },
+                ].map((s) => (
                   <li key={s.n} className="flex gap-4">
-                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-gray-600 dark:text-gray-300 text-sm">{s.n}</div>
+                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-gray-600 dark:text-gray-300 text-sm">
+                      {s.n}
+                    </div>
                     <div>
-                      <p className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5"><span>{s.icon}</span>{s.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{s.desc}</p>
+                      <p className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                        <span>{s.icon}</span>
+                        {s.title}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        {s.desc}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -1386,7 +1477,7 @@ export default function HomePage() {
           {/* CTA central */}
           <div className="mt-10 text-center">
             <button
-              onClick={() => router.push('/auth/register')}
+              onClick={() => router.push("/auth/register")}
               className="inline-flex items-center gap-2 px-8 py-4 bg-[#42CE1D] text-white font-bold rounded-xl shadow-lg hover:bg-[#35a818] transition-colors"
             >
               <span>📦</span> Enviar mi primer paquete
@@ -1429,11 +1520,12 @@ export default function HomePage() {
               </div>
               <ul className="space-y-5">
                 {[
-                  {
-                    icon: "🏍️",
-                    title: "Mototaxi",
-                    desc: "Transporte rápido y económico en moto para enviar tus encomiendas. No se puede llevar pasajeros",
-                  },
+                  // Moto deshabilitada temporalmente (sin autorización de operación)
+                  // {
+                  //   icon: "🏍️",
+                  //   title: "Mototaxi",
+                  //   desc: "Transporte rápido y económico en moto para enviar tus encomiendas. No se puede llevar pasajeros",
+                  // },
                   {
                     icon: "🛺",
                     title: "Piayo",
@@ -1441,7 +1533,7 @@ export default function HomePage() {
                   },
                   {
                     icon: "📦",
-                    title: "Envío de paquetes en moto",
+                    title: "Envío de paquetes",
                     desc: "Envía objetos o encomiendas sin moverte de tu lugar. El conductor los entrega por ti.",
                   },
                   {
@@ -1496,7 +1588,8 @@ export default function HomePage() {
             <div className="bg-gradient-to-br from-[#f0fdf4] to-white border border-[#008000]/20 rounded-3xl p-8 shadow-sm dark:bg-none dark:bg-gray-900 dark:border-[#42CE1D]/20">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 bg-[#008000] rounded-2xl flex items-center justify-center shadow-md">
-                  <span className="text-2xl">🏍️</span>
+                  {/* Moto deshabilitada temporalmente: 🏍️ */}
+                  <span className="text-2xl">🚐</span>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Para conductores
@@ -1556,7 +1649,7 @@ export default function HomePage() {
           {/* Stat bar */}
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { value: "4", label: "Tipos de vehículo disponibles" },
+              { value: "2", label: "Tipos de vehículo disponibles" },
               { value: "4", label: "Municipios cubiertos" },
               { value: "5★", label: "Sistema de calificaciones" },
               { value: "GPS", label: "Seguimiento en tiempo real" },
@@ -1607,8 +1700,8 @@ export default function HomePage() {
                 y facilita el contacto entre conductores independientes y
                 usuarios en el Alto Putumayo. MoTaxi no es una empresa de
                 transporte, no presta el servicio, no posee vehículos y no
-                vincula laboralmente a los conductores. El método de pago de cada
-                servicio es acordado directa y libremente entre las partes
+                vincula laboralmente a los conductores. El método de pago de
+                cada servicio es acordado directa y libremente entre las partes
                 (efectivo, transferencia, u otro medio que decidan).{" "}
                 <strong>
                   MoTaxi no procesa, gestiona ni intermedia ningún pago

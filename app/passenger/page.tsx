@@ -197,8 +197,10 @@ export default function PassengerHomePage() {
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
 
   // Modo de solicitud: viaje normal o envío de paquete
+  // Moto deshabilitada temporalmente (sin autorización): el modo "delivery" solo
+  // tenía moto, así que el modo inicial pasa a ser "cargo" (Piaggio / Van).
   const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">(
-    "delivery",
+    "cargo",
   );
   const [deliveryNote, setDeliveryNote] = useState("");
   const [homePickup, setHomePickup] = useState(false);
@@ -1129,6 +1131,7 @@ export default function PassengerHomePage() {
                     onClick={() => { setTripMode("ride"); setVehicleType("taxi"); setVehicleCarouselIndex(0); }}
                     ...Viaje en taxi oculto...
                   </button> */}
+                  {/* Envío deshabilitado temporalmente: solo operaba con moto (sin autorización)
                   <button
                     type="button"
                     onClick={() => {
@@ -1145,7 +1148,7 @@ export default function PassengerHomePage() {
                   >
                     <span>📦</span>
                     <span>Envío</span>
-                  </button>
+                  </button> */}
                   <button
                     type="button"
                     onClick={() => {
@@ -1204,20 +1207,22 @@ export default function PassengerHomePage() {
                       ride: [
                         // TAXI OCULTO: pendiente confirmación de Cootransvalle para habilitar
                         // { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
-                        {
-                          value: "moto" as const,
-                          icon: "🏍️",
-                          label: "Mototaxi",
-                          sub: "Rápido · económico",
-                        },
+                        // Moto deshabilitada temporalmente (sin autorización de operación)
+                        // {
+                        //   value: "moto" as const,
+                        //   icon: "🏍️",
+                        //   label: "Mototaxi",
+                        //   sub: "Rápido · económico",
+                        // },
                       ],
                       delivery: [
-                        {
-                          value: "moto" as const,
-                          icon: "🏍️",
-                          label: "Mototaxi",
-                          sub: "Solo objetos · rápido",
-                        },
+                        // Moto deshabilitada temporalmente (sin autorización de operación)
+                        // {
+                        //   value: "moto" as const,
+                        //   icon: "🏍️",
+                        //   label: "Mototaxi",
+                        //   sub: "Solo objetos · rápido",
+                        // },
                       ],
                       cargo: [
                         {
@@ -1849,7 +1854,7 @@ export default function PassengerHomePage() {
                                     <span className="text-base flex-shrink-0">
                                       {(
                                         {
-                                          moto: "🏍️",
+                                          // moto: "🏍️", // deshabilitada temporalmente
                                           taxi: "🚕",
                                           carro: "🚐",
                                           piaggio: "🛻",
@@ -2121,7 +2126,7 @@ export default function PassengerHomePage() {
                       <span>
                         {(
                           {
-                            moto: "🏍️",
+                            // moto: "🏍️", // deshabilitada temporalmente
                             taxi: "🚕",
                             carro: "🚐",
                             piaggio: "🛻",
@@ -2132,7 +2137,7 @@ export default function PassengerHomePage() {
                       <span>
                         {(
                           {
-                            moto: "Mototaxi",
+                            // moto: "Mototaxi", // deshabilitada temporalmente
                             taxi: "Taxi",
                             carro: "Carro / Van",
                             piaggio: "Piaggio",

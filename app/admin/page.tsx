@@ -637,7 +637,7 @@ function BroadcastEmailSection() {
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-white text-sm font-medium">{u.full_name}</span>
-                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-300">{u.role === 'driver' ? '🏍️ Conductor' : '👤 Pasajero'}</span>
+                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-300">{u.role === 'driver' ? '🚐 Conductor' : '👤 Pasajero'}</span>
                         </div>
                         <span className="text-gray-400 text-xs">{u.phone}</span>
                       </div>

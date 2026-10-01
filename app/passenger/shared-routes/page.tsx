@@ -53,7 +53,7 @@ interface SharedRoute {
 }
 
 const VEHICLE_LABELS: Record<string, string> = {
-  moto: '🏍️ Mototaxi',
+  // moto: '🏍️ Mototaxi', // deshabilitada temporalmente
   taxi: '🚕 Taxi',
   carro: '🚐 Carro / Van',
   piaggio: '🛻 Piaggio',

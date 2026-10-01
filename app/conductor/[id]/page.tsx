@@ -28,7 +28,8 @@ interface VehiclePhoto {
 }
 
 const VEHICLE_LABELS: Record<string, { emoji: string; label: string }> = {
-  moto: { emoji: '🏍️', label: 'Mototaxi' },
+  // Moto deshabilitada temporalmente (sin autorización de operación)
+  // moto: { emoji: '🏍️', label: 'Mototaxi' },
   piaggio: { emoji: '🛺', label: 'Piaggio' },
   carro: { emoji: '🚐', label: 'Van / Carro' },
   particular: { emoji: '🚗', label: 'Particular' },
@@ -78,7 +79,7 @@ export default function DriverPublicProfilePage() {
   if (notFound || !driver) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-        <span className="text-6xl mb-4">🏍️</span>
+        <span className="text-6xl mb-4">🚐</span>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Conductor no encontrado</h1>
         <p className="text-gray-500 mb-6 text-center">Este perfil no existe o el conductor no está verificado.</p>
         <Link href="/" className="px-6 py-3 bg-[#42CE1D] text-white rounded-xl font-semibold hover:bg-[#35a818] transition-colors">
@@ -88,7 +89,7 @@ export default function DriverPublicProfilePage() {
     );
   }
 
-  const vehicleInfo = VEHICLE_LABELS[driver.vehicle_types] ?? { emoji: '🏍️', label: 'Mototaxi' };
+  const vehicleInfo = VEHICLE_LABELS[driver.vehicle_types] ?? { emoji: '🚐', label: 'Vehículo' };
 
   return (
     <div className="min-h-screen bg-gray-50">

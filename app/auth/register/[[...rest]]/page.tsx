@@ -269,7 +269,8 @@ function RegisterForm() {
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { value: "moto", label: "Moto", emoji: "🏍️" },
+                      // Moto deshabilitada temporalmente (sin autorización de operación)
+                      // { value: "moto", label: "Moto", emoji: "🏍️" },
                       { value: "piaggio", label: "Piaggio", emoji: "🛺" },
                       { value: "carro", label: "Van / Carro", emoji: "🚐" },
                     ].map((v) => (

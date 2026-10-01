@@ -59,9 +59,11 @@ function vehicleLabel(t?: string | null): { emoji: string; text: string } {
       return { emoji: "🚗", text: "Carro" };
     case "piaggio":
       return { emoji: "🛺", text: "Piaggio" };
-    case "moto":
+    // Moto deshabilitada temporalmente (sin autorización de operación):
+    // case "moto":
+    //   return { emoji: "🏍️", text: "Moto" };
     default:
-      return { emoji: "🏍️", text: "Moto" };
+      return { emoji: "🚗", text: "Vehículo" };
   }
 }
 

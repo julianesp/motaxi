@@ -4,6 +4,7 @@ import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
 import { sendWebPush } from '../services/web-push';
 import { TelegramService } from '../services/telegram';
+import { PushNotificationService } from '../services/push-notifications';
 import { isWithinCoverage, COVERAGE_LABEL, COVERAGE_BOUNDS } from '../utils/coverage';
 import { getVehicleNotice, MOTO_DISABLED_CODE } from '../utils/vehicles';
 
@@ -213,6 +214,38 @@ tripRoutes.post('/', async (c) => {
       } catch (telegramError) {
         console.error('Error sending Telegram notifications:', telegramError);
       }
+    }
+
+    // Push a la app nativa de los conductores disponibles y aprobados que la tengan
+    // instalada (token de Expo). Con la app cerrada o en segundo plano también llega.
+    try {
+      const pushDrivers = await c.env.DB.prepare(`
+        SELECT u.push_token
+        FROM users u
+        JOIN drivers d ON d.id = u.id
+        WHERE d.is_available = 1
+          AND d.verification_status = 'approved'
+          AND u.push_token IS NOT NULL
+          AND u.push_token != ''
+      `).all();
+
+      const messages = (pushDrivers.results || []).map((row: any) =>
+        PushNotificationService.buildNewTripMessage(row.push_token as string, {
+          tripId,
+          pickupAddress: pickup_address,
+          fare: fareWithSurcharge || estimated_fare || 0,
+          tripType: trip_type,
+        })
+      );
+
+      if (messages.length > 0) {
+        // No esperar: responder al pasajero de inmediato
+        c.executionCtx?.waitUntil(
+          PushNotificationService.sendBulkPushNotifications(messages).catch(() => false)
+        );
+      }
+    } catch (appPushError) {
+      console.error('Error sending app push notifications:', appPushError);
     }
 
     return c.json({

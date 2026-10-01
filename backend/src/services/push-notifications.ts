@@ -12,6 +12,10 @@ export interface PushMessage {
   sound?: 'default' | null;
   badge?: number;
   priority?: 'default' | 'normal' | 'high';
+  /** Canal de Android (debe existir en la app). Define importancia, sonido y vibración. */
+  channelId?: string;
+  /** Segundos que Expo reintenta entregarlo si el celular está sin conexión. */
+  ttl?: number;
 }
 
 export class PushNotificationService {
@@ -49,28 +53,32 @@ export class PushNotificationService {
    * Envía push notifications a múltiples dispositivos
    */
   static async sendBulkPushNotifications(messages: PushMessage[]): Promise<boolean> {
-    try {
-      const response = await fetch(this.EXPO_PUSH_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(messages),
-      });
+    // Expo admite como máximo 100 mensajes por petición.
+    let ok = true;
+    for (let i = 0; i < messages.length; i += 100) {
+      const chunk = messages.slice(i, i + 100);
+      try {
+        const response = await fetch(this.EXPO_PUSH_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(chunk),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.errors) {
-        console.error('Bulk push notification errors:', data.errors);
-        return false;
+        if (data.errors) {
+          console.error('Bulk push notification errors:', data.errors);
+          ok = false;
+        }
+      } catch (error) {
+        console.error('Error sending bulk push notifications:', error);
+        ok = false;
       }
-
-      return true;
-    } catch (error) {
-      console.error('Error sending bulk push notifications:', error);
-      return false;
     }
+    return ok;
   }
 
   /**
@@ -82,19 +90,45 @@ export class PushNotificationService {
       tripId: string;
       pickupAddress: string;
       fare: number;
+      tripType?: string;
     }
   ): Promise<boolean> {
-    return this.sendPushNotification({
+    return this.sendPushNotification(
+      PushNotificationService.buildNewTripMessage(driverPushToken, tripData)
+    );
+  }
+
+  /** Mensaje de "nueva solicitud" para un conductor (también se usa en envíos masivos). */
+  static buildNewTripMessage(
+    driverPushToken: string,
+    tripData: {
+      tripId: string;
+      pickupAddress: string;
+      fare: number;
+      tripType?: string;
+    }
+  ): PushMessage {
+    const title =
+      tripData.tripType === 'delivery'
+        ? '📦 ¡Nueva solicitud de envío!'
+        : tripData.tripType === 'cargo'
+          ? '🛻 ¡Nueva solicitud de trasteo!'
+          : '🚖 ¡Nueva solicitud de viaje!';
+    const fare = tripData.fare ? ` · $${Number(tripData.fare).toLocaleString('es-CO')}` : '';
+    return {
       to: driverPushToken,
-      title: '¡Nuevo viaje disponible!',
-      body: `${tripData.pickupAddress} - $${tripData.fare.toLocaleString()}`,
+      title,
+      body: `${tripData.pickupAddress}${fare}`,
       data: {
         type: 'new_trip',
         tripId: tripData.tripId,
       },
       sound: 'default',
       priority: 'high',
-    });
+      // Canal de importancia máxima creado por la app: aviso emergente, sonido y vibración.
+      channelId: 'trip-requests',
+      ttl: 120, // una solicitud vieja ya no sirve: no se entrega pasados 2 minutos
+    };
   }
 
   /**

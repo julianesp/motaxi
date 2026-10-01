@@ -20,6 +20,7 @@ function getYoutubeId(url: string): string | null {
 import dynamic from "next/dynamic";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
 import Navbar from "@/components/Navbar/page";
+import TutorialAnimations from "@/components/TutorialAnimations";
 
 // Cargar el mapa dinámicamente (solo client-side, sin bloquear el render inicial)
 const LandingMap = dynamic(() => import("@/components/LandingMap"), {
@@ -1316,6 +1317,9 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Tutoriales animados: cómo usar la PWA */}
+      <TutorialAnimations />
 
       {/* Guías de uso */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900">

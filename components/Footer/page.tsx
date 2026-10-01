@@ -21,7 +21,7 @@ export default function Footer() {
           <div>
             <h3 className="text-2xl font-bold mb-4">MoTaxi</h3>
             <p className="text-gray-400">
-              Conectando el Valle de Sibundoy, un viaje a la vez.
+              Tu compañía en cada camino del Valle de Sibundoy.
             </p>
           </div>
 

@@ -5,6 +5,7 @@ import { Env } from '../index';
 import { sendWebPush } from '../services/web-push';
 import { TelegramService } from '../services/telegram';
 import { isWithinCoverage, COVERAGE_LABEL, COVERAGE_BOUNDS } from '../utils/coverage';
+import { getVehicleNotice, MOTO_DISABLED_CODE } from '../utils/vehicles';
 
 export const tripRoutes = new Hono<{ Bindings: Env }>();
 
@@ -471,6 +472,12 @@ tripRoutes.put('/:id/accept', async (c) => {
 
     if (user.role !== 'driver') {
       return c.json({ error: 'Only drivers can accept trips' }, 403);
+    }
+
+    // Moto deshabilitada (sin autorización del Ministerio de Transporte)
+    const notice = await getVehicleNotice(c.env.DB, user.id);
+    if (notice) {
+      return c.json({ error: notice.message, code: MOTO_DISABLED_CODE, vehicleDisabled: true }, 403);
     }
 
     // Verificar que el viaje existe y está disponible

@@ -4,6 +4,7 @@ import { AuthUtils } from '../utils/auth';
 import { EmailService } from '../utils/email';
 import { TelegramService } from '../services/telegram';
 import { Env } from '../index';
+import { getVehicleNotice } from '../utils/vehicles';
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
 
@@ -216,8 +217,9 @@ authRoutes.post('/register', async (c) => {
       const tempPlate = `PENDING-${userId.substring(0, 8)}`;
       const tempLicense = `PENDING-${userId.substring(0, 8)}`;
 
-      const validVehicleTypes = ['moto', 'taxi', 'carro', 'piaggio', 'particular'];
-      const finalVehicleType = vehicle_types && validVehicleTypes.includes(vehicle_types) ? vehicle_types : 'moto';
+      // Moto deshabilitada temporalmente (sin autorización de operación): el default pasa a 'carro'
+      const validVehicleTypes = ['taxi', 'carro', 'piaggio', 'particular'];
+      const finalVehicleType = vehicle_types && validVehicleTypes.includes(vehicle_types) ? vehicle_types : 'carro';
 
       // Auto-aprobación habilitada temporalmente (sin verificación manual)
       await c.env.DB.prepare(
@@ -340,10 +342,14 @@ authRoutes.post('/login', async (c) => {
     // Remover password_hash de la respuesta
     const { password_hash, ...userWithoutPassword } = user;
 
+    // Aviso para conductores de moto (no habilitados por términos del Ministerio de Transporte)
+    const vehicle_notice = await getVehicleNotice(c.env.DB, user.id as string);
+
     return c.json({
       user: userWithoutPassword,
       token,
       expiresAt,
+      vehicle_notice,
     });
   } catch (error: any) {
     console.error('Login error:', error);
@@ -431,7 +437,8 @@ authRoutes.post('/google', async (c) => {
     // Crear sesión
     const { token, expiresAt } = await AuthUtils.createSession(c.env.DB, user.id as string);
 
-    return c.json({ user: userWithoutPassword, token, expiresAt });
+    const vehicle_notice = await getVehicleNotice(c.env.DB, user.id as string);
+    return c.json({ user: userWithoutPassword, token, expiresAt, vehicle_notice });
   } catch (error: any) {
     console.error('Google auth error:', error);
     return c.json({ error: error.message || 'Google authentication failed' }, 500);
@@ -499,7 +506,8 @@ authRoutes.post('/google-clerk', async (c) => {
     const { password_hash, ...userWithoutPassword } = user;
     const { token, expiresAt } = await AuthUtils.createSession(c.env.DB, user.id as string);
 
-    return c.json({ user: userWithoutPassword, token, expiresAt, isNewUser });
+    const vehicle_notice = await getVehicleNotice(c.env.DB, user.id as string);
+    return c.json({ user: userWithoutPassword, token, expiresAt, isNewUser, vehicle_notice });
   } catch (error: any) {
     console.error('Google Clerk auth error:', error);
     return c.json({ error: error.message || 'Authentication failed' }, 500);
@@ -770,7 +778,8 @@ authRoutes.get('/me', async (c) => {
 
     const { password_hash, ...userWithoutPassword } = user;
 
-    return c.json({ user: userWithoutPassword });
+    const vehicle_notice = await getVehicleNotice(c.env.DB, user.id as string);
+    return c.json({ user: userWithoutPassword, vehicle_notice });
   } catch (error: any) {
     console.error('Get me error:', error);
     return c.json({ error: error.message || 'Failed to get user' }, 500);

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
 import { COVERAGE_BOUNDS } from '../utils/coverage';
+import { getVehicleNotice, MOTO_DISABLED_CODE } from '../utils/vehicles';
 
 export const driverRoutes = new Hono<{ Bindings: Env }>();
 
@@ -47,6 +48,8 @@ driverRoutes.get('/registered', async (c) => {
        FROM drivers d
        JOIN users u ON d.id = u.id
        WHERE d.verification_status = 'approved'
+         -- Moto deshabilitada temporalmente (sin autorización de operación)
+         AND (d.vehicle_types IS NULL OR d.vehicle_types != 'moto')
        ORDER BY d.total_trips DESC, u.full_name ASC
        LIMIT 40`
     ).all();
@@ -318,8 +321,9 @@ driverRoutes.put('/profile', async (c) => {
       values.push(per_km_fare);
     }
     if (vehicle_types !== undefined) {
-      if (!['moto', 'taxi', 'carro', 'piaggio', 'particular'].includes(vehicle_types)) {
-        return c.json({ error: 'vehicle_types must be: moto, taxi, carro, piaggio, or particular' }, 400);
+      // Moto deshabilitada temporalmente (sin autorización de operación): 'moto' ya no es válido
+      if (!['taxi', 'carro', 'piaggio', 'particular'].includes(vehicle_types)) {
+        return c.json({ error: 'vehicle_types must be: taxi, carro, piaggio, or particular' }, 400);
       }
       updates.push('vehicle_types = ?');
       values.push(vehicle_types);
@@ -418,6 +422,14 @@ driverRoutes.put('/availability', async (c) => {
 
     if (user.role !== 'driver') {
       return c.json({ error: 'Only drivers can update availability' }, 403);
+    }
+
+    // Moto deshabilitada (sin autorización del Ministerio de Transporte): no pueden activarse.
+    if (isAvailable) {
+      const notice = await getVehicleNotice(c.env.DB, user.id);
+      if (notice) {
+        return c.json({ error: notice.message, code: MOTO_DISABLED_CODE, vehicleDisabled: true }, 403);
+      }
     }
 
     // Verificar que el perfil esté completo antes de permitir activarse.
@@ -688,13 +700,10 @@ driverRoutes.get('/nearby', async (c) => {
     }
 
     // Filtrar por tipo de vehículo si se especifica
-    // Los conductores con vehicle_types NULL se tratan como 'moto' (valor por defecto histórico)
-    if (vehicleType && ['moto', 'taxi', 'carro', 'piaggio', 'particular'].includes(vehicleType)) {
-      if (vehicleType === 'moto') {
-        whereClause += ` AND (d.vehicle_types = 'moto' OR d.vehicle_types IS NULL)`;
-      } else {
-        whereClause += ` AND d.vehicle_types = '${vehicleType}'`;
-      }
+    // Moto deshabilitada temporalmente (sin autorización de operación): nunca se listan conductores de moto
+    whereClause += ` AND (d.vehicle_types IS NULL OR d.vehicle_types != 'moto')`;
+    if (vehicleType && ['taxi', 'carro', 'piaggio', 'particular'].includes(vehicleType)) {
+      whereClause += ` AND d.vehicle_types = '${vehicleType}'`;
     }
 
     const drivers = await c.env.DB.prepare(

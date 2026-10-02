@@ -9,6 +9,7 @@ import Footer from "@/components/Footer/page";
 import Script from "next/script";
 import OpenInBrowser from "@/components/OpenInBrowser";
 import InstallPWAModal from "@/components/InstallPWAModal";
+import { APP_ONLY } from "@/lib/constants/stores";
 import PageViewTracker from "@/components/PageViewTracker";
 import { Analytics } from "@vercel/analytics/next";
 import { GoogleMapsProvider } from "@/lib/google-maps-provider";
@@ -189,9 +190,8 @@ export default function RootLayout({
             <Analytics />
             <PageViewTracker />
             <OpenInBrowser />
-            {/* Invitación a instalar la PWA desactivada: ahora se descarga la app nativa.
-            <InstallPWAModal />
-            */}
+            {/* Con el interruptor encendido (solo app) ya no se invita a instalar la PWA */}
+            {!APP_ONLY && <InstallPWAModal />}
             <GoogleMapsProvider>
               <AuthProvider>
                 <VehicleNoticeAlert />

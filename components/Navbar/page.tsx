@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Image from "next/image";
 import styles from "./Navbar.module.scss";
+import { APP_ONLY } from "@/lib/constants/stores";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
@@ -223,34 +224,37 @@ export default function Navbar() {
                       Inicio
                     </button>
                   )}
-                  {/* Acceso web desactivado: el ingreso y el registro ocurren en la app.
-                  <button
-                    onClick={() => router.push("/auth/login")}
-                    className="text-white  px-3 py-2 rounded-md text-lg font-bold transition-all duration-200 border border-white hover:scale-110"
-                  >
-                    Iniciar sesión
-                  </button>
-                  <button
-                    onClick={() => router.push("/auth/register")}
-                    className={`px-4 py-2 rounded-lg font-medium shadow-lg transition-all hover:scale-105 ${
-                      isHomePage
-                        ? "bg-white text-[#008000] hover:shadow-xl"
-                        : "bg-[#008000] text-white hover:bg-[#006600]"
-                    }`}
-                  >
-                    Registrarse
-                  </button>
-                  */}
-                  <button
-                    onClick={() => router.push("/app")}
-                    className={`px-4 py-2 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 ${
-                      isHomePage
-                        ? "bg-white text-[#008000] hover:shadow-xl"
-                        : "bg-[#008000] text-white hover:bg-[#006600]"
-                    }`}
-                  >
-                    Descargar la app
-                  </button>
+                  {APP_ONLY ? (
+                    <button
+                      onClick={() => router.push("/app")}
+                      className={`px-4 py-2 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 ${
+                        isHomePage
+                          ? "bg-white text-[#008000] hover:shadow-xl"
+                          : "bg-[#008000] text-white hover:bg-[#006600]"
+                      }`}
+                    >
+                      Descargar la app
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => router.push("/auth/login")}
+                        className="text-white  px-3 py-2 rounded-md text-lg font-bold transition-all duration-200 border border-white [text-shadow:_1px_1px_2px_rgb(0_0_0_/_90%),_-1px_-1px_2px_rgb(0_0_0_/_80%),_1px_-1px_2px_rgb(0_0_0_/_80%),_-1px_1px_2px_rgb(0_0_0_/_80%)] hover:scale-110"
+                      >
+                        Iniciar sesión
+                      </button>
+                      <button
+                        onClick={() => router.push("/auth/register")}
+                        className={`px-4 py-2 rounded-lg font-medium shadow-lg transition-all hover:scale-105 ${
+                          isHomePage
+                            ? "bg-white text-[#008000] hover:shadow-xl"
+                            : "bg-[#008000] text-white hover:bg-[#006600]"
+                        }`}
+                      >
+                        Registrarse
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -370,37 +374,40 @@ export default function Navbar() {
                       Inicio
                     </button>
                   )}
-                  {/* Acceso web desactivado: el ingreso y el registro ocurren en la app.
-                  <button
-                    onClick={() => {
-                      router.push("/auth/login");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full text-center px-4 py-3 rounded-xl font-semibold transition-all hover:bg-gray-100"
-                    style={{ backgroundColor: "#ffffff", color: "#000000" }}
-                  >
-                    Iniciar sesión
-                  </button>
+                  {APP_ONLY ? (
+                    <button
+                      onClick={() => {
+                        router.push("/app");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-center px-4 py-3 rounded-xl font-semibold shadow-md transition-all bg-[#008000] text-white hover:bg-[#006600]"
+                    >
+                      Descargar la app
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          router.push("/auth/login");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full text-center px-4 py-3 rounded-xl font-semibold transition-all hover:bg-gray-100"
+                        style={{ backgroundColor: "#ffffff", color: "#000000" }}
+                      >
+                        Iniciar sesión
+                      </button>
 
-                  <button
-                    onClick={() => {
-                      router.push("/auth/register");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full text-center px-4 py-3 rounded-xl font-semibold shadow-md transition-all bg-[#008000] text-white hover:bg-[#006600]"
-                  >
-                    Registrarse
-                  </button>
-                  */}
-                  <button
-                    onClick={() => {
-                      router.push("/app");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full text-center px-4 py-3 rounded-xl font-semibold shadow-md transition-all bg-[#008000] text-white hover:bg-[#006600]"
-                  >
-                    Descargar la app
-                  </button>
+                      <button
+                        onClick={() => {
+                          router.push("/auth/register");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full text-center px-4 py-3 rounded-xl font-semibold shadow-md transition-all bg-[#008000] text-white hover:bg-[#006600]"
+                      >
+                        Registrarse
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </div>

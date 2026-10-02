@@ -11,6 +11,15 @@ export const PLAY_STORE_URL =
   process.env.NEXT_PUBLIC_PLAY_STORE_URL ||
   `https://play.google.com/store/apps/details?id=${APP_PACKAGE}`;
 
+// INTERRUPTOR: NEXT_PUBLIC_APP_ONLY=true -> el sitio es solo presentación: ingreso y registro
+// van a la app (/app) y las pantallas web de conductor/pasajero se redirigen. Apagado (por
+// defecto), la web sigue funcionando como siempre y /app avisa que la app llega pronto a
+// Google Play. Se activa en Vercel cuando Producción esté aprobada en Play Console.
+export const APP_ONLY = process.env.NEXT_PUBLIC_APP_ONLY === 'true';
+
+// Enlace para quienes ya son testers de la prueba cerrada (mientras no haya ficha pública).
+export const TESTERS_URL = `https://play.google.com/apps/testing/${APP_PACKAGE}`;
+
 // Todavía no hay versión para iPhone ni para Huawei (AppGallery requiere una versión con
 // los servicios de Huawei: mapas y notificaciones). Se muestran avisos en su lugar.
 export const IOS_STORE_URL: string | null = null;

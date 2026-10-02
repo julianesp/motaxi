@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { APP_ONLY } from "@/lib/constants/stores";
 
 interface DriverPublicProfile {
   id: string;
@@ -227,7 +228,7 @@ export default function DriverPublicProfilePage() {
         <div className="bg-[#42CE1D]/10 border border-[#42CE1D]/30 rounded-2xl p-6 text-center">
           <p className="text-gray-700 font-semibold mb-3">¿Quieres solicitar un viaje con MoTaxi?</p>
           <Link
-            href="/app"
+            href={APP_ONLY ? "/app" : "/passenger"}
             className="inline-block px-8 py-3 bg-[#42CE1D] text-white font-bold rounded-xl hover:bg-[#35a818] transition-colors shadow-md"
           >
             Solicitar viaje

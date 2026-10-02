@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar/page";
 import { MUNICIPALITIES } from "@/lib/constants/municipalities";
+import { APP_ONLY } from "@/lib/constants/stores";
 
 export const metadata: Metadata = {
   title: "MoTaxi · Envíos y trasteos en el Valle de Sibundoy",
@@ -9,9 +10,10 @@ export const metadata: Metadata = {
     "MoTaxi es una plataforma que conecta a quienes necesitan enviar un paquete o hacer un trasteo con conductores del Valle de Sibundoy (Putumayo), desde la app.",
 };
 
-// La web de MoTaxi es una presentación: todo el uso (pedir servicios, recibir solicitudes,
-// perfil, chat) ocurre en la app. Quien quiera ingresar es enviado a /app, que abre la
-// app o lleva a la tienda correspondiente.
+// Presentación de MoTaxi. Con NEXT_PUBLIC_APP_ONLY=true todo el uso ocurre en la app y quien
+// quiera ingresar va a /app (abre la app o lleva a la tienda). Con el interruptor apagado
+// (hoy, hasta que Google Play apruebe Producción) la web sigue funcionando: se ofrece
+// iniciar sesión o registrarse y se avisa que la app llega pronto.
 const CLIENT_FEATURES = [
   { title: "Envía paquetes", text: "Pide que recojan y lleven tu paquete, con una nota para el conductor y los datos de quien lo recibe." },
   { title: "Trasteos y cargas", text: "Solicita un Piayo o una van para mudanzas y carga voluminosa." },
@@ -30,11 +32,17 @@ const DRIVER_FEATURES = [
   { title: "Tus ganancias", text: "Consulta tus servicios y lo que has ganado, todo en un solo lugar." },
 ];
 
-const STEPS = [
-  { n: "1", title: "Descarga la app", text: "Instala MoTaxi desde la tienda de aplicaciones de tu celular." },
-  { n: "2", title: "Crea tu cuenta", text: "Elige si vas a pedir servicios o a ofrecerlos como conductor, y completa tus datos." },
-  { n: "3", title: "Empieza a usarla", text: "Pide tu envío o trasteo, o ponte en línea para recibir solicitudes." },
-];
+const STEPS = APP_ONLY
+  ? [
+      { n: "1", title: "Descarga la app", text: "Instala MoTaxi desde la tienda de aplicaciones de tu celular." },
+      { n: "2", title: "Crea tu cuenta", text: "Elige si vas a pedir servicios o a ofrecerlos como conductor, y completa tus datos." },
+      { n: "3", title: "Empieza a usarla", text: "Pide tu envío o trasteo, o ponte en línea para recibir solicitudes." },
+    ]
+  : [
+      { n: "1", title: "Crea tu cuenta", text: "Regístrate como cliente o como conductor y completa tus datos." },
+      { n: "2", title: "Elige qué necesitas", text: "Pide un envío o un trasteo, o ofrece tus servicios como conductor." },
+      { n: "3", title: "Empieza a usarla", text: "Coordina con el conductor o recibe solicitudes en línea." },
+    ];
 
 function Check() {
   return (
@@ -78,15 +86,32 @@ export default function HomePage() {
             </h1>
             <p className="mt-5 max-w-xl text-lg text-white/90">
               MoTaxi conecta a quienes necesitan enviar un paquete o hacer un trasteo con
-              conductores del Valle de Sibundoy, en el Alto Putumayo. Todo desde la app.
+              conductores del Valle de Sibundoy, en el Alto Putumayo. {APP_ONLY ? "Todo desde la app." : "Todo desde tu celular."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/app"
-                className="rounded-xl bg-white px-6 py-3 font-bold text-[#008000] shadow-lg transition hover:bg-gray-100"
-              >
-                Descargar la app
-              </Link>
+              {APP_ONLY ? (
+                <Link
+                  href="/app"
+                  className="rounded-xl bg-white px-6 py-3 font-bold text-[#008000] shadow-lg transition hover:bg-gray-100"
+                >
+                  Descargar la app
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/register"
+                    className="rounded-xl bg-white px-6 py-3 font-bold text-[#008000] shadow-lg transition hover:bg-gray-100"
+                  >
+                    Registrarse
+                  </Link>
+                  <Link
+                    href="/auth/login"
+                    className="rounded-xl border-2 border-white/70 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+                  >
+                    Iniciar sesión
+                  </Link>
+                </>
+              )}
               <a
                 href="#funciones"
                 className="rounded-xl border-2 border-white/70 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
@@ -94,6 +119,11 @@ export default function HomePage() {
                 Ver qué puedes hacer
               </a>
             </div>
+            {!APP_ONLY && (
+              <p className="mt-4 text-sm text-white/80">
+                La app de MoTaxi para Android llegará muy pronto a Google Play.
+              </p>
+            )}
           </div>
           <div className="flex justify-center">
             <img src="/logo-512.png" alt="Logo de MoTaxi" className="w-56 rounded-3xl shadow-2xl sm:w-72" />
@@ -105,7 +135,7 @@ export default function HomePage() {
       <section id="funciones" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Todo lo que puedes hacer en MoTaxi</h2>
         <p className="mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
-          Todo se hace desde la app, pensado para las calles y los caminos del Valle.
+          {APP_ONLY ? "Todo se hace desde la app" : "Todo en un solo lugar"}, pensado para las calles y los caminos del Valle.
         </p>
 
         <div className="mt-12 grid gap-12 md:grid-cols-2">
@@ -172,12 +202,14 @@ export default function HomePage() {
       {/* Llamado final */}
       <section className="bg-[#008000]">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-16 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white">Descarga MoTaxi y empieza hoy</h2>
+          <h2 className="text-3xl font-bold text-white">
+            {APP_ONLY ? "Descarga MoTaxi y empieza hoy" : "Crea tu cuenta y empieza hoy"}
+          </h2>
           <Link
-            href="/app"
+            href={APP_ONLY ? "/app" : "/auth/register"}
             className="rounded-xl bg-white px-8 py-3 font-bold text-[#008000] shadow-lg transition hover:bg-gray-100"
           >
-            Descargar la app
+            {APP_ONLY ? "Descargar la app" : "Registrarse"}
           </Link>
         </div>
       </section>

@@ -20,12 +20,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // El uso de MoTaxi (conductor y pasajero) ocurre en la app nativa. Cualquier acceso web
-  // a esas pantallas lleva a /app, que abre la app o envía a la tienda del celular.
+  // Con NEXT_PUBLIC_APP_ONLY=true el uso de MoTaxi (conductor y pasajero) ocurre en la app
+  // nativa y cualquier acceso web a esas pantallas lleva a /app, que abre la app o envía a la tienda del celular.
   // Las pantallas originales siguen en el código; para reactivarlas basta con quitar
   // estas redirecciones. El panel de administrador (/admin) y su ingreso se conservan:
   // /auth/login solo queda accesible con ?admin=1.
   async redirects() {
+    // Interruptor apagado: la web funciona como siempre (ver lib/constants/stores.ts)
+    if (process.env.NEXT_PUBLIC_APP_ONLY !== 'true') return [];
     const toApp = '/app';
     return [
       { source: '/driver', destination: toApp, permanent: false },

@@ -20,6 +20,32 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // El uso de MoTaxi (conductor y pasajero) ocurre en la app nativa. Cualquier acceso web
+  // a esas pantallas lleva a /app, que abre la app o envía a la tienda del celular.
+  // Las pantallas originales siguen en el código; para reactivarlas basta con quitar
+  // estas redirecciones. El panel de administrador (/admin) y su ingreso se conservan:
+  // /auth/login solo queda accesible con ?admin=1.
+  async redirects() {
+    const toApp = '/app';
+    return [
+      { source: '/driver', destination: toApp, permanent: false },
+      { source: '/driver/:path*', destination: toApp, permanent: false },
+      { source: '/passenger', destination: toApp, permanent: false },
+      { source: '/passenger/:path*', destination: toApp, permanent: false },
+      { source: '/conductor', destination: toApp, permanent: false },
+      { source: '/auth/register', destination: toApp, permanent: false },
+      { source: '/auth/role-selection', destination: toApp, permanent: false },
+      { source: '/auth/complete-profile', destination: toApp, permanent: false },
+      { source: '/auth/en-tramite', destination: toApp, permanent: false },
+      { source: '/sso-callback', destination: toApp, permanent: false },
+      {
+        source: '/auth/login',
+        missing: [{ type: 'query', key: 'admin' }],
+        destination: toApp,
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

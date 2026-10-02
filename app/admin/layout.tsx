@@ -110,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push('/auth/login');
+        router.push('/auth/login?admin=1');
       } else if (user.email !== ADMIN_EMAIL) {
         router.push('/');
       }

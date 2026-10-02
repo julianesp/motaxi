@@ -189,7 +189,9 @@ export default function RootLayout({
             <Analytics />
             <PageViewTracker />
             <OpenInBrowser />
+            {/* Invitación a instalar la PWA desactivada: ahora se descarga la app nativa.
             <InstallPWAModal />
+            */}
             <GoogleMapsProvider>
               <AuthProvider>
                 <VehicleNoticeAlert />

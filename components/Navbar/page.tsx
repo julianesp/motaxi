@@ -223,9 +223,10 @@ export default function Navbar() {
                       Inicio
                     </button>
                   )}
+                  {/* Acceso web desactivado: el ingreso y el registro ocurren en la app.
                   <button
                     onClick={() => router.push("/auth/login")}
-                    className="text-white  px-3 py-2 rounded-md text-lg font-bold transition-all duration-200 border border-white [text-shadow:_1px_1px_2px_rgb(0_0_0_/_90%),_-1px_-1px_2px_rgb(0_0_0_/_80%),_1px_-1px_2px_rgb(0_0_0_/_80%),_-1px_1px_2px_rgb(0_0_0_/_80%)] hover:scale-110"
+                    className="text-white  px-3 py-2 rounded-md text-lg font-bold transition-all duration-200 border border-white hover:scale-110"
                   >
                     Iniciar sesión
                   </button>
@@ -238,6 +239,17 @@ export default function Navbar() {
                     }`}
                   >
                     Registrarse
+                  </button>
+                  */}
+                  <button
+                    onClick={() => router.push("/app")}
+                    className={`px-4 py-2 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 ${
+                      isHomePage
+                        ? "bg-white text-[#008000] hover:shadow-xl"
+                        : "bg-[#008000] text-white hover:bg-[#006600]"
+                    }`}
+                  >
+                    Descargar la app
                   </button>
                 </>
               )}
@@ -358,6 +370,7 @@ export default function Navbar() {
                       Inicio
                     </button>
                   )}
+                  {/* Acceso web desactivado: el ingreso y el registro ocurren en la app.
                   <button
                     onClick={() => {
                       router.push("/auth/login");
@@ -377,6 +390,16 @@ export default function Navbar() {
                     className="w-full text-center px-4 py-3 rounded-xl font-semibold shadow-md transition-all bg-[#008000] text-white hover:bg-[#006600]"
                   >
                     Registrarse
+                  </button>
+                  */}
+                  <button
+                    onClick={() => {
+                      router.push("/app");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-center px-4 py-3 rounded-xl font-semibold shadow-md transition-all bg-[#008000] text-white hover:bg-[#006600]"
+                  >
+                    Descargar la app
                   </button>
                 </>
               )}

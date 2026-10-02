@@ -71,7 +71,8 @@ apiClient.interceptors.response.use(
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
         const publicPaths = [
-          '/', // Página de inicio (landing page)
+          '/', // Página de inicio (presentación)
+          '/app', // Puerta de entrada a la app
           '/auth/login',
           '/auth/register',
           '/auth/role-selection',
@@ -86,7 +87,8 @@ apiClient.interceptors.response.use(
         if (!isCheckingAuth && !isPublicPath) {
           // Token expirado o inválido en una página protegida
           removeAuthToken();
-          window.location.href = '/auth/login';
+          // Solo el panel de administrador sigue usando la web; el resto vive en la app
+          window.location.href = currentPath.startsWith('/admin') ? '/auth/login?admin=1' : '/app';
         } else if (isCheckingAuth && !isPublicPath) {
           // checkAuth falló en página protegida, solo remover token (no redirigir aquí)
           removeAuthToken();

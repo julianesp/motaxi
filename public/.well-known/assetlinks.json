@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.motaxi.app",
+      "sha256_cert_fingerprints": [
+        "CF:C2:57:75:38:90:05:48:37:E4:5F:AE:F2:3F:25:9F:1B:C8:37:8B:12:F0:E6:E0:2B:8F:4B:70:37:A0:EC:A1",
+        "AE:F5:36:27:72:9C:3B:15:EA:77:3D:D3:48:D6:F4:B1:86:F8:EB:A1:A2:64:40:35:89:B5:11:2A:7E:49:44:1F",
+        "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C"
+      ]
+    }
+  }
+]

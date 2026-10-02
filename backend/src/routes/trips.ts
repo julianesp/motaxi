@@ -260,6 +260,98 @@ tripRoutes.post('/', async (c) => {
 });
 
 /**
+ * GET /trips/route?from=lat,lng&to=lat,lng
+ * Ruta por calles entre dos puntos, para dibujarla en el mapa de la app.
+ * Devuelve la polyline codificada (precisión 5, formato de Google), distancia y duración.
+ * Fuente: Google Directions si la clave del servidor lo permite; si no, OSRM
+ * (OpenStreetMap). El resultado se guarda en KV 30 min para no repetir consultas.
+ */
+tripRoutes.get('/route', async (c) => {
+  const parsePoint = (v: string | undefined) => {
+    const [lat, lng] = (v || '').split(',').map(Number);
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  };
+  const from = parsePoint(c.req.query('from'));
+  const to = parsePoint(c.req.query('to'));
+  if (!from || !to) {
+    return c.json({ error: 'Los parámetros from y to deben ser "lat,lng"' }, 400);
+  }
+  // Solo dentro del área de cobertura: evita usar este endpoint como proxy abierto
+  if (!isWithinCoverage(from.lat, from.lng) || !isWithinCoverage(to.lat, to.lng)) {
+    return c.json({ error: 'Los puntos están fuera del área de cobertura' }, 400);
+  }
+
+  const r4 = (n: number) => n.toFixed(4); // ~11 m: agrupa pedidos casi idénticos
+  const cacheKey = `route:${r4(from.lat)},${r4(from.lng)}:${r4(to.lat)},${r4(to.lng)}`;
+
+  try {
+    const cached = await c.env.CACHE?.get(cacheKey, 'json');
+    if (cached) return c.json(cached);
+  } catch (_) {
+    // sin caché: se calcula igual
+  }
+
+  type RouteResult = { polyline: string; distance_m: number; duration_s: number; source: string };
+  let result: RouteResult | null = null;
+
+  if (c.env.GOOGLE_MAPS_API_KEY) {
+    try {
+      const url =
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${from.lat},${from.lng}` +
+        `&destination=${to.lat},${to.lng}&mode=driving&key=${c.env.GOOGLE_MAPS_API_KEY}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      const data = (await res.json()) as any;
+      const route = data?.status === 'OK' ? data.routes?.[0] : null;
+      if (route?.overview_polyline?.points) {
+        result = {
+          polyline: route.overview_polyline.points,
+          distance_m: route.legs?.[0]?.distance?.value ?? 0,
+          duration_s: route.legs?.[0]?.duration?.value ?? 0,
+          source: 'google',
+        };
+      }
+    } catch (_) {
+      // Google no disponible para esta clave: se usa OSRM
+    }
+  }
+
+  if (!result) {
+    try {
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}` +
+        `?overview=full&geometries=polyline&alternatives=false`;
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'MoTaxi/1.0 (admin@neurai.dev)' },
+        signal: AbortSignal.timeout(8000),
+      });
+      const data = (await res.json()) as any;
+      const route = data?.code === 'Ok' ? data.routes?.[0] : null;
+      if (route?.geometry) {
+        result = {
+          polyline: route.geometry,
+          distance_m: Math.round(route.distance ?? 0),
+          duration_s: Math.round(route.duration ?? 0),
+          source: 'osrm',
+        };
+      }
+    } catch (_) {
+      // sin ruta disponible
+    }
+  }
+
+  if (!result) {
+    return c.json({ error: 'No se pudo calcular la ruta' }, 502);
+  }
+
+  try {
+    await c.env.CACHE?.put(cacheKey, JSON.stringify(result), { expirationTtl: 1800 });
+  } catch (_) {
+    // no es crítico
+  }
+  return c.json(result);
+});
+
+/**
  * GET /trips/active
  * Obtener viajes activos/solicitados (TABLERO para conductores)
  * Muestra todas las solicitudes disponibles que pueden aceptar

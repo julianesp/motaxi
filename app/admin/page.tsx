@@ -30,12 +30,12 @@ function StatCard({ title, value, subtitle, color, icon }: {
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <div className="bg-adm-surface border border-adm-border rounded-xl p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-400 mb-1">{title}</p>
+          <p className="text-sm text-adm-fg3 mb-1">{title}</p>
           <p className={`text-2xl font-bold ${color}`}>{value}</p>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+          {subtitle && <p className="text-xs text-adm-fg4 mt-1">{subtitle}</p>}
         </div>
         <div className={`p-2 rounded-lg ${color.replace('text-', 'bg-').replace('[', '[').replace(']', ']')}/10`}>
           {icon}
@@ -131,29 +131,29 @@ export default function AdminDashboard() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 text-sm mt-1">Resumen general de la plataforma</p>
+        <h1 className="text-2xl font-bold text-adm-fg">Dashboard</h1>
+        <p className="text-adm-fg3 text-sm mt-1">Resumen general de la plataforma</p>
       </div>
 
       {/* Control de acceso a la plataforma */}
-      <div className={`rounded-2xl border p-4 flex items-center justify-between gap-4 ${appLocked ? 'bg-red-950/40 border-red-800/50' : 'bg-green-950/40 border-green-800/50'}`}>
+      <div className={`rounded-2xl border p-4 flex items-center justify-between gap-4 ${appLocked ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50' : 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50'}`}>
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${appLocked ? 'bg-red-800/40' : 'bg-green-800/40'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${appLocked ? 'bg-red-100 dark:bg-red-800/40' : 'bg-green-100 dark:bg-green-800/40'}`}>
             {appLocked ? (
-              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-green-700 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
               </svg>
             )}
           </div>
           <div>
-            <p className={`font-semibold text-sm ${appLocked ? 'text-red-300' : 'text-green-300'}`}>
+            <p className={`font-semibold text-sm ${appLocked ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'}`}>
               Acceso a la plataforma: <strong>{appLocked ? 'BLOQUEADO' : 'ACTIVO'}</strong>
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-adm-fg3 mt-0.5">
               {appLocked
                 ? 'Los usuarios no pueden iniciar sesión. Solo el admin tiene acceso.'
                 : 'Los usuarios pueden iniciar sesión y pedir carreras con normalidad.'}
@@ -175,115 +175,115 @@ export default function AdminDashboard() {
 
       {/* Ingresos */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Ingresos este mes</h2>
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">Ingresos este mes</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             title="Comisiones de viajes"
             value={`$${Math.round(revenue.platform_commission_month).toLocaleString()}`}
             subtitle={`De $${Math.round(revenue.total_fares_month).toLocaleString()} en tarifas`}
-            color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
+            color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
           />
           <StatCard
             title="Ingresos suscripciones"
             value={`$${Math.round(subscriptions.monthly_revenue).toLocaleString()}`}
             subtitle={`${subscriptions.active} suscripciones activas`}
-            color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
+            color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
           />
           <StatCard
             title="Total estimado"
             value={`$${Math.round(totalRevenue).toLocaleString()}`}
             subtitle="Comisiones + suscripciones"
-            color="text-white"
-            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            color="text-adm-fg"
+            icon={<svg className="w-5 h-5 text-adm-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
         </div>
       </div>
 
       {/* Usuarios */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Usuarios registrados</h2>
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">Usuarios registrados</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatCard
             title="Total usuarios"
             value={users.total}
             subtitle={`+${users.today} hoy`}
-            color="text-white"
-            icon={<svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+            color="text-adm-fg"
+            icon={<svg className="w-5 h-5 text-adm-fg3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
           />
           <StatCard
             title="Conductores"
             value={drivers.total}
             subtitle={`${drivers.approved} aprobados`}
-            color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+            color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
           />
           <StatCard
             title="Pasajeros"
             value={passengers.total}
             subtitle={`+${users.this_month} este mes`}
-            color="text-white"
-            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
+            color="text-adm-fg"
+            icon={<svg className="w-5 h-5 text-adm-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
           />
           <StatCard
             title="Pendientes verificación"
             value={drivers.pending}
             subtitle="Conductores por aprobar"
-            color={drivers.pending > 0 ? 'text-white' : 'text-gray-400'}
-            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            color={drivers.pending > 0 ? 'text-adm-fg' : 'text-adm-fg3'}
+            icon={<svg className="w-5 h-5 text-adm-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
         </div>
       </div>
 
       {/* Viajes */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Viajes</h2>
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">Viajes</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard title="Total viajes" value={trips.total} color="text-white"
-            icon={<svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>}
+          <StatCard title="Total viajes" value={trips.total} color="text-adm-fg"
+            icon={<svg className="w-5 h-5 text-adm-fg3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>}
           />
-          <StatCard title="Completados hoy" value={trips.completed_today} color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="Completados hoy" value={trips.completed_today} color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="Completados este mes" value={trips.completed_month} color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+          <StatCard title="Completados este mes" value={trips.completed_month} color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
           />
-          <StatCard title="En curso ahora" value={trips.active} color={trips.active > 0 ? 'text-[#008000]' : 'text-gray-400'}
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+          <StatCard title="En curso ahora" value={trips.active} color={trips.active > 0 ? 'text-adm-accent' : 'text-adm-fg3'}
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
           />
         </div>
       </div>
 
       {/* Suscripciones */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Suscripciones</h2>
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">Suscripciones</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard title="Activas" value={subscriptions.active} color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="Activas" value={subscriptions.active} color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="En prueba (trial)" value={subscriptions.trial} color="text-white"
-            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="En prueba (trial)" value={subscriptions.trial} color="text-adm-fg"
+            icon={<svg className="w-5 h-5 text-adm-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="Expiradas" value={subscriptions.expired} color={subscriptions.expired > 0 ? 'text-white' : 'text-gray-400'}
-            icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          <StatCard title="Expiradas" value={subscriptions.expired} color={subscriptions.expired > 0 ? 'text-adm-fg' : 'text-adm-fg3'}
+            icon={<svg className="w-5 h-5 text-adm-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           />
-          <StatCard title="Conductores online" value={drivers.online} subtitle="Disponibles ahora" color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" /></svg>}
+          <StatCard title="Conductores online" value={drivers.online} subtitle="Disponibles ahora" color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" /></svg>}
           />
         </div>
       </div>
 
       {/* Visitas al sitio */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Visitas al sitio</h2>
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">Visitas al sitio</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
           <StatCard
             title="Visitas hoy"
             value={pageViews[0]?.date === new Date().toISOString().slice(0, 10) ? pageViews[0].count : 0}
             subtitle="Personas únicas (por sesión)"
-            color="text-[#008000]"
-            icon={<svg className="w-5 h-5 text-[#008000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>}
+            color="text-adm-accent"
+            icon={<svg className="w-5 h-5 text-adm-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>}
           />
           <StatCard
             title="Visitas ayer"
@@ -293,35 +293,35 @@ export default function AdminDashboard() {
               const key = yesterday.toISOString().slice(0, 10);
               return pageViews.find(v => v.date === key)?.count ?? 0;
             })()}
-            color="text-white"
-            icon={<svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+            color="text-adm-fg"
+            icon={<svg className="w-5 h-5 text-adm-fg3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
           />
           <StatCard
             title="Total últimos 7 días"
             value={pageViews.slice(0, 7).reduce((s, v) => s + v.count, 0)}
-            color="text-white"
-            icon={<svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
+            color="text-adm-fg"
+            icon={<svg className="w-5 h-5 text-adm-fg3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
           />
         </div>
         {pageViews.length > 0 && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-800">
-              <span className="text-sm text-white font-medium">Historial de visitas (últimos 30 días)</span>
+          <div className="bg-adm-surface border border-adm-border rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-adm-border">
+              <span className="text-sm text-adm-fg font-medium">Historial de visitas (últimos 30 días)</span>
             </div>
-            <div className="divide-y divide-gray-800">
+            <div className="divide-y divide-adm-border">
               {pageViews.map((v) => {
                 const maxCount = Math.max(...pageViews.map(x => x.count), 1);
                 const pct = Math.round((v.count / maxCount) * 100);
                 return (
                   <div key={v.date} className="flex items-center gap-3 px-4 py-2.5">
-                    <span className="text-xs text-gray-400 w-24 flex-shrink-0">{v.date}</span>
-                    <div className="flex-1 bg-gray-800 rounded-full h-2">
+                    <span className="text-xs text-adm-fg3 w-24 flex-shrink-0">{v.date}</span>
+                    <div className="flex-1 bg-adm-muted rounded-full h-2">
                       <div
                         className="bg-[#008000] h-2 rounded-full transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs font-semibold text-white w-10 text-right">{v.count}</span>
+                    <span className="text-xs font-semibold text-adm-fg w-10 text-right">{v.count}</span>
                   </div>
                 );
               })}
@@ -329,41 +329,41 @@ export default function AdminDashboard() {
           </div>
         )}
         {pageViews.length === 0 && (
-          <p className="text-gray-500 text-sm text-center py-6">Sin datos de visitas aún</p>
+          <p className="text-adm-fg4 text-sm text-center py-6">Sin datos de visitas aún</p>
         )}
       </div>
 
       {/* Usuarios con Telegram vinculado */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">
           Notificaciones Telegram
         </h2>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+        <div className="bg-adm-surface border border-adm-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-adm-border">
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#008000]" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-4 h-4 text-adm-accent" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.67l-2.95-.924c-.642-.204-.657-.641.136-.953l11.57-4.461c.537-.194 1.006.131.948.889z"/>
               </svg>
-              <span className="text-sm text-white font-medium">
+              <span className="text-sm text-adm-fg font-medium">
                 {telegramUsers.length} {telegramUsers.length === 1 ? 'usuario vinculado' : 'usuarios vinculados'}
               </span>
             </div>
           </div>
           {telegramUsers.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-8">Ningún usuario ha vinculado Telegram aún</p>
+            <p className="text-adm-fg4 text-sm text-center py-8">Ningún usuario ha vinculado Telegram aún</p>
           ) : (
-            <div className="divide-y divide-gray-800">
+            <div className="divide-y divide-adm-border">
               {telegramUsers.map(u => (
                 <div key={u.id} className="flex items-center justify-between px-4 py-3">
                   <div>
-                    <p className="text-sm font-medium text-white">{u.full_name}</p>
-                    <p className="text-xs text-gray-400">{u.email}</p>
-                    {u.phone && <p className="text-xs text-gray-500">{u.phone}</p>}
+                    <p className="text-sm font-medium text-adm-fg">{u.full_name}</p>
+                    <p className="text-xs text-adm-fg3">{u.email}</p>
+                    {u.phone && <p className="text-xs text-adm-fg4">{u.phone}</p>}
                   </div>
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                     u.role === 'driver'
-                      ? 'text-[#008000] bg-[#008000]/10'
-                      : 'text-white bg-white/10'
+                      ? 'text-adm-accent bg-[#008000]/10'
+                      : 'text-adm-fg bg-adm-fg/10'
                   }`}>
                     {u.role === 'driver' ? 'Conductor' : 'Pasajero'}
                   </span>
@@ -422,34 +422,34 @@ function ReferralLeaderboard() {
 
   return (
     <div className="mt-8">
-      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+      <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">
         Concurso de referidos — {month ? `${monthNames[month]} ${year}` : ''}
       </h2>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-adm-surface border border-adm-border rounded-xl overflow-hidden">
         {leaderboard.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-8">Ningún conductor ha referido pasajeros este mes</p>
+          <p className="text-adm-fg4 text-sm text-center py-8">Ningún conductor ha referido pasajeros este mes</p>
         ) : (
-          <div className="divide-y divide-gray-800">
+          <div className="divide-y divide-adm-border">
             {leaderboard.map((entry, i) => (
               <div key={entry.driver_id} className="flex items-center justify-between px-4 py-3 gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={`text-lg font-bold flex-shrink-0 w-6 text-center ${i === 0 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                  <span className={`text-lg font-bold flex-shrink-0 w-6 text-center ${i === 0 ? 'text-yellow-700 dark:text-yellow-400' : 'text-adm-fg4'}`}>
                     {i === 0 ? '🥇' : `#${i + 1}`}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{entry.full_name}</p>
-                    <p className="text-xs text-gray-400">{entry.phone}{entry.municipality ? ` · ${entry.municipality}` : ''}</p>
+                    <p className="text-sm font-medium text-adm-fg truncate">{entry.full_name}</p>
+                    <p className="text-xs text-adm-fg3">{entry.phone}{entry.municipality ? ` · ${entry.municipality}` : ''}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-[#008000] font-bold text-sm">{entry.referral_count} referidos</span>
+                  <span className="text-adm-accent font-bold text-sm">{entry.referral_count} referidos</span>
                   {winnerSet === entry.driver_id ? (
-                    <span className="text-xs bg-[#008000]/20 text-[#008000] px-2 py-1 rounded-lg font-semibold">Ganador</span>
+                    <span className="text-xs bg-[#008000]/20 text-adm-accent px-2 py-1 rounded-lg font-semibold">Ganador</span>
                   ) : (
                     <button
                       onClick={() => handleSetWinner(entry.driver_id)}
                       disabled={settingWinner === entry.driver_id}
-                      className="text-xs bg-[#008000] hover:bg-[#006800] text-white px-2 py-1 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                      className="text-xs bg-[#008000] hover:bg-[#006600] text-white px-2 py-1 rounded-lg font-semibold transition-colors disabled:opacity-50"
                     >
                       {settingWinner === entry.driver_id ? '...' : 'Declarar ganador'}
                     </button>
@@ -490,23 +490,23 @@ function QrRequestsSection() {
   };
 
   const statusLabel: Record<string, string> = { pending: 'Pendiente', contacted: 'Contactado', delivered: 'Entregado' };
-  const statusColor: Record<string, string> = { pending: 'text-amber-400', contacted: 'text-blue-400', delivered: 'text-[#008000]' };
+  const statusColor: Record<string, string> = { pending: 'text-amber-700 dark:text-amber-400', contacted: 'text-blue-600 dark:text-blue-400', delivered: 'text-adm-accent' };
 
   return (
     <div className="mt-8">
-      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+      <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">
         Solicitudes de código QR ({requests.length})
       </h2>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-adm-surface border border-adm-border rounded-xl overflow-hidden">
         {requests.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-8">Ningún conductor ha solicitado QR aún</p>
+          <p className="text-adm-fg4 text-sm text-center py-8">Ningún conductor ha solicitado QR aún</p>
         ) : (
-          <div className="divide-y divide-gray-800">
+          <div className="divide-y divide-adm-border">
             {requests.map(req => (
               <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white">{req.full_name}</p>
-                  <p className="text-xs text-gray-400">{req.phone}{req.municipality ? ` · ${req.municipality}` : ''}{req.vehicle_plate ? ` · ${req.vehicle_plate}` : ''}</p>
+                  <p className="text-sm font-medium text-adm-fg">{req.full_name}</p>
+                  <p className="text-xs text-adm-fg3">{req.phone}{req.municipality ? ` · ${req.municipality}` : ''}{req.vehicle_plate ? ` · ${req.vehicle_plate}` : ''}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className={`text-xs font-semibold ${statusColor[req.status]}`}>{statusLabel[req.status]}</span>
@@ -514,7 +514,7 @@ function QrRequestsSection() {
                     value={req.status}
                     disabled={updating === req.driver_id}
                     onChange={e => handleStatusChange(req.driver_id, e.target.value)}
-                    className="bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-2 py-1 focus:outline-none"
+                    className="bg-adm-muted border border-adm-border-strong text-adm-fg text-xs rounded-lg px-2 py-1 focus:outline-none"
                   >
                     <option value="pending">Pendiente</option>
                     <option value="contacted">Contactado</option>
@@ -597,15 +597,15 @@ function BroadcastEmailSection() {
 
   return (
     <div className="mt-8">
-      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Emails</h2>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+      <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">Emails</h2>
+      <div className="bg-adm-surface border border-adm-border rounded-xl p-5 space-y-4">
         {/* Selector de destinatarios */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Destinatarios</label>
+          <label className="block text-xs text-adm-fg3 mb-1">Destinatarios</label>
           <select
             value={target}
             onChange={e => { setTarget(e.target.value as any); setSelectedUsers([]); setSearchQuery(''); setSearchResults([]); }}
-            className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000]"
+            className="w-full bg-adm-muted border border-adm-border-strong text-adm-fg text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000]"
           >
             <option value="all">Todos (conductores + pasajeros)</option>
             <option value="passengers">Solo pasajeros</option>
@@ -617,32 +617,32 @@ function BroadcastEmailSection() {
         {/* Buscador de usuarios específicos */}
         {target === 'specific' && (
           <div className="space-y-2">
-            <label className="block text-xs text-gray-400 mb-1">Buscar por nombre, email o teléfono</label>
+            <label className="block text-xs text-adm-fg3 mb-1">Buscar por nombre, email o teléfono</label>
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); searchUsers(e.target.value); }}
                 placeholder="Ej: Bayron, 3112102014..."
-                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600"
+                className="w-full bg-adm-muted border border-adm-border-strong text-adm-fg text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-adm-fg4"
               />
               {loadingUsers && (
-                <div className="absolute right-3 top-2.5"><svg className="animate-spin w-4 h-4 text-gray-400" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
+                <div className="absolute right-3 top-2.5"><svg className="animate-spin w-4 h-4 text-adm-fg3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
               )}
               {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden shadow-xl">
+                <div className="absolute z-10 w-full mt-1 bg-adm-muted border border-adm-border-strong rounded-lg overflow-hidden shadow-xl">
                   {searchResults.map(u => (
                     <button key={u.id} onClick={() => addUser(u)}
-                      className="w-full text-left px-3 py-2.5 hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-0">
+                      className="w-full text-left px-3 py-2.5 hover:bg-adm-hover transition-colors border-b border-adm-border-strong last:border-0">
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="text-white text-sm font-medium">{u.full_name}</span>
-                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-300">{u.role === 'driver' ? '🚐 Conductor' : '👤 Pasajero'}</span>
+                          <span className="text-adm-fg text-sm font-medium">{u.full_name}</span>
+                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-adm-hover text-adm-fg2">{u.role === 'driver' ? '🚐 Conductor' : '👤 Pasajero'}</span>
                         </div>
-                        <span className="text-gray-400 text-xs">{u.phone}</span>
+                        <span className="text-adm-fg3 text-xs">{u.phone}</span>
                       </div>
                       {u.email && !u.email.includes('@motaxi.local') && (
-                        <p className="text-gray-400 text-xs mt-0.5">{u.email}</p>
+                        <p className="text-adm-fg3 text-xs mt-0.5">{u.email}</p>
                       )}
                     </button>
                   ))}
@@ -653,55 +653,55 @@ function BroadcastEmailSection() {
             {selectedUsers.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedUsers.map(u => (
-                  <div key={u.id} className="flex items-center gap-1.5 bg-[#008000]/20 border border-[#008000]/40 text-green-300 text-xs px-2.5 py-1.5 rounded-full">
+                  <div key={u.id} className="flex items-center gap-1.5 bg-[#008000]/20 border border-[#008000]/40 text-green-700 dark:text-green-300 text-xs px-2.5 py-1.5 rounded-full">
                     <span>{u.full_name}</span>
-                    <button onClick={() => removeUser(u.id)} className="text-green-400 hover:text-white ml-0.5">×</button>
+                    <button onClick={() => removeUser(u.id)} className="text-green-700 dark:text-green-400 hover:text-adm-fg ml-0.5">×</button>
                   </div>
                 ))}
               </div>
             )}
             {selectedUsers.length === 0 && (
-              <p className="text-gray-600 text-xs">Ningún usuario seleccionado</p>
+              <p className="text-adm-fg4 text-xs">Ningún usuario seleccionado</p>
             )}
           </div>
         )}
 
         {/* Asunto */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Asunto</label>
+          <label className="block text-xs text-adm-fg3 mb-1">Asunto</label>
           <input
             type="text"
             value={subject}
             onChange={e => setSubject(e.target.value)}
             placeholder="Ej: ¡MoTaxi tiene novedades para ti!"
-            className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600"
+            className="w-full bg-adm-muted border border-adm-border-strong text-adm-fg text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-adm-fg4"
           />
         </div>
 
         {/* Mensaje */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Mensaje</label>
+          <label className="block text-xs text-adm-fg3 mb-1">Mensaje</label>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
             rows={5}
             placeholder="Escribe aquí el mensaje para tus usuarios..."
-            className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-gray-600 resize-none"
+            className="w-full bg-adm-muted border border-adm-border-strong text-adm-fg text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#008000] placeholder-adm-fg4 resize-none"
           />
         </div>
 
-        {error && <p className="text-red-400 text-xs">{error}</p>}
+        {error && <p className="text-red-600 dark:text-red-400 text-xs">{error}</p>}
         {result && (
           <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-lg px-4 py-3">
-            <p className="text-[#008000] text-sm font-semibold">✓ Emails enviados: {result.sent} / {result.total}</p>
-            {result.failed > 0 && <p className="text-amber-400 text-xs mt-0.5">Fallidos: {result.failed}</p>}
+            <p className="text-adm-accent text-sm font-semibold">✓ Emails enviados: {result.sent} / {result.total}</p>
+            {result.failed > 0 && <p className="text-amber-700 dark:text-amber-400 text-xs mt-0.5">Fallidos: {result.failed}</p>}
           </div>
         )}
 
         <button
           onClick={handleSend}
           disabled={sending}
-          className="w-full bg-[#008000] hover:bg-[#006800] text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+          className="w-full bg-[#008000] hover:bg-[#006600] text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
         >
           {sending ? (
             <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Enviando...</>
@@ -728,8 +728,8 @@ function QRSection() {
 
   return (
     <div>
-      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Código QR de la app</h2>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col sm:flex-row items-center gap-6">
+      <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">Código QR de la app</h2>
+      <div className="bg-adm-surface border border-adm-border rounded-xl p-6 flex flex-col sm:flex-row items-center gap-6">
         <div ref={canvasRef} className="bg-white p-4 rounded-xl">
           <QRCodeCanvas
             value={APP_URL}
@@ -746,15 +746,15 @@ function QRSection() {
           />
         </div>
         <div className="flex-1 text-center sm:text-left">
-          <p className="text-white font-semibold text-lg mb-1">Motaxi App</p>
-          <p className="text-gray-400 text-sm mb-1">Escanea para abrir la aplicación</p>
-          <p className="text-[#008000] text-sm font-mono mb-4">{APP_URL}</p>
-          <p className="text-gray-500 text-xs mb-4">
-            Al escanear este QR con la cámara del teléfono, el sistema mostrará la opción <span className="text-gray-300">"Abrir en el navegador"</span> automáticamente.
+          <p className="text-adm-fg font-semibold text-lg mb-1">Motaxi App</p>
+          <p className="text-adm-fg3 text-sm mb-1">Escanea para abrir la aplicación</p>
+          <p className="text-adm-accent text-sm font-mono mb-4">{APP_URL}</p>
+          <p className="text-adm-fg4 text-xs mb-4">
+            Al escanear este QR con la cámara del teléfono, el sistema mostrará la opción <span className="text-adm-fg2">"Abrir en el navegador"</span> automáticamente.
           </p>
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 bg-[#008000] hover:bg-[#38b018] text-black font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 bg-[#008000] hover:bg-[#006600] text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

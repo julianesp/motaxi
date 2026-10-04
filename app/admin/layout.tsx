@@ -4,6 +4,102 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { useTheme, type ThemeMode } from '@/lib/theme-context';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+
+const themeOptions: { mode: ThemeMode; label: string; icon: React.ReactNode }[] = [
+  {
+    mode: 'light',
+    label: 'Claro',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+  },
+  {
+    mode: 'dark',
+    label: 'Oscuro',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      </svg>
+    ),
+  },
+  {
+    mode: 'auto',
+    label: 'Auto',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+];
+
+/** Selector claro / oscuro / automático (oscuro de 19:00 a 7:00). */
+function ThemeSwitch({ compact = false }: { compact?: boolean }) {
+  const { mode, setMode } = useTheme();
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Tema del panel"
+      className="inline-flex items-center rounded-lg border border-adm-border bg-adm-muted p-0.5"
+    >
+      {themeOptions.map((opt) => {
+        const active = mode === opt.mode;
+        return (
+          <button
+            key={opt.mode}
+            role="radio"
+            aria-checked={active}
+            onClick={() => setMode(opt.mode)}
+            title={opt.mode === 'auto' ? 'Automático: oscuro de 19:00 a 7:00' : `Tema ${opt.label.toLowerCase()}`}
+            className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors
+              ${active ? 'bg-adm-surface text-adm-fg shadow-sm' : 'text-adm-fg3 hover:text-adm-fg'}`}
+          >
+            {opt.icon}
+            {!compact && <span>{opt.label}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Indicador de si la API (Cloudflare Worker) responde. */
+function ApiStatus() {
+  const [status, setStatus] = useState<'checking' | 'ok' | 'down'>('checking');
+
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const res = await fetch(API_URL + '/', { cache: 'no-store' });
+        if (!cancelled) setStatus(res.ok ? 'ok' : 'down');
+      } catch {
+        if (!cancelled) setStatus('down');
+      }
+    };
+    check();
+    const id = setInterval(check, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  const styles = {
+    checking: { dot: 'bg-gray-400', text: 'Comprobando API…' },
+    ok: { dot: 'bg-green-500', text: 'API en línea' },
+    down: { dot: 'bg-red-500', text: 'API sin respuesta' },
+  }[status];
+
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-adm-fg3" title={API_URL}>
+      <span className={`h-2 w-2 rounded-full ${styles.dot}`} />
+      {styles.text}
+    </span>
+  );
+}
 
 const ADMIN_EMAIL = 'admin@neurai.dev';
 
@@ -106,6 +202,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Al cambiar la key se vuelve a montar la página y recarga sus datos
+  const [reloadKey, setReloadKey] = useState(0);
+  const [lastReload, setLastReload] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!loading) {
@@ -119,7 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-950">
+      <div className="admin-root flex items-center justify-center min-h-screen bg-adm-bg">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#008000]"></div>
       </div>
     );
@@ -128,7 +227,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user || user.email !== ADMIN_EMAIL) return null;
 
   return (
-    <div className="flex min-h-screen bg-gray-950 text-white">
+    <div className="admin-root flex min-h-screen bg-adm-bg text-adm-fg">
       {/* Sidebar overlay mobile */}
       {sidebarOpen && (
         <div
@@ -139,12 +238,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-gray-900 border-r border-gray-800 z-30 transition-transform duration-200
+        className={`fixed top-0 left-0 h-full w-64 bg-adm-surface border-r border-adm-border z-30 transition-transform duration-200
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="px-6 py-5 border-b border-gray-800">
+          <div className="px-6 py-5 border-b border-adm-border">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-[#008000] rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,8 +251,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </svg>
               </div>
               <div>
-                <p className="font-bold text-white">MoTaxi Admin</p>
-                <p className="text-xs text-gray-400">Panel de control</p>
+                <p className="font-bold text-adm-fg">MoTaxi Admin</p>
+                <p className="text-xs text-adm-fg3">Panel de control</p>
               </div>
             </div>
           </div>
@@ -171,8 +270,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium
                     ${isActive
-                      ? 'bg-[#008000]/10 text-[#008000] border border-[#008000]/20'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'bg-[#008000]/10 text-adm-accent border border-[#008000]/20'
+                      : 'text-adm-fg3 hover:text-adm-fg hover:bg-adm-muted'
                     }`}
                 >
                   {item.icon}
@@ -182,21 +281,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
+          {/* Tema */}
+          <div className="px-4 pt-4 border-t border-adm-border">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-adm-fg4 mb-2">Tema</p>
+            <ThemeSwitch />
+          </div>
+
           {/* User info */}
-          <div className="px-4 py-4 border-t border-gray-800">
+          <div className="px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 min-w-0">
                 <div className="w-8 h-8 bg-[#008000] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-bold text-gray-900">A</span>
+                  <span className="text-xs font-bold text-white">A</span>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">Admin</p>
-                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  <p className="text-sm font-medium text-adm-fg truncate">Admin</p>
+                  <p className="text-xs text-adm-fg3 truncate">{user.email}</p>
                 </div>
               </div>
               <button
                 onClick={() => { logout(); router.push('/'); }}
-                className="text-gray-400 hover:text-red-400 transition-colors ml-2"
+                className="text-adm-fg3 hover:text-red-600 dark:hover:text-red-400 transition-colors ml-2"
                 title="Cerrar sesión"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,17 +316,56 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar (mobile) */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800">
-          <button onClick={() => setSidebarOpen(true)} className="text-gray-400">
+        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-adm-surface border-b border-adm-border">
+          <button onClick={() => setSidebarOpen(true)} className="text-adm-fg3">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="font-bold text-[#008000]">MoTaxi Admin</span>
-          <div className="w-6" />
+          <span className="font-bold text-adm-accent">MoTaxi Admin</span>
+          <ThemeSwitch compact />
         </header>
 
-        <main className="flex-1 overflow-auto">
+        {/* Barra de control */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 lg:px-6 py-2.5 bg-adm-surface border-b border-adm-border">
+          <div className="flex items-center gap-3 min-w-0">
+            <h2 className="text-sm font-semibold text-adm-fg truncate">
+              {navItems.find((i) => (i.href === '/admin' ? pathname === '/admin' : pathname.startsWith(i.href)))?.label ?? 'Admin'}
+            </h2>
+            <ApiStatus />
+          </div>
+          <div className="flex items-center gap-2">
+            {lastReload && (
+              <span className="hidden sm:inline text-xs text-adm-fg4">
+                Actualizado {lastReload.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            <button
+              onClick={() => { setReloadKey((k) => k + 1); setLastReload(new Date()); }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-adm-border px-2.5 py-1.5 text-xs font-medium text-adm-fg2 hover:bg-adm-muted transition-colors"
+              title="Volver a cargar los datos de esta sección"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Actualizar
+            </button>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-adm-border px-2.5 py-1.5 text-xs font-medium text-adm-fg2 hover:bg-adm-muted transition-colors"
+              title="Abrir motaxi.dev en otra pestaña"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Ver sitio
+            </a>
+          </div>
+        </div>
+
+        <main key={reloadKey} className="flex-1 overflow-auto">
           {children}
         </main>
       </div>

@@ -129,14 +129,14 @@ export default function AdminMunicipiosPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Municipios — Contenido pendiente</h1>
+      <h1 className="text-2xl font-bold text-adm-fg mb-6">Municipios — Contenido pendiente</h1>
 
       {msg && (
         <div
           className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${
             msg.type === "ok"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
+              ? "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/50"
+              : "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/50"
           }`}
         >
           {msg.text}
@@ -149,8 +149,8 @@ export default function AdminMunicipiosPage() {
           onClick={() => setTab("images")}
           className={`px-5 py-2 rounded-xl font-semibold text-sm transition-colors ${
             tab === "images"
-              ? "bg-[#42CE1D] text-white"
-              : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              ? "bg-[#008000] text-white"
+              : "bg-adm-surface border border-adm-border text-adm-fg4 hover:bg-adm-muted"
           }`}
         >
           Imágenes propuestas
@@ -164,8 +164,8 @@ export default function AdminMunicipiosPage() {
           onClick={() => setTab("places")}
           className={`px-5 py-2 rounded-xl font-semibold text-sm transition-colors ${
             tab === "places"
-              ? "bg-[#42CE1D] text-white"
-              : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              ? "bg-[#008000] text-white"
+              : "bg-adm-surface border border-adm-border text-adm-fg4 hover:bg-adm-muted"
           }`}
         >
           Lugares / negocios
@@ -178,14 +178,14 @@ export default function AdminMunicipiosPage() {
       </div>
 
       {fetching ? (
-        <div className="text-center py-16 text-gray-400 text-sm">Cargando...</div>
+        <div className="text-center py-16 text-adm-fg3 text-sm">Cargando...</div>
       ) : tab === "images" ? (
         pendingImages.length === 0 ? (
-          <p className="text-gray-400 text-sm py-12 text-center">No hay imágenes pendientes.</p>
+          <p className="text-adm-fg3 text-sm py-12 text-center">No hay imágenes pendientes.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {pendingImages.map((img) => (
-              <div key={img.id} className="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
+              <div key={img.id} className="bg-adm-surface rounded-2xl shadow border border-adm-border overflow-hidden">
                 <img
                   src={img.image_url}
                   alt="Propuesta"
@@ -196,23 +196,23 @@ export default function AdminMunicipiosPage() {
                   }}
                 />
                 <div className="p-4">
-                  <p className="text-sm font-semibold text-gray-800 mb-0.5">
-                    Municipio: <span className="text-[#42CE1D]">{municipalityName(img.municipality_id)}</span>
+                  <p className="text-sm font-semibold text-adm-fg mb-0.5">
+                    Municipio: <span className="text-adm-accent">{municipalityName(img.municipality_id)}</span>
                   </p>
-                  <p className="text-xs text-gray-500 mb-1">Por: {img.proposed_by_name} ({img.proposed_by_email})</p>
-                  <p className="text-xs text-gray-400 mb-3 break-all">{img.image_url}</p>
+                  <p className="text-xs text-adm-fg4 mb-1">Por: {img.proposed_by_name} ({img.proposed_by_email})</p>
+                  <p className="text-xs text-adm-fg3 mb-3 break-all">{img.image_url}</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleImageAction(img.id, "approve")}
                       disabled={actionLoading === img.id}
-                      className="flex-1 py-1.5 bg-[#42CE1D] text-white text-sm font-semibold rounded-xl hover:bg-[#36b018] transition-colors disabled:opacity-60"
+                      className="flex-1 py-1.5 bg-[#008000] text-white text-sm font-semibold rounded-xl hover:bg-[#006600] transition-colors disabled:opacity-60"
                     >
                       Aprobar
                     </button>
                     <button
                       onClick={() => handleImageAction(img.id, "reject")}
                       disabled={actionLoading === img.id}
-                      className="flex-1 py-1.5 border border-red-300 text-red-600 text-sm font-semibold rounded-xl hover:bg-red-50 transition-colors disabled:opacity-60"
+                      className="flex-1 py-1.5 border border-red-300 dark:border-red-500/40 text-red-600 dark:text-red-400 text-sm font-semibold rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
                     >
                       Rechazar
                     </button>
@@ -224,11 +224,11 @@ export default function AdminMunicipiosPage() {
         )
       ) : (
         pendingPlaces.length === 0 ? (
-          <p className="text-gray-400 text-sm py-12 text-center">No hay lugares pendientes.</p>
+          <p className="text-adm-fg3 text-sm py-12 text-center">No hay lugares pendientes.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {pendingPlaces.map((place) => (
-              <div key={place.id} className="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
+              <div key={place.id} className="bg-adm-surface rounded-2xl shadow border border-adm-border overflow-hidden">
                 {place.image_url && (
                   <img
                     src={place.image_url}
@@ -239,33 +239,33 @@ export default function AdminMunicipiosPage() {
                 )}
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-bold text-gray-900">{place.name}</p>
-                    <span className="text-xs bg-green-50 text-[#42CE1D] border border-[#42CE1D]/20 rounded-full px-2 py-0.5 whitespace-nowrap">
+                    <p className="text-sm font-bold text-adm-fg">{place.name}</p>
+                    <span className="text-xs bg-green-50 dark:bg-green-500/10 text-adm-accent border border-[#42CE1D]/20 rounded-full px-2 py-0.5 whitespace-nowrap">
                       {place.category}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mb-0.5">
+                  <p className="text-xs text-adm-fg4 mb-0.5">
                     Municipio: <span className="font-medium">{municipalityName(place.municipality_id)}</span>
                   </p>
-                  <p className="text-xs text-gray-500 mb-0.5">Dirección: {place.address}</p>
+                  <p className="text-xs text-adm-fg4 mb-0.5">Dirección: {place.address}</p>
                   {place.description && (
-                    <p className="text-xs text-gray-400 mb-1">{place.description}</p>
+                    <p className="text-xs text-adm-fg3 mb-1">{place.description}</p>
                   )}
-                  <p className="text-xs text-gray-400 mb-3">
+                  <p className="text-xs text-adm-fg3 mb-3">
                     Por: {place.published_by_name} ({place.published_by_email})
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handlePlaceAction(place.id, "approve")}
                       disabled={actionLoading === place.id}
-                      className="flex-1 py-1.5 bg-[#42CE1D] text-white text-sm font-semibold rounded-xl hover:bg-[#36b018] transition-colors disabled:opacity-60"
+                      className="flex-1 py-1.5 bg-[#008000] text-white text-sm font-semibold rounded-xl hover:bg-[#006600] transition-colors disabled:opacity-60"
                     >
                       Aprobar
                     </button>
                     <button
                       onClick={() => handlePlaceAction(place.id, "reject")}
                       disabled={actionLoading === place.id}
-                      className="flex-1 py-1.5 border border-red-300 text-red-600 text-sm font-semibold rounded-xl hover:bg-red-50 transition-colors disabled:opacity-60"
+                      className="flex-1 py-1.5 border border-red-300 dark:border-red-500/40 text-red-600 dark:text-red-400 text-sm font-semibold rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
                     >
                       Rechazar
                     </button>

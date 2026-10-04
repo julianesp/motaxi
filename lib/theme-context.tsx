@@ -3,17 +3,22 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 type Theme = 'light' | 'dark';
+export type ThemeMode = Theme | 'auto';
 
 interface ThemeContextValue {
   theme: Theme;
   toggle: () => void;
   isAuto: boolean;
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'light',
   toggle: () => {},
   isAuto: true,
+  mode: 'auto',
+  setMode: () => {},
 });
 
 function isDarkHour(): boolean {
@@ -68,8 +73,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(next);
   }, [theme, applyTheme]);
 
+  // Elegir explícitamente claro, oscuro o automático (por hora del día)
+  const setMode = useCallback((mode: ThemeMode) => {
+    if (mode === 'auto') {
+      setIsAuto(true);
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+      applyTheme(isDarkHour() ? 'dark' : 'light');
+    } else {
+      setIsAuto(false);
+      try { localStorage.setItem(STORAGE_KEY, mode); } catch {}
+      applyTheme(mode);
+    }
+  }, [applyTheme]);
+
+  const mode: ThemeMode = isAuto ? 'auto' : theme;
+
   return (
-    <ThemeContext.Provider value={{ theme, toggle, isAuto }}>
+    <ThemeContext.Provider value={{ theme, toggle, isAuto, mode, setMode }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -75,32 +75,32 @@ export default function AdminVideos() {
   return (
     <div className="p-6 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-white">Videos de instrucciones</h1>
-        <p className="text-gray-400 text-sm mt-1">Agrega videos de YouTube que se mostrarán en la página principal</p>
+        <h1 className="text-2xl font-bold text-adm-fg">Videos de instrucciones</h1>
+        <p className="text-adm-fg3 text-sm mt-1">Agrega videos de YouTube que se mostrarán en la página principal</p>
       </div>
 
       {/* Formulario */}
-      <form onSubmit={handleAdd} className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Agregar video</h2>
+      <form onSubmit={handleAdd} className="bg-adm-surface border border-adm-border rounded-xl p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider">Agregar video</h2>
         <div>
-          <label className="block text-sm text-gray-300 mb-1">Título</label>
+          <label className="block text-sm text-adm-fg2 mb-1">Título</label>
           <input
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Ej: Cómo pedir un viaje"
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#008000]"
+            className="w-full bg-adm-muted border border-adm-border-strong rounded-lg px-4 py-2 text-adm-fg text-sm focus:outline-none focus:border-[#008000]"
             required
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-300 mb-1">Enlace de YouTube</label>
+          <label className="block text-sm text-adm-fg2 mb-1">Enlace de YouTube</label>
           <input
             type="url"
             value={youtubeUrl}
             onChange={e => setYoutubeUrl(e.target.value)}
             placeholder="https://youtu.be/..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-[#008000]"
+            className="w-full bg-adm-muted border border-adm-border-strong rounded-lg px-4 py-2 text-adm-fg text-sm focus:outline-none focus:border-[#008000]"
             required
           />
         </div>
@@ -117,12 +117,12 @@ export default function AdminVideos() {
           </div>
         )}
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
 
         <button
           type="submit"
           disabled={saving}
-          className="bg-[#008000] hover:bg-[#38b018] disabled:opacity-50 text-black font-semibold px-6 py-2 rounded-lg text-sm transition-colors"
+          className="bg-[#008000] hover:bg-[#006600] disabled:opacity-50 text-white font-semibold px-6 py-2 rounded-lg text-sm transition-colors"
         >
           {saving ? 'Guardando...' : 'Agregar video'}
         </button>
@@ -130,7 +130,7 @@ export default function AdminVideos() {
 
       {/* Lista */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-semibold text-adm-fg3 uppercase tracking-wider mb-3">
           Videos publicados ({videos.length})
         </h2>
         {loading ? (
@@ -138,7 +138,7 @@ export default function AdminVideos() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008000]"></div>
           </div>
         ) : videos.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-gray-500 text-sm">
+          <div className="bg-adm-surface border border-adm-border rounded-xl p-8 text-center text-adm-fg4 text-sm">
             No hay videos publicados aún
           </div>
         ) : (
@@ -146,7 +146,7 @@ export default function AdminVideos() {
             {videos.map((video) => {
               const ytId = getYoutubeId(video.youtubeUrl);
               return (
-                <div key={video.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+                <div key={video.id} className="bg-adm-surface border border-adm-border rounded-xl overflow-hidden">
                   {ytId && (
                     <div className="aspect-video bg-black">
                       <iframe
@@ -159,14 +159,14 @@ export default function AdminVideos() {
                   )}
                   <div className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-white font-medium text-sm">{video.title}</p>
-                      <p className="text-gray-500 text-xs mt-0.5">
+                      <p className="text-adm-fg font-medium text-sm">{video.title}</p>
+                      <p className="text-adm-fg4 text-xs mt-0.5">
                         {new Date(video.uploadedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                     <button
                       onClick={() => handleDelete(video.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors ml-4"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors ml-4"
                       title="Eliminar"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

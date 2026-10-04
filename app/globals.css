@@ -34,6 +34,39 @@ html.dark body, body.dark {
   background: linear-gradient(to top, #003300, #050a14);
 }
 
+/* Panel /admin: tema claro por defecto y oscuro con html.dark (ThemeProvider) */
+.admin-root {
+  --adm-bg: 243 244 246;
+  --adm-surface: 255 255 255;
+  --adm-muted: 243 244 246;
+  --adm-hover: 229 231 235;
+  --adm-border: 229 231 235;
+  --adm-border-strong: 209 213 219;
+  --adm-fg: 17 24 39;
+  --adm-fg2: 55 65 81;
+  --adm-fg3: 75 85 99;
+  --adm-fg4: 107 114 128;
+  --adm-accent: 0 110 0;
+  --adm-accent-strong: 0 85 0;
+  color-scheme: light;
+}
+
+html.dark .admin-root {
+  --adm-bg: 3 7 18;
+  --adm-surface: 17 24 39;
+  --adm-muted: 31 41 55;
+  --adm-hover: 55 65 81;
+  --adm-border: 31 41 55;
+  --adm-border-strong: 55 65 81;
+  --adm-fg: 255 255 255;
+  --adm-fg2: 209 213 219;
+  --adm-fg3: 156 163 175;
+  --adm-fg4: 138 146 158;
+  --adm-accent: 74 222 128;
+  --adm-accent-strong: 134 239 172;
+  color-scheme: dark;
+}
+
 a {
   color: inherit;
   text-decoration: none;

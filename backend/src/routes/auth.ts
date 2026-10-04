@@ -361,6 +361,13 @@ authRoutes.post('/login', async (c) => {
  * POST /auth/google
  * Iniciar sesión o registrarse con Google OAuth
  */
+// Client IDs OAuth de MoTaxi (proyecto 960191829564). La app nativa pide el idToken
+// para el client Web; el client Android queda por compatibilidad con versiones viejas.
+const GOOGLE_CLIENT_IDS = [
+  '960191829564-t1eoq4uoa3v7b64uhsa5pd596fg3ivmd.apps.googleusercontent.com', // Web
+  '960191829564-g627f3ql90vq1r89j2qjehhbq3q3bon5.apps.googleusercontent.com', // Android
+];
+
 authRoutes.post('/google', async (c) => {
   try {
     const body = await c.req.json();
@@ -385,11 +392,20 @@ authRoutes.post('/google', async (c) => {
       return c.json({ error: 'Invalid Google token data' }, 401);
     }
 
+    // El token debe haber sido emitido para MoTaxi y con el correo verificado;
+    // si no, se aceptarían tokens de cualquier otra app que use Google Sign-In.
+    if (!GOOGLE_CLIENT_IDS.includes(googleData.aud)) {
+      return c.json({ error: 'Google token not issued for MoTaxi' }, 401);
+    }
+    if (googleData.email_verified !== 'true' && googleData.email_verified !== true) {
+      return c.json({ error: 'Google email not verified' }, 401);
+    }
+
     const { email, name, sub: googleId } = googleData;
 
     // Buscar si ya existe el usuario
     let user: any = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE email = ?'
+      'SELECT * FROM users WHERE lower(trim(email)) = lower(?)'
     ).bind(email).first();
 
     if (!user) {

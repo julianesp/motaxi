@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import AppVersionCard from '@/components/admin/AppVersionCard';
 import { apiClient } from '@/lib/api-client';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -172,6 +173,9 @@ export default function AdminDashboard() {
           {togglingLock ? '...' : appLocked ? 'Desbloquear' : 'Bloquear acceso'}
         </button>
       </div>
+
+      {/* Aviso de actualización de la app */}
+      <AppVersionCard />
 
       {/* Ingresos */}
       <div>

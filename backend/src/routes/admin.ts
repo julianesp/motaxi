@@ -1141,6 +1141,53 @@ adminRoutes.post('/referrals/set-winner', async (c) => {
 });
 
 /**
+ * GET /admin/app-version
+ * Versión de la app Android que se anuncia a los usuarios
+ */
+adminRoutes.get('/app-version', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare(
+      "SELECT key, value FROM app_settings WHERE key IN ('android_latest_version_code', 'android_min_version_code', 'android_update_message')"
+    ).all<{ key: string; value: string }>();
+    const map = Object.fromEntries((rows.results || []).map((r) => [r.key, r.value]));
+    return c.json({
+      latestVersionCode: Number(map.android_latest_version_code) || 0,
+      minVersionCode: Number(map.android_min_version_code) || 0,
+      message: map.android_update_message || '',
+    });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * PUT /admin/app-version
+ * latestVersionCode: la app muestra "hay una nueva versión" si la suya es menor.
+ * minVersionCode: por debajo de esta versión la actualización es obligatoria.
+ */
+adminRoutes.put('/app-version', async (c) => {
+  try {
+    const { latestVersionCode, minVersionCode, message } = await c.req.json();
+    const latest = Number(latestVersionCode);
+    const min = Number(minVersionCode) || 0;
+    if (!Number.isInteger(latest) || latest < 0 || !Number.isInteger(min) || min < 0 || min > latest) {
+      return c.json({ error: 'Versiones inválidas: deben ser enteros y la mínima no puede superar a la última' }, 400);
+    }
+    const upsert = `INSERT INTO app_settings (key, value, updated_at)
+       VALUES (?, ?, strftime('%s', 'now'))
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`;
+    await c.env.DB.batch([
+      c.env.DB.prepare(upsert).bind('android_latest_version_code', String(latest)),
+      c.env.DB.prepare(upsert).bind('android_min_version_code', String(min)),
+      c.env.DB.prepare(upsert).bind('android_update_message', typeof message === 'string' ? message.trim().slice(0, 300) : ''),
+    ]);
+    return c.json({ success: true, latestVersionCode: latest, minVersionCode: min });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
  * GET /admin/app-access
  * Obtener estado actual del bloqueo de acceso
  */

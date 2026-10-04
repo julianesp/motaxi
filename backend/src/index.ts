@@ -88,6 +88,32 @@ app.get('/', (c) => {
   });
 });
 
+/**
+ * GET /app/version (público)
+ * Última versión publicada de la app y la mínima que se exige, para que la app
+ * avise a los usuarios con un aviso propio (no depende de las notificaciones).
+ * Se configura desde el panel admin (PUT /admin/app-version).
+ */
+app.get('/app/version', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare(
+      "SELECT key, value FROM app_settings WHERE key IN ('android_latest_version_code', 'android_min_version_code', 'android_update_message')"
+    ).all<{ key: string; value: string }>();
+    const map = Object.fromEntries((rows.results || []).map((r) => [r.key, r.value]));
+    return c.json({
+      android: {
+        latestVersionCode: Number(map.android_latest_version_code) || 0,
+        minVersionCode: Number(map.android_min_version_code) || 0,
+        message: map.android_update_message || null,
+        storeUrl: 'https://play.google.com/store/apps/details?id=com.motaxi.app',
+      },
+    });
+  } catch (error: any) {
+    console.error('Get app version error:', error);
+    return c.json({ error: 'Failed to get app version' }, 500);
+  }
+});
+
 // Routes
 app.route('/auth', authRoutes);
 app.route('/trips', tripRoutes);

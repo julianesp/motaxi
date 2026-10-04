@@ -609,7 +609,7 @@ authRoutes.post('/forgot-password', async (c) => {
     }
 
     const codeSentViaChannel = emailSent || smsSent;
-    console.log(`Reset code for ${user.email || user.phone}: ${resetCode} | emailSent=${emailSent} | smsSent=${smsSent} | error=${emailError}`);
+    console.log(`Reset code requested for ${user.email || user.phone} | emailSent=${emailSent} | smsSent=${smsSent} | error=${emailError}`);
 
     const response: any = {
       message: 'Si el correo o teléfono existe, recibirás instrucciones para recuperar tu cuenta.',
@@ -617,8 +617,10 @@ authRoutes.post('/forgot-password', async (c) => {
       smsSent,
     };
 
+    // Nunca devolver el código en la respuesta: permitiría cambiar la contraseña
+    // de cualquier cuenta conociendo solo su correo o teléfono.
     if (!codeSentViaChannel) {
-      response.resetCode = resetCode;
+      console.error(`Reset code NOT delivered for user ${user.id}`);
     }
 
     return c.json(response);

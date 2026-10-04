@@ -90,6 +90,46 @@ userRoutes.put('/profile', async (c) => {
 });
 
 /**
+ * POST /users/feedback
+ * Respuestas de la encuesta de satisfacción de la app
+ */
+userRoutes.post('/feedback', async (c) => {
+  try {
+    const user = c.get('user');
+    const { easeRating, foundNeeded, improvement, appVersion, platform } = await c.req.json();
+
+    const rating = Number(easeRating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return c.json({ error: 'easeRating debe ser un entero de 1 a 5' }, 400);
+    }
+    if (!['yes', 'partly', 'no'].includes(foundNeeded)) {
+      return c.json({ error: 'foundNeeded inválido' }, 400);
+    }
+
+    await c.env.DB.prepare(
+      `INSERT INTO app_feedback (id, user_id, role, ease_rating, found_needed, improvement, app_version, platform)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        crypto.randomUUID(),
+        user.id,
+        user.role ?? null,
+        rating,
+        foundNeeded,
+        typeof improvement === 'string' && improvement.trim() ? improvement.trim().slice(0, 1000) : null,
+        typeof appVersion === 'string' ? appVersion.slice(0, 20) : null,
+        typeof platform === 'string' ? platform.slice(0, 20) : null,
+      )
+      .run();
+
+    return c.json({ message: 'Gracias por tu opinión' });
+  } catch (error: any) {
+    console.error('Save feedback error:', error);
+    return c.json({ error: error.message || 'Failed to save feedback' }, 500);
+  }
+});
+
+/**
  * POST /users/push-token
  * Guardar token de push notifications
  */

@@ -420,6 +420,37 @@ adminRoutes.get('/users', async (c) => {
 });
 
 /**
+ * GET /admin/feedback
+ * Respuestas de la encuesta de satisfacción de la app, con resumen
+ */
+adminRoutes.get('/feedback', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare(
+      `SELECT f.id, f.role, f.ease_rating, f.found_needed, f.improvement, f.app_version,
+              f.platform, f.created_at, u.full_name, u.email
+       FROM app_feedback f
+       LEFT JOIN users u ON u.id = f.user_id
+       ORDER BY f.created_at DESC
+       LIMIT 500`
+    ).all();
+
+    const summary = await c.env.DB.prepare(
+      `SELECT COUNT(*) AS total,
+              AVG(ease_rating) AS avg_ease,
+              SUM(found_needed = 'yes') AS found_yes,
+              SUM(found_needed = 'partly') AS found_partly,
+              SUM(found_needed = 'no') AS found_no
+       FROM app_feedback`
+    ).first();
+
+    return c.json({ feedback: rows.results || [], summary });
+  } catch (error: any) {
+    console.error('Get feedback error:', error);
+    return c.json({ error: error.message || 'Failed to get feedback' }, 500);
+  }
+});
+
+/**
  * GET /admin/telegram-users
  * Lista de usuarios con Telegram vinculado
  */

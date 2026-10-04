@@ -160,7 +160,7 @@ authRoutes.post('/register', async (c) => {
 
     if (email) {
       const emailExists = await c.env.DB.prepare(
-        'SELECT id FROM users WHERE email = ?'
+        'SELECT id FROM users WHERE lower(trim(email)) = lower(trim(?))'
       ).bind(email).first();
       if (emailExists) {
         return c.json({ error: 'Email already registered' }, 409);
@@ -313,9 +313,9 @@ authRoutes.post('/login', async (c) => {
 
     // Buscar usuario por email o teléfono
     const user = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE email = ? OR phone = ?'
+      'SELECT * FROM users WHERE lower(trim(email)) = lower(?) OR phone = ?'
     )
-      .bind(identifier, identifier)
+      .bind(String(identifier).trim(), String(identifier).trim())
       .first();
 
     if (!user) {
@@ -529,9 +529,9 @@ authRoutes.post('/forgot-password', async (c) => {
 
     // Buscar usuario por email o teléfono
     const user = await c.env.DB.prepare(
-      'SELECT id, email, phone, full_name FROM users WHERE email = ? OR phone = ?'
+      'SELECT id, email, phone, full_name FROM users WHERE lower(trim(email)) = lower(?) OR phone = ?'
     )
-      .bind(emailOrPhone, emailOrPhone)
+      .bind(String(emailOrPhone).trim(), String(emailOrPhone).trim())
       .first();
 
     if (!user) {
@@ -649,9 +649,9 @@ authRoutes.post('/reset-password', async (c) => {
 
     // Buscar usuario
     const user = await c.env.DB.prepare(
-      'SELECT id FROM users WHERE email = ? OR phone = ?'
+      'SELECT id FROM users WHERE lower(trim(email)) = lower(?) OR phone = ?'
     )
-      .bind(emailOrPhone, emailOrPhone)
+      .bind(String(emailOrPhone).trim(), String(emailOrPhone).trim())
       .first();
 
     if (!user) {

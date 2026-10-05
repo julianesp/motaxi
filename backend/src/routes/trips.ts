@@ -352,6 +352,107 @@ tripRoutes.get('/route', async (c) => {
 });
 
 /**
+ * GET /trips/places?q=texto
+ * Búsqueda de lugares para el destino del pasajero, SOLO dentro del Alto Putumayo
+ * (COVERAGE_BOUNDS). Fuente: Google Places (Text Search, API nueva) restringido al
+ * rectángulo de cobertura; si la clave no lo permite, Photon (OpenStreetMap) con bbox.
+ * Respuesta: { places: [{ id, name, address, latitude, longitude }] }. Caché KV 1 día.
+ */
+tripRoutes.get('/places', async (c) => {
+  const q = (c.req.query('q') || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  if (q.length < 3) return c.json({ places: [] });
+
+  type PlaceResult = { id: string; name: string; address: string; latitude: number; longitude: number };
+  const cacheKey = `places:${q.toLowerCase()}`;
+  try {
+    const cached = await c.env.CACHE?.get(cacheKey, 'json');
+    if (cached) return c.json({ places: cached });
+  } catch (_) {
+    // sin caché: se busca igual
+  }
+
+  let places: PlaceResult[] | null = null;
+
+  if (c.env.GOOGLE_MAPS_API_KEY) {
+    try {
+      const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': c.env.GOOGLE_MAPS_API_KEY,
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location',
+        },
+        body: JSON.stringify({
+          textQuery: q,
+          languageCode: 'es',
+          regionCode: 'CO',
+          pageSize: 8,
+          locationRestriction: {
+            rectangle: {
+              low: { latitude: COVERAGE_BOUNDS.latMin, longitude: COVERAGE_BOUNDS.lonMin },
+              high: { latitude: COVERAGE_BOUNDS.latMax, longitude: COVERAGE_BOUNDS.lonMax },
+            },
+          },
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        places = (data?.places || [])
+          .filter((p: any) => p?.location)
+          .map((p: any) => ({
+            id: p.id,
+            name: p.displayName?.text || p.formattedAddress || q,
+            address: p.formattedAddress || '',
+            latitude: p.location.latitude,
+            longitude: p.location.longitude,
+          }));
+      }
+    } catch (_) {
+      // Google no disponible para esta clave: se usa Photon
+    }
+  }
+
+  if (!places) {
+    try {
+      const params = new URLSearchParams({
+        q,
+        limit: '8',
+        bbox: `${COVERAGE_BOUNDS.lonMin},${COVERAGE_BOUNDS.latMin},${COVERAGE_BOUNDS.lonMax},${COVERAGE_BOUNDS.latMax}`,
+      });
+      const res = await fetch(`https://photon.komoot.io/api/?${params}`, {
+        headers: { 'User-Agent': 'MoTaxi/1.0 (admin@neurai.dev)' },
+        signal: AbortSignal.timeout(6000),
+      });
+      const data = (await res.json()) as any;
+      places = (data?.features || []).map((f: any) => {
+        const p = f.properties || {};
+        const [lng, lat] = f.geometry?.coordinates || [];
+        return {
+          id: `osm:${p.osm_type}${p.osm_id}`,
+          name: p.name || p.street || q,
+          address: [p.street, p.district, p.city || p.county, p.state].filter(Boolean).join(', '),
+          latitude: lat,
+          longitude: lng,
+        };
+      });
+    } catch (_) {
+      // sin resultados disponibles
+    }
+  }
+
+  const result = (places || []).filter((p) => isWithinCoverage(p.latitude, p.longitude));
+  if (places) {
+    try {
+      await c.env.CACHE?.put(cacheKey, JSON.stringify(result), { expirationTtl: 86400 });
+    } catch (_) {
+      // no es crítico
+    }
+  }
+  return c.json({ places: result });
+});
+
+/**
  * GET /trips/active
  * Obtener viajes activos/solicitados (TABLERO para conductores)
  * Muestra todas las solicitudes disponibles que pueden aceptar

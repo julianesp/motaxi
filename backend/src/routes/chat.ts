@@ -53,17 +53,41 @@ chatRoutes.get('/conversation/:trip_id', async (c) => {
     const user = c.get('user');
     const tripId = c.req.param('trip_id');
 
-    const conversation = await c.env.DB.prepare(
-      `SELECT c.*,
-              p.full_name as passenger_name, p.phone as passenger_phone,
-              d_user.full_name as driver_name, d_user.phone as driver_phone
-       FROM conversations c
-       LEFT JOIN users p ON c.passenger_id = p.id
-       LEFT JOIN users d_user ON c.driver_id = d_user.id
-       WHERE c.trip_id = ? AND (c.passenger_id = ? OR c.driver_id = ?)`
-    )
-      .bind(tripId, user.id, user.id)
-      .first();
+    const findConversation = () =>
+      c.env.DB.prepare(
+        `SELECT c.*,
+                p.full_name as passenger_name, p.phone as passenger_phone,
+                d_user.full_name as driver_name, d_user.phone as driver_phone
+         FROM conversations c
+         LEFT JOIN users p ON c.passenger_id = p.id
+         LEFT JOIN users d_user ON c.driver_id = d_user.id
+         WHERE c.trip_id = ? AND (c.passenger_id = ? OR c.driver_id = ?)`
+      )
+        .bind(tripId, user.id, user.id)
+        .first();
+
+    let conversation = await findConversation();
+
+    // El trigger create_conversation_on_trip_accepted no existe en la D1 de producción,
+    // así que la conversación se crea aquí la primera vez que alguno de los dos abre el chat.
+    if (!conversation) {
+      const trip = await c.env.DB.prepare(
+        `SELECT id, passenger_id, driver_id FROM trips
+         WHERE id = ? AND driver_id IS NOT NULL AND (passenger_id = ? OR driver_id = ?)`
+      )
+        .bind(tripId, user.id, user.id)
+        .first();
+
+      if (trip) {
+        await c.env.DB.prepare(
+          `INSERT OR IGNORE INTO conversations (id, trip_id, passenger_id, driver_id)
+           VALUES (?, ?, ?, ?)`
+        )
+          .bind(`${trip.id}_chat`, trip.id, trip.passenger_id, trip.driver_id)
+          .run();
+        conversation = await findConversation();
+      }
+    }
 
     if (!conversation) {
       return c.json({ error: 'Conversation not found' }, 404);
@@ -223,7 +247,8 @@ chatRoutes.post('/send', async (c) => {
         recipientId,
         user.full_name || 'Usuario',
         message_type === 'text' ? text_content : 'Nuevo mensaje',
-        'chat_message',
+        // notifications.type tiene un CHECK que no incluye 'chat_message'
+        'general',
         JSON.stringify({ conversation_id, message_id: messageId })
       )
       .run();

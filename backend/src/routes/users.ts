@@ -43,8 +43,9 @@ userRoutes.put('/profile', async (c) => {
       values.push(phone);
     }
     if (email) {
+      // El login compara el correo en minúsculas
       updates.push('email = ?');
-      values.push(email);
+      values.push(String(email).trim().toLowerCase());
     }
     if (profile_image) {
       updates.push('profile_image = ?');

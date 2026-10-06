@@ -35,10 +35,16 @@ export class PushNotificationService {
         body: JSON.stringify(message),
       });
 
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.errors) {
         console.error('Push notification errors:', data.errors);
+        return false;
+      }
+      // Los fallos por dispositivo (DeviceNotRegistered, InvalidCredentials de FCM...)
+      // llegan como ticket con status 'error', no en data.errors
+      if (data.data?.status === 'error') {
+        console.error('Push ticket error:', data.data.message, data.data.details);
         return false;
       }
 

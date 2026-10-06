@@ -568,6 +568,8 @@ tripRoutes.get('/current', async (c) => {
               d.vehicle_plate,
               d.current_latitude as driver_latitude,
               d.current_longitude as driver_longitude,
+              d.last_location_update as driver_location_at,
+              d.vehicle_types as driver_vehicle_type,
               d.rating as driver_rating
        FROM trips t
        LEFT JOIN users u ON t.driver_id = u.id

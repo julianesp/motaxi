@@ -232,8 +232,13 @@ chatRoutes.post('/send', async (c) => {
           type: 'chat_message',
           conversation_id,
           message_id: messageId,
+          trip_id: conversation.trip_id,
+          sender_name: senderName,
         },
         sound: 'default',
+        priority: 'high',
+        // Canal de la app con importancia alta (aviso emergente con sonido)
+        channelId: 'chat-messages',
       });
     }
 

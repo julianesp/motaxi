@@ -25,7 +25,8 @@ EPAYCO_PUBLIC_KEY = "101df072a3893ba3a275792688bbd7b1"
 EPAYCO_TEST_MODE = "false"
 # VAPID keys para Web Push Notifications
 VAPID_PUBLIC_KEY = "BHJV_6ebHmDfg30ECb_VMCHT_e78Y_FeYxNhwFmitLwbjKqHI52v5KszEDywHvZ-bZJsXJCH8XjPPJXH6zIHmOY"
-VAPID_PRIVATE_KEY = "8rM6Ee9ZWZpgui6mZNERt82SPoxcATV0EI3z6-kyI5k"
+# VAPID_PRIVATE_KEY es un secret cifrado: wrangler secret put VAPID_PRIVATE_KEY
+# (no debe ir aquí en texto plano; movido a secret el 2026-10-09)
 # Telegram Bot Token — para producción usar: wrangler secret put TELEGRAM_BOT_TOKEN
 # TELEGRAM_BOT_TOKEN = ""  # no poner aquí en producción
 # Chat ID del admin para recibir notificaciones: wrangler secret put ADMIN_TELEGRAM_CHAT_ID

@@ -17,6 +17,7 @@ import { municipalityRoutes } from './routes/municipalities';
 import { passkeyRoutes } from './routes/passkeys';
 import { runSubscriptionRenewal } from './services/subscription-renewal';
 import { SUBSCRIPTIONS_ENABLED } from './utils/auth';
+import { getAltoPutumayoWeather } from './services/weather';
 
 export interface Env {
   DB: D1Database;
@@ -38,6 +39,8 @@ export interface Env {
   TWILIO_MESSAGING_SERVICE_SID?: string;
   ADMIN_API_TOKEN?: string;
   GOOGLE_MAPS_API_KEY?: string;
+  /** Clave con la Weather API habilitada; si falta se usa GOOGLE_MAPS_API_KEY */
+  GOOGLE_WEATHER_API_KEY?: string;
   INTERNAL_API_SECRET?: string;
 }
 
@@ -86,6 +89,21 @@ app.get('/', (c) => {
     version: '1.0.0',
     status: 'healthy',
   });
+});
+
+/**
+ * GET /app/weather (público)
+ * Clima actual del Alto Putumayo (Google Weather API, caché de 10 min) para el ambiente
+ * de la pantalla de inicio. Si no hay clima disponible responde { weather: null }.
+ */
+app.get('/app/weather', async (c) => {
+  const result = await getAltoPutumayoWeather(
+    c.env.GOOGLE_WEATHER_API_KEY || c.env.GOOGLE_MAPS_API_KEY,
+    c.env.CACHE
+  );
+  if (result.error) console.warn('Weather unavailable:', result.error);
+  c.header('Cache-Control', 'public, max-age=300');
+  return c.json({ weather: result.weather });
 });
 
 /**

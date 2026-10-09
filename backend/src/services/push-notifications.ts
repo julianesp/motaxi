@@ -95,6 +95,7 @@ export class PushNotificationService {
     tripData: {
       tripId: string;
       pickupAddress: string;
+      dropoffAddress?: string;
       fare: number;
       tripType?: string;
     }
@@ -110,6 +111,7 @@ export class PushNotificationService {
     tripData: {
       tripId: string;
       pickupAddress: string;
+      dropoffAddress?: string;
       fare: number;
       tripType?: string;
     }
@@ -124,7 +126,8 @@ export class PushNotificationService {
     return {
       to: driverPushToken,
       title,
-      body: `${tripData.pickupAddress}${fare}`,
+      // Recogida → destino, para que el conductor sepa hacia dónde va el pasajero
+      body: `${tripData.pickupAddress}${tripData.dropoffAddress ? ` → ${tripData.dropoffAddress}` : ''}${fare}`,
       data: {
         type: 'new_trip',
         tripId: tripData.tripId,

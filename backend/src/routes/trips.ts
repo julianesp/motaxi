@@ -150,7 +150,7 @@ tripRoutes.post('/', async (c) => {
         const homePickupTag = home_pickup ? ' · 🏠 Recogida a domicilio (+$1.000)' : '';
         const notifPayload = {
           title: isDelivery ? '📦 ¡Nueva solicitud de envío!' : '🏍️ ¡Nueva solicitud de viaje!',
-          body: `${pickup_address}${fareStr ? ' · ' + fareStr : ''}${homePickupTag}`,
+          body: `${pickup_address}${dropoff_address ? ' → ' + dropoff_address : ''}${fareStr ? ' · ' + fareStr : ''}${homePickupTag}`,
           data: { type: 'new_trip', tripId },
           icon: '/logo.png',
           tag: `trip-${tripId}`,
@@ -233,6 +233,7 @@ tripRoutes.post('/', async (c) => {
         PushNotificationService.buildNewTripMessage(row.push_token as string, {
           tripId,
           pickupAddress: pickup_address,
+          dropoffAddress: dropoff_address,
           fare: fareWithSurcharge || estimated_fare || 0,
           tripType: trip_type,
         })

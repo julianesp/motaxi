@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { Env } from '../index';
+import { getServiceStatus } from '../utils/service-status';
+import { isAllowedVehicleType } from '../utils/vehicles';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -244,6 +246,27 @@ adminRoutes.put('/drivers/:id/verify', async (c) => {
     const user = c.get('user');
     const driverId = c.req.param('id');
 
+    // Solo se aprueban taxis de servicio público con la empresa y la tarjeta de operación
+    // registradas (utils/vehicles.ts); el admin las coteja antes de aprobar.
+    const candidate = await c.env.DB.prepare(
+      'SELECT vehicle_types, company_name, company_nit, operation_card_number FROM drivers WHERE id = ?'
+    ).bind(driverId).first<Record<string, string | null>>();
+    if (!candidate) {
+      return c.json({ error: 'Conductor no encontrado' }, 404);
+    }
+    if (!isAllowedVehicleType(candidate.vehicle_types)) {
+      return c.json({ error: 'Solo se pueden aprobar taxis de servicio público.', code: 'VEHICLE_NOT_AUTHORIZED' }, 400);
+    }
+    const missingCompany = (['company_name', 'company_nit', 'operation_card_number'] as const)
+      .filter((k) => !candidate[k]?.trim());
+    if (missingCompany.length > 0) {
+      return c.json({
+        error: 'El conductor no ha registrado su empresa de transporte, NIT y tarjeta de operación.',
+        code: 'COMPANY_DATA_MISSING',
+        missingFields: missingCompany,
+      }, 400);
+    }
+
     await c.env.DB.prepare(
       `UPDATE drivers
        SET verification_status = 'approved',
@@ -260,8 +283,9 @@ adminRoutes.put('/drivers/:id/verify', async (c) => {
       crypto.randomUUID(),
       driverId,
       '¡Cuenta verificada!',
-      'Tu cuenta de conductor ha sido aprobada. Ya puedes empezar a recibir solicitudes de viaje.',
-      'verification_approved'
+      'Verificamos tu empresa de transporte y tu tarjeta de operación. Ya puedes activarte y recibir solicitudes de viaje.',
+      // notifications.type tiene un CHECK que solo admite los tipos de viaje y 'general'
+      'general'
     ).run();
 
     const driver = await c.env.DB.prepare('SELECT * FROM drivers WHERE id = ?').bind(driverId).first();
@@ -305,7 +329,7 @@ adminRoutes.put('/drivers/:id/reject', async (c) => {
       driverId,
       'Verificación rechazada',
       `Tu solicitud de conductor no fue aprobada. Motivo: ${reason}`,
-      'verification_rejected',
+      'general',
       JSON.stringify({ reason })
     ).run();
 
@@ -1216,6 +1240,42 @@ adminRoutes.put('/app-access', async (c) => {
        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
     ).bind(value).run();
     return c.json({ success: true, locked });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * GET /admin/service-status
+ * Estado de la pausa general de viajes y el aviso que ven los usuarios
+ */
+adminRoutes.get('/service-status', async (c) => {
+  try {
+    return c.json(await getServiceStatus(c.env.DB));
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+/**
+ * PUT /admin/service-status
+ * paused: true pausa la creación de viajes (POST /trips responde 503 con el aviso).
+ * message: texto del aviso; vacío = aviso por defecto.
+ */
+adminRoutes.put('/service-status', async (c) => {
+  try {
+    const { paused, message } = await c.req.json();
+    if (typeof paused !== 'boolean') {
+      return c.json({ error: 'paused debe ser true o false' }, 400);
+    }
+    const upsert = `INSERT INTO app_settings (key, value, updated_at)
+       VALUES (?, ?, strftime('%s', 'now'))
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`;
+    await c.env.DB.batch([
+      c.env.DB.prepare(upsert).bind('service_paused', paused ? '1' : '0'),
+      c.env.DB.prepare(upsert).bind('service_paused_message', typeof message === 'string' ? message.trim().slice(0, 500) : ''),
+    ]);
+    return c.json({ success: true, ...(await getServiceStatus(c.env.DB)) });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }

@@ -189,9 +189,10 @@ userRoutes.put('/switch-role', async (c) => {
         const uniqueSuffix = user.id.substring(0, 6) + now.toString().slice(-4);
         const tempPlate = `P-${uniqueSuffix}`;
         const tempLicense = `L-${uniqueSuffix}`;
+        // Taxi pendiente de verificación: el admin revisa la empresa y la tarjeta de operación
         await c.env.DB.prepare(
-          'INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, rating, verification_status, is_verified, verified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(user.id, tempLicense, tempPlate, 'PENDING', 'PENDING', null, 'approved', 1, now).run();
+          'INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, vehicle_types, rating, verification_status, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(user.id, tempLicense, tempPlate, 'PENDING', 'PENDING', 'taxi', null, 'pending', 0).run();
       }
       // Crear suscripción de prueba si no tiene una
       const existingSub = await c.env.DB.prepare('SELECT id FROM subscriptions WHERE user_id = ?')

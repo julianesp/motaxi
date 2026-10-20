@@ -2,7 +2,12 @@ import { Hono } from 'hono';
 import { authMiddleware, subscriptionMiddleware } from '../utils/auth';
 import { Env } from '../index';
 import { COVERAGE_BOUNDS } from '../utils/coverage';
-import { getVehicleNotice, MOTO_DISABLED_CODE } from '../utils/vehicles';
+import {
+  getVehicleNotice,
+  isAllowedVehicleType,
+  DRIVER_NOT_VERIFIED_CODE,
+  DRIVER_NOT_VERIFIED_MESSAGE,
+} from '../utils/vehicles';
 
 export const driverRoutes = new Hono<{ Bindings: Env }>();
 
@@ -48,8 +53,8 @@ driverRoutes.get('/registered', async (c) => {
        FROM drivers d
        JOIN users u ON d.id = u.id
        WHERE d.verification_status = 'approved'
-         -- Moto deshabilitada temporalmente (sin autorización de operación)
-         AND (d.vehicle_types IS NULL OR d.vehicle_types != 'moto')
+         -- Solo taxis de servicio público (utils/vehicles.ts)
+         AND d.vehicle_types = 'taxi'
        ORDER BY d.total_trips DESC, u.full_name ASC
        LIMIT 40`
     ).all();
@@ -168,7 +173,10 @@ driverRoutes.get('/profile', async (c) => {
         d.profile_skipped_at,
         d.usual_hours,
         d.usual_origin,
-        d.usual_destination
+        d.usual_destination,
+        d.company_name,
+        d.company_nit,
+        d.operation_card_number
       FROM drivers d
       WHERE d.id = ?`
     )
@@ -178,8 +186,8 @@ driverRoutes.get('/profile', async (c) => {
     if (!driver) {
       // Crear el registro faltante con valores por defecto
       await c.env.DB.prepare(
-        `INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, verification_status, is_available, profile_completed)
-         VALUES (?, ?, ?, '', '', 'pending', 0, 0)`
+        `INSERT OR IGNORE INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, vehicle_types, verification_status, is_available, profile_completed)
+         VALUES (?, ?, ?, '', '', 'taxi', 'pending', 0, 0)`
       ).bind(user.id, `tmp_${user.id}`, `tmp_${user.id}`).run();
 
       const newDriver = await c.env.DB.prepare(
@@ -189,7 +197,8 @@ driverRoutes.get('/profile', async (c) => {
                 d.municipality, d.accepts_intercity_trips, d.accepts_rural_trips,
                 d.night_only, d.weekend_daytime, d.whatsapp, d.nequi_phone, d.nequi_qr_key,
                 d.base_fare, d.intercity_fare, d.rural_fare, d.per_km_fare,
-                d.profile_completed, d.profile_skipped_at, d.vehicle_types
+                d.profile_completed, d.profile_skipped_at, d.vehicle_types,
+                d.company_name, d.company_nit, d.operation_card_number
          FROM drivers d WHERE d.id = ?`
       ).bind(user.id).first();
 
@@ -321,12 +330,43 @@ driverRoutes.put('/profile', async (c) => {
       values.push(per_km_fare);
     }
     if (vehicle_types !== undefined) {
-      // Moto deshabilitada temporalmente (sin autorización de operación): 'moto' ya no es válido
-      if (!['taxi', 'carro', 'piaggio', 'particular'].includes(vehicle_types)) {
-        return c.json({ error: 'vehicle_types must be: taxi, carro, piaggio, or particular' }, 400);
+      // Solo taxis de servicio público (utils/vehicles.ts): motos, motocarros y particulares no.
+      if (!isAllowedVehicleType(vehicle_types)) {
+        return c.json({
+          error: 'MoTaxi solo admite taxis de servicio público (placa blanca).',
+          code: 'VEHICLE_NOT_AUTHORIZED',
+        }, 400);
       }
       updates.push('vehicle_types = ?');
       values.push(vehicle_types);
+    }
+    // Empresa de transporte habilitada a la que está afiliado el taxi y su tarjeta de operación
+    const { company_name, company_nit, operation_card_number } = body;
+    const companyFields: Array<[string, unknown]> = [
+      ['company_name', company_name],
+      ['company_nit', company_nit],
+      ['operation_card_number', operation_card_number],
+    ];
+    // Cambiar el vehículo, la empresa o la tarjeta de operación exige una nueva verificación
+    let needsReview = false;
+    if (vehicle_types !== undefined || companyFields.some(([, value]) => value !== undefined)) {
+      const current = (await c.env.DB.prepare(
+        'SELECT vehicle_types, company_name, company_nit, operation_card_number FROM drivers WHERE id = ?'
+      ).bind(user.id).first<Record<string, string | null>>()) || {};
+      if (vehicle_types !== undefined && vehicle_types !== current.vehicle_types) needsReview = true;
+      for (const [column, value] of companyFields) {
+        if (value === undefined) continue;
+        if (value !== null && typeof value !== 'string') {
+          return c.json({ error: `${column} debe ser texto` }, 400);
+        }
+        const clean = (typeof value === 'string' ? value.trim().slice(0, 120) : '') || null;
+        updates.push(`${column} = ?`);
+        values.push(clean);
+        if (clean !== (current[column] ?? null)) needsReview = true;
+      }
+    }
+    if (needsReview) {
+      updates.push("verification_status = 'pending'", 'is_verified = 0', 'is_available = 0');
     }
     if (default_route_fares !== undefined) {
       updates.push('default_route_fares = ?');
@@ -424,11 +464,11 @@ driverRoutes.put('/availability', async (c) => {
       return c.json({ error: 'Only drivers can update availability' }, 403);
     }
 
-    // Moto deshabilitada (sin autorización del Ministerio de Transporte): no pueden activarse.
+    // Solo taxis de servicio público (utils/vehicles.ts): los demás vehículos no pueden activarse.
     if (isAvailable) {
       const notice = await getVehicleNotice(c.env.DB, user.id);
       if (notice) {
-        return c.json({ error: notice.message, code: MOTO_DISABLED_CODE, vehicleDisabled: true }, 403);
+        return c.json({ error: notice.message, code: notice.code, vehicleDisabled: true }, 403);
       }
     }
 
@@ -438,6 +478,7 @@ driverRoutes.put('/availability', async (c) => {
       const driver = await c.env.DB.prepare(
         `SELECT d.profile_completed, d.verification_status, d.vehicle_plate, d.vehicle_model,
                 d.vehicle_color, d.license_number, d.municipality, d.soat_image_url,
+                d.company_name, d.company_nit, d.operation_card_number,
                 u.created_at AS created_at
          FROM drivers d JOIN users u ON u.id = d.id
          WHERE d.id = ?`
@@ -452,6 +493,9 @@ driverRoutes.put('/availability', async (c) => {
           license_number: string;
           municipality: string | null;
           soat_image_url: string | null;
+          company_name: string | null;
+          company_nit: string | null;
+          operation_card_number: string | null;
           created_at: number | null;
         }>();
 
@@ -475,6 +519,9 @@ driverRoutes.put('/availability', async (c) => {
       if (isPending(driver.vehicle_color)) missing.push('color del vehículo');
       if (isPending(driver.license_number)) missing.push('número de licencia');
       if (isPending(driver.municipality)) missing.push('municipio');
+      if (isPending(driver.company_name)) missing.push('empresa de transporte');
+      if (isPending(driver.company_nit)) missing.push('NIT de la empresa');
+      if (isPending(driver.operation_card_number)) missing.push('tarjeta de operación');
 
       if (missing.length > 0) {
         return c.json({
@@ -498,6 +545,15 @@ driverRoutes.put('/availability', async (c) => {
             soatRequired: true,
           }, 400);
         }
+      }
+
+      // El admin debe haber verificado la empresa y la tarjeta de operación
+      if (driver.verification_status !== 'approved') {
+        return c.json({
+          error: DRIVER_NOT_VERIFIED_MESSAGE,
+          code: DRIVER_NOT_VERIFIED_CODE,
+          pendingVerification: true,
+        }, 403);
       }
     }
 
@@ -669,7 +725,6 @@ driverRoutes.get('/nearby', async (c) => {
   try {
     const lat = parseFloat(c.req.query('lat') || '0');
     const lng = parseFloat(c.req.query('lng') || '0');
-    const vehicleType = c.req.query('vehicle_type'); // 'moto' | 'carro' | undefined
 
     // Bounding box del Alto Putumayo — fuente única en utils/coverage.ts
     const BBOX = COVERAGE_BOUNDS;
@@ -699,12 +754,8 @@ driverRoutes.get('/nearby', async (c) => {
       )`;
     }
 
-    // Filtrar por tipo de vehículo si se especifica
-    // Moto deshabilitada temporalmente (sin autorización de operación): nunca se listan conductores de moto
-    whereClause += ` AND (d.vehicle_types IS NULL OR d.vehicle_types != 'moto')`;
-    if (vehicleType && ['taxi', 'carro', 'piaggio', 'particular'].includes(vehicleType)) {
-      whereClause += ` AND d.vehicle_types = '${vehicleType}'`;
-    }
+    // Solo taxis de servicio público (utils/vehicles.ts)
+    whereClause += ` AND d.vehicle_types = 'taxi'`;
 
     const drivers = await c.env.DB.prepare(
       `SELECT d.id, d.current_latitude, d.current_longitude, d.rating, d.total_trips,

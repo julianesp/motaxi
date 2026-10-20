@@ -155,7 +155,7 @@ referralRoutes.post('/register', async (c) => {
 
 /**
  * POST /referrals/qr-request
- * El conductor solicita que le lleven un código QR para su moto
+ * El conductor solicita que le lleven un código QR para su taxi
  */
 referralRoutes.post('/qr-request', authMiddleware, async (c) => {
   try {

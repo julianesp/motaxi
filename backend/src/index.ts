@@ -18,6 +18,7 @@ import { passkeyRoutes } from './routes/passkeys';
 import { runSubscriptionRenewal } from './services/subscription-renewal';
 import { SUBSCRIPTIONS_ENABLED } from './utils/auth';
 import { getAltoPutumayoWeather } from './services/weather';
+import { getServiceStatus, DEFAULT_SERVICE_PAUSED_MESSAGE } from './utils/service-status';
 
 export interface Env {
   DB: D1Database;
@@ -104,6 +105,20 @@ app.get('/app/weather', async (c) => {
   if (result.error) console.warn('Weather unavailable:', result.error);
   c.header('Cache-Control', 'public, max-age=300');
   return c.json({ weather: result.weather });
+});
+
+/**
+ * GET /app/service (público)
+ * Si el servicio de viajes está pausado y el aviso que la app muestra a los usuarios.
+ * Ante un error de lectura se responde pausado: es preferible avisar de más que operar sin habilitación.
+ */
+app.get('/app/service', async (c) => {
+  try {
+    return c.json(await getServiceStatus(c.env.DB));
+  } catch (error: any) {
+    console.error('Get service status error:', error);
+    return c.json({ paused: true, message: DEFAULT_SERVICE_PAUSED_MESSAGE });
+  }
 });
 
 /**

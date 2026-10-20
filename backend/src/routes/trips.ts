@@ -6,7 +6,8 @@ import { sendWebPush } from '../services/web-push';
 import { TelegramService } from '../services/telegram';
 import { PushNotificationService } from '../services/push-notifications';
 import { isWithinCoverage, COVERAGE_LABEL, COVERAGE_BOUNDS } from '../utils/coverage';
-import { getVehicleNotice, MOTO_DISABLED_CODE } from '../utils/vehicles';
+import { getDriverBlock } from '../utils/vehicles';
+import { getServiceStatus } from '../utils/service-status';
 
 export const tripRoutes = new Hono<{ Bindings: Env }>();
 
@@ -20,31 +21,12 @@ tripRoutes.use('/:id/status', subscriptionMiddleware);
 
 /**
  * POST /trips/package-photo
- * Subir foto del paquete antes de crear el viaje (pasajero)
+ * Ya no se usa: MoTaxi solo intermedia viajes de pasajeros en taxi (sin envíos de paquetes).
+ * Se responde 410 a versiones viejas de la app o la web que intenten subir la foto.
  */
-tripRoutes.post('/package-photo', async (c) => {
-  try {
-    const user = c.get('user');
-    if (user.role !== 'passenger') return c.json({ error: 'Solo pasajeros' }, 403);
-    if (!c.env.IMAGES) return c.json({ error: 'Almacenamiento no configurado' }, 500);
-
-    const body = await c.req.parseBody();
-    const file = body['photo'] as File | undefined;
-    if (!file || typeof file === 'string') return c.json({ error: 'Se requiere una imagen' }, 400);
-    if (!file.type.startsWith('image/')) return c.json({ error: 'Formato inválido' }, 400);
-    if (file.size > 5 * 1024 * 1024) return c.json({ error: 'Máximo 5MB' }, 400);
-
-    const id = crypto.randomUUID();
-    const ext = file.type.split('/')[1] || 'jpg';
-    const imageKey = `package-photos/${user.id}/${id}.${ext}`;
-    await c.env.IMAGES.put(imageKey, await file.arrayBuffer(), {
-      httpMetadata: { contentType: file.type },
-    });
-    return c.json({ success: true, image_key: imageKey });
-  } catch (error: any) {
-    return c.json({ error: error.message || 'Error al subir foto' }, 500);
-  }
-});
+tripRoutes.post('/package-photo', (c) =>
+  c.json({ error: 'MoTaxi ya no gestiona envíos de paquetes.', code: 'SERVICE_TYPE_NOT_AVAILABLE' }, 410)
+);
 
 /**
  * POST /trips
@@ -52,6 +34,13 @@ tripRoutes.post('/package-photo', async (c) => {
  */
 tripRoutes.post('/', async (c) => {
   try {
+    // Servicio pausado hasta tener la habilitación (ver utils/service-status.ts).
+    // El mensaje va en `error` para que versiones viejas de la app también lo muestren.
+    const service = await getServiceStatus(c.env.DB);
+    if (service.paused) {
+      return c.json({ error: service.message, code: 'SERVICE_PAUSED' }, 503);
+    }
+
     const user = c.get('user');
     const body = await c.req.json();
 
@@ -64,17 +53,23 @@ tripRoutes.post('/', async (c) => {
       dropoff_address,
       distance_km,
       estimated_fare, // Precio estimado calculado por el frontend
-      trip_type = 'ride', // 'ride' o 'delivery'
-      delivery_note,      // Nota/descripción del paquete (solo para delivery)
+      trip_type = 'ride', // Solo 'ride' (pasajeros en taxi)
+      delivery_note,      // Indicaciones para el conductor (opcional)
       home_pickup = false, // El pasajero solicita que lo vayan a recoger a casa: +$1.000
-      recipient_name,     // Nombre del destinatario (envíos)
-      recipient_phone,    // Teléfono del destinatario (envíos)
-      package_size = 'small', // Tamaño: 'small' | 'medium' | 'large'
-      package_photo_key,  // Clave R2 de la foto del paquete (subida antes del viaje)
     } = body;
 
     if (user.role !== 'passenger') {
       return c.json({ error: 'Only passengers can create trips' }, 403);
+    }
+
+    // MoTaxi solo intermedia viajes de pasajeros en taxis de empresas habilitadas: los envíos
+    // ('delivery') y trasteos ('cargo') de versiones anteriores ya no se aceptan.
+    if (trip_type !== 'ride') {
+      return c.json({
+        error: 'MoTaxi ahora solo conecta pasajeros con taxis de empresas de transporte habilitadas. ' +
+          'Los envíos y trasteos ya no están disponibles. Actualiza la app para pedir tu taxi.',
+        code: 'SERVICE_TYPE_NOT_AVAILABLE',
+      }, 422);
     }
 
     // Cobertura: MoTaxi opera exclusivamente en el Alto Putumayo.
@@ -94,9 +89,15 @@ tripRoutes.post('/', async (c) => {
       );
     }
 
+    // La tarifa que el pasajero confirma en la app es el valor total que se cobra
+    // (Res. 2163/2016 art. 16): tiene que llegar y ser un valor válido.
+    if (typeof estimated_fare !== 'number' || !Number.isFinite(estimated_fare) || estimated_fare < 1000) {
+      return c.json({ error: 'La tarifa del viaje no es válida (mínimo $1.000).', code: 'INVALID_FARE' }, 400);
+    }
+
     const HOME_PICKUP_SURCHARGE = 1000;
     const homePickupFlag = home_pickup ? 1 : 0;
-    const fareWithSurcharge = (estimated_fare || 0) + (home_pickup ? HOME_PICKUP_SURCHARGE : 0);
+    const fareWithSurcharge = Math.round(estimated_fare) + (home_pickup ? HOME_PICKUP_SURCHARGE : 0);
 
     const tripId = uuidv4();
 
@@ -105,9 +106,8 @@ tripRoutes.post('/', async (c) => {
       `INSERT INTO trips (
         id, passenger_id, pickup_latitude, pickup_longitude, pickup_address,
         dropoff_latitude, dropoff_longitude, dropoff_address, fare, distance_km, status,
-        trip_type, delivery_note, home_pickup,
-        recipient_name, recipient_phone, package_size, package_photo_key
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?, ?, ?, ?, ?, ?)`
+        trip_type, delivery_note, home_pickup
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?, ?, ?)`
     )
       .bind(
         tripId,
@@ -122,11 +122,7 @@ tripRoutes.post('/', async (c) => {
         distance_km,
         trip_type,
         delivery_note || null,
-        homePickupFlag,
-        recipient_name || null,
-        recipient_phone || null,
-        trip_type === 'delivery' ? (package_size || 'small') : null,
-        package_photo_key || null
+        homePickupFlag
       )
       .run();
 
@@ -141,15 +137,14 @@ tripRoutes.post('/', async (c) => {
           SELECT wps.endpoint, wps.p256dh, wps.auth
           FROM web_push_subscriptions wps
           JOIN drivers d ON d.id = wps.user_id
-          WHERE d.is_available = 1 AND d.verification_status = 'approved'
+          WHERE d.is_available = 1 AND d.verification_status = 'approved' AND d.vehicle_types = 'taxi'
         `).all();
 
         const subscriptions = pushSubs.results || [];
         const fareStr = fareWithSurcharge ? `$${Number(fareWithSurcharge).toLocaleString('es-CO')}` : '';
-        const isDelivery = trip_type === 'delivery';
         const homePickupTag = home_pickup ? ' · 🏠 Recogida a domicilio (+$1.000)' : '';
         const notifPayload = {
-          title: isDelivery ? '📦 ¡Nueva solicitud de envío!' : '🏍️ ¡Nueva solicitud de viaje!',
+          title: '🚕 ¡Nueva solicitud de viaje!',
           body: `${pickup_address}${dropoff_address ? ' → ' + dropoff_address : ''}${fareStr ? ' · ' + fareStr : ''}${homePickupTag}`,
           data: { type: 'new_trip', tripId },
           icon: '/logo.png',
@@ -188,6 +183,7 @@ tripRoutes.post('/', async (c) => {
           JOIN drivers d ON d.id = u.id
           WHERE d.is_available = 1
             AND d.verification_status = 'approved'
+            AND d.vehicle_types = 'taxi'
             AND u.telegram_chat_id IS NOT NULL
         `).all();
 
@@ -225,6 +221,7 @@ tripRoutes.post('/', async (c) => {
         JOIN drivers d ON d.id = u.id
         WHERE d.is_available = 1
           AND d.verification_status = 'approved'
+          AND d.vehicle_types = 'taxi'
           AND u.push_token IS NOT NULL
           AND u.push_token != ''
       `).all();
@@ -473,10 +470,13 @@ tripRoutes.get('/active', async (c) => {
       .bind(user.id)
       .first();
 
-    if (!driver || driver.verification_status !== 'approved') {
+    // Solo taxis de servicio público verificados por el admin (utils/vehicles.ts)
+    const block = await getDriverBlock(c.env.DB, user.id);
+    if (!driver || block) {
       return c.json({
         trips: [],
-        message: 'Tu cuenta debe estar verificada para ver solicitudes de viajes'
+        message: block?.message || 'Tu cuenta debe estar verificada para ver solicitudes de viajes',
+        code: block?.code,
       });
     }
 
@@ -571,7 +571,8 @@ tripRoutes.get('/current', async (c) => {
               d.current_longitude as driver_longitude,
               d.last_location_update as driver_location_at,
               d.vehicle_types as driver_vehicle_type,
-              d.rating as driver_rating
+              d.rating as driver_rating,
+              d.company_name as driver_company
        FROM trips t
        LEFT JOIN users u ON t.driver_id = u.id
        LEFT JOIN drivers d ON t.driver_id = d.id
@@ -703,10 +704,10 @@ tripRoutes.put('/:id/accept', async (c) => {
       return c.json({ error: 'Only drivers can accept trips' }, 403);
     }
 
-    // Moto deshabilitada (sin autorización del Ministerio de Transporte)
-    const notice = await getVehicleNotice(c.env.DB, user.id);
-    if (notice) {
-      return c.json({ error: notice.message, code: MOTO_DISABLED_CODE, vehicleDisabled: true }, 403);
+    // Solo taxis de servicio público verificados por el admin (utils/vehicles.ts)
+    const block = await getDriverBlock(c.env.DB, user.id);
+    if (block) {
+      return c.json({ error: block.message, code: block.code, vehicleDisabled: true }, 403);
     }
 
     // Verificar que el viaje existe y está disponible
@@ -720,12 +721,9 @@ tripRoutes.put('/:id/accept', async (c) => {
       return c.json({ error: 'Trip not found or already accepted' }, 404);
     }
 
-    // Obtener precios y ubicación actual del conductor para calcular la tarifa
     const driverData = await c.env.DB.prepare(
       `SELECT u.full_name, u.push_token,
-              d.vehicle_model, d.vehicle_color, d.vehicle_plate,
-              d.base_fare, d.intercity_fare, d.per_km_fare,
-              d.current_latitude, d.current_longitude
+              d.vehicle_model, d.vehicle_color, d.vehicle_plate
        FROM users u
        JOIN drivers d ON u.id = d.id
        WHERE u.id = ?`
@@ -733,45 +731,23 @@ tripRoutes.put('/:id/accept', async (c) => {
       .bind(user.id)
       .first() as any;
 
-    // Calcular tarifa según precios del conductor
-    // Si el conductor está a más de 5 km del punto de recogida → tarifa intermunicipal
-    let calculatedFare = 0;
-    const baseFare = driverData?.base_fare ?? 5000;
-    const intercityFare = driverData?.intercity_fare ?? 10000;
-    const perKmFare = driverData?.per_km_fare ?? 2000;
-    const distanceKm = (trip as any).distance_km ?? 0;
-
-    let selectedBaseFare = baseFare;
-    if (
-      driverData?.current_latitude &&
-      driverData?.current_longitude &&
-      (trip as any).pickup_latitude &&
-      (trip as any).pickup_longitude
-    ) {
-      const dLat = (((trip as any).pickup_latitude - driverData.current_latitude) * Math.PI) / 180;
-      const dLng = (((trip as any).pickup_longitude - driverData.current_longitude) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((driverData.current_latitude * Math.PI) / 180) *
-          Math.cos(((trip as any).pickup_latitude * Math.PI) / 180) *
-          Math.sin(dLng / 2) * Math.sin(dLng / 2);
-      const driverToPickupKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      // Si el conductor está a más de 5 km del punto de recogida → intermunicipal
-      if (driverToPickupKm > 5) {
-        selectedBaseFare = intercityFare;
-      }
-    }
-
-    const homePickupSurcharge = (trip as any).home_pickup ? 1000 : 0;
-    calculatedFare = Math.round(selectedBaseFare + distanceKm * perKmFare) + homePickupSurcharge;
-
-    // Actualizar viaje con el conductor asignado y la tarifa calculada
-    await c.env.DB.prepare(
-      'UPDATE trips SET driver_id = ?, status = ?, accepted_at = ?, fare = ? WHERE id = ?'
+    // La tarifa NO se recalcula al aceptar: se cobra la que el pasajero vio y confirmó al
+    // pedir el viaje (trips.fare, ya con el recargo de recogida a domicilio). Res. 2163/2016
+    // art. 16 y Ley 1480/2011 (Estatuto del Consumidor): el valor total se informa antes del
+    // servicio y no puede cambiar después. Si el conductor quiere otro precio debe enviar una
+    // contraoferta (PUT /:id/offer-price) que el pasajero acepta de forma expresa.
+    //
+    // `AND status = 'requested'` evita que dos conductores se queden con el mismo viaje si
+    // aceptan a la vez: solo la primera actualización cambia la fila.
+    const accepted = await c.env.DB.prepare(
+      "UPDATE trips SET driver_id = ?, status = 'accepted', accepted_at = ? WHERE id = ? AND status = 'requested'"
     )
-      .bind(user.id, 'accepted', Math.floor(Date.now() / 1000), calculatedFare, tripId)
+      .bind(user.id, Math.floor(Date.now() / 1000), tripId)
       .run();
+
+    if (!accepted.meta?.changes) {
+      return c.json({ error: 'Trip not found or already accepted' }, 404);
+    }
 
     // Marcar conductor como no disponible (ocupado en viaje)
     await c.env.DB.prepare('UPDATE drivers SET is_available = 0 WHERE id = ?')
@@ -890,6 +866,12 @@ tripRoutes.put('/:id/offer-price', async (c) => {
 
     if (trip.status !== 'requested') {
       return c.json({ error: 'Trip is no longer available for offers' }, 400);
+    }
+
+    // Solo taxis de servicio público verificados por el admin (utils/vehicles.ts)
+    const block = await getDriverBlock(c.env.DB, user.id);
+    if (block) {
+      return c.json({ error: block.message, code: block.code, vehicleDisabled: true }, 403);
     }
 
     // Verificar que el conductor tiene perfil completo
@@ -1031,12 +1013,17 @@ tripRoutes.put('/:id/accept-offer', async (c) => {
       .bind(driver_id)
       .first() as any;
 
-    // Actualizar viaje con el conductor asignado y la tarifa de la oferta
-    await c.env.DB.prepare(
-      'UPDATE trips SET driver_id = ?, status = ?, accepted_at = ?, fare = ? WHERE id = ?'
+    // Actualizar viaje con el conductor asignado y la tarifa de la oferta.
+    // Solo si sigue en 'requested': otro conductor pudo aceptarlo mientras tanto.
+    const accepted = await c.env.DB.prepare(
+      "UPDATE trips SET driver_id = ?, status = 'accepted', accepted_at = ?, fare = ? WHERE id = ? AND status = 'requested'"
     )
-      .bind(driver_id, 'accepted', Math.floor(Date.now() / 1000), offer.offered_price, tripId)
+      .bind(driver_id, Math.floor(Date.now() / 1000), offer.offered_price, tripId)
       .run();
+
+    if (!accepted.meta?.changes) {
+      return c.json({ error: 'Trip is no longer available' }, 400);
+    }
 
     // Marcar conductor como no disponible (ocupado en viaje)
     await c.env.DB.prepare('UPDATE drivers SET is_available = 0 WHERE id = ?')
@@ -1127,6 +1114,28 @@ tripRoutes.put('/:id/status', async (c) => {
       trip.passenger_id !== user.id
     ) {
       return c.json({ error: 'Unauthorized' }, 403);
+    }
+
+    // Transiciones válidas: un viaje terminado (completado o cancelado) no se reabre, una
+    // solicitud sin conductor solo se puede cancelar y el resto avanza sin retroceder
+    // (aceptado → en camino → en curso → completado). Repetir el estado actual se permite
+    // para que un reintento de la app no falle.
+    const currentStatus = trip.status as string;
+    if (currentStatus === 'completed' || currentStatus === 'cancelled') {
+      return c.json({
+        error: currentStatus === 'completed' ? 'El viaje ya fue completado.' : 'El viaje ya fue cancelado.',
+        code: 'TRIP_FINISHED',
+      }, 409);
+    }
+    const FLOW = ['accepted', 'driver_arriving', 'in_progress', 'completed'];
+    const forward =
+      status === 'cancelled' ||
+      (currentStatus !== 'requested' && FLOW.indexOf(status) >= FLOW.indexOf(currentStatus));
+    if (!forward) {
+      return c.json({
+        error: `No se puede pasar el viaje de "${currentStatus}" a "${status}".`,
+        code: 'INVALID_TRANSITION',
+      }, 409);
     }
 
     // El pasajero solo puede cancelar si el viaje aún no ha sido aceptado por un conductor
@@ -1316,7 +1325,7 @@ tripRoutes.get('/:id', async (c) => {
       // Obtener información del conductor (nombre, teléfono, rating, ubicación)
       const driver = await c.env.DB.prepare(
         `SELECT u.full_name, u.phone, d.rating AS driver_avg_rating, d.vehicle_model, d.vehicle_color, d.vehicle_plate,
-                d.current_latitude, d.current_longitude, d.nequi_phone, d.nequi_qr_key
+                d.current_latitude, d.current_longitude, d.nequi_phone, d.nequi_qr_key, d.company_name
          FROM users u
          LEFT JOIN drivers d ON d.id = u.id
          WHERE u.id = ?`
@@ -1335,6 +1344,7 @@ tripRoutes.get('/:id', async (c) => {
         tripWithDetails.driver_longitude = driver.current_longitude;
         tripWithDetails.driver_nequi_phone = driver.nequi_phone;
         tripWithDetails.driver_nequi_qr_key = driver.nequi_qr_key;
+        tripWithDetails.driver_company = driver.company_name;
       }
     }
 
@@ -1529,7 +1539,8 @@ tripRoutes.get('/:id/offers', async (c) => {
         d.vehicle_plate,
         d.rating as driver_rating,
         d.current_latitude,
-        d.current_longitude
+        d.current_longitude,
+        d.company_name as driver_company
        FROM driver_price_offers dpo
        JOIN users u ON dpo.driver_id = u.id
        JOIN drivers d ON dpo.driver_id = d.id

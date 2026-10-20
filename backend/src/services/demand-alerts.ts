@@ -51,7 +51,8 @@ export async function runDemandAlerts(env: Env, opts: { daysHistory?: number } =
        AND dp.status = 'active'
        AND dp.current_period_end > ?
        AND d.is_available = 1
-       AND d.verification_status = 'approved'`
+       AND d.verification_status = 'approved'
+       AND d.vehicle_types = 'taxi'`
   ).bind(now).all();
 
   const targets = (drivers.results || []) as { id: string }[];

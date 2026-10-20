@@ -11,7 +11,7 @@
     "db:migrate": "wrangler d1 execute motaxi-db --file=../cloudflare_d1_schema.sql",
     "db:migrate:local": "wrangler d1 execute motaxi-db --file=../cloudflare_d1_schema.sql --local",
     "db:query": "wrangler d1 execute motaxi-db --command",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

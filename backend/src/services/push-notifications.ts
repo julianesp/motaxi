@@ -116,12 +116,8 @@ export class PushNotificationService {
       tripType?: string;
     }
   ): PushMessage {
-    const title =
-      tripData.tripType === 'delivery'
-        ? '📦 ¡Nueva solicitud de envío!'
-        : tripData.tripType === 'cargo'
-          ? '🛻 ¡Nueva solicitud de trasteo!'
-          : '🚖 ¡Nueva solicitud de viaje!';
+    // MoTaxi solo intermedia viajes de pasajeros en taxi
+    const title = '🚕 ¡Nueva solicitud de viaje!';
     const fare = tripData.fare ? ` · $${Number(tripData.fare).toLocaleString('es-CO')}` : '';
     return {
       to: driverPushToken,

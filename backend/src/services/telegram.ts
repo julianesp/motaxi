@@ -46,15 +46,11 @@ export class TelegramService {
       dropoffAddress: string;
       fare: number;
       distanceKm: number;
-      tripType: 'ride' | 'delivery';
+      tripType: 'ride';
       passengerName: string;
     }
   ): Promise<boolean> {
-    const isDelivery = trip.tripType === 'delivery';
-    const emoji = isDelivery ? '📦' : '🏍️';
-    const tipo = isDelivery ? 'ENVÍO' : 'VIAJE';
-
-    const text = `${emoji} <b>¡Nueva solicitud de ${tipo}!</b>
+    const text = `🚕 <b>¡Nueva solicitud de viaje!</b>
 
 📍 <b>Recogida:</b> ${trip.pickupAddress}
 🏁 <b>Destino:</b> ${trip.dropoffAddress}
@@ -81,7 +77,7 @@ export class TelegramService {
     }
   ): Promise<boolean> {
     const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const roleLabel = user.role === 'driver' ? '🏍️ Conductor' : '👤 Pasajero';
+    const roleLabel = user.role === 'driver' ? '🚕 Conductor' : '👤 Pasajero';
     const emailLine = user.email && !user.email.includes('motaxi.local')
       ? `📧 <b>Email:</b> ${escape(user.email)}\n`
       : '';
@@ -113,7 +109,7 @@ ${emailLine}📱 <b>Teléfono:</b> ${escape(user.phone)}`;
 
 🆔 <b>ID:</b> <code>${trip.tripId.substring(0, 8)}</code>
 👤 <b>Pasajero:</b> ${trip.passengerName}
-🏍️ <b>Conductor:</b> ${trip.driverName}
+🚕 <b>Conductor:</b> ${trip.driverName}
 📍 <b>Origen:</b> ${trip.pickupAddress}
 🏁 <b>Destino:</b> ${trip.dropoffAddress}
 💰 <b>Tarifa:</b> $${trip.fare.toLocaleString('es-CO')}`;
@@ -138,7 +134,7 @@ ${emailLine}📱 <b>Teléfono:</b> ${escape(user.phone)}`;
     const stars = '⭐'.repeat(data.rating);
     const text = `⭐ <b>Conductor calificado</b>
 
-🏍️ <b>Conductor:</b> ${data.driverName}
+🚕 <b>Conductor:</b> ${data.driverName}
 👤 <b>Por:</b> ${data.passengerName}
 ${stars} <b>Calificación:</b> ${data.rating}/5${data.comment ? `\n💬 <b>Comentario:</b> "${data.comment}"` : ''}
 🆔 <b>Viaje:</b> <code>${data.tripId.substring(0, 8)}</code>`;

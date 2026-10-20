@@ -4,7 +4,12 @@ import { AuthUtils } from '../utils/auth';
 import { EmailService } from '../utils/email';
 import { TelegramService } from '../services/telegram';
 import { Env } from '../index';
-import { getVehicleNotice } from '../utils/vehicles';
+import {
+  getVehicleNotice,
+  isAllowedVehicleType,
+  VEHICLE_NOT_AUTHORIZED_CODE,
+  VEHICLE_NOT_AUTHORIZED_MESSAGE,
+} from '../utils/vehicles';
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
 
@@ -149,6 +154,11 @@ authRoutes.post('/register', async (c) => {
       return c.json({ error: 'Password must be at least 6 characters' }, 400);
     }
 
+    // Solo taxis de servicio público (utils/vehicles.ts): se valida antes de crear nada.
+    if (role === 'driver' && vehicle_types != null && !isAllowedVehicleType(vehicle_types)) {
+      return c.json({ error: VEHICLE_NOT_AUTHORIZED_MESSAGE, code: VEHICLE_NOT_AUTHORIZED_CODE }, 400);
+    }
+
     // Verificar si el usuario ya existe por teléfono (y por email si se proveyó)
     const phoneExists = await c.env.DB.prepare(
       'SELECT id FROM users WHERE phone = ?'
@@ -217,15 +227,12 @@ authRoutes.post('/register', async (c) => {
       const tempPlate = `PENDING-${userId.substring(0, 8)}`;
       const tempLicense = `PENDING-${userId.substring(0, 8)}`;
 
-      // Moto deshabilitada temporalmente (sin autorización de operación): el default pasa a 'carro'
-      const validVehicleTypes = ['taxi', 'carro', 'piaggio', 'particular'];
-      const finalVehicleType = vehicle_types && validVehicleTypes.includes(vehicle_types) ? vehicle_types : 'carro';
-
-      // Auto-aprobación habilitada temporalmente (sin verificación manual)
+      // Queda 'pending': el admin verifica la empresa de transporte y la tarjeta de operación
+      // antes de que el conductor pueda activarse (PUT /admin/drivers/:id/verify).
       await c.env.DB.prepare(
-        'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, vehicle_types, rating, verification_status, is_verified, verified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO drivers (id, license_number, vehicle_plate, vehicle_model, vehicle_color, vehicle_types, rating, verification_status, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       )
-        .bind(userId, tempLicense, tempPlate, 'PENDING', 'PENDING', finalVehicleType, null, 'approved', 1, Math.floor(Date.now() / 1000))
+        .bind(userId, tempLicense, tempPlate, 'PENDING', 'PENDING', 'taxi', null, 'pending', 0)
         .run();
 
       // Crear trial de 30 días al registrarse
@@ -342,7 +349,7 @@ authRoutes.post('/login', async (c) => {
     // Remover password_hash de la respuesta
     const { password_hash, ...userWithoutPassword } = user;
 
-    // Aviso para conductores de moto (no habilitados por términos del Ministerio de Transporte)
+    // Aviso para conductores cuyo vehículo no es un taxi de servicio público (utils/vehicles.ts)
     const vehicle_notice = await getVehicleNotice(c.env.DB, user.id as string);
 
     return c.json({

@@ -66,7 +66,7 @@ telegramRoutes.post('/webhook', async (c) => {
         await TelegramService.sendMessage(
           c.env.TELEGRAM_BOT_TOKEN,
           chatId,
-          `✅ <b>¡Cuenta vinculada exitosamente!</b>\n\nHola ${driver.full_name}, a partir de ahora recibirás notificaciones de nuevos viajes aquí. 🏍️\n\n<i>No necesitas hacer nada más, solo mantén Telegram activo en tu celular.</i>`
+          `✅ <b>¡Cuenta vinculada exitosamente!</b>\n\nHola ${driver.full_name}, a partir de ahora recibirás notificaciones de nuevos viajes aquí. 🚕\n\n<i>No necesitas hacer nada más, solo mantén Telegram activo en tu celular.</i>`
         );
       }
     }

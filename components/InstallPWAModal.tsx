@@ -78,7 +78,7 @@ export default function InstallPWAModal() {
           <ul className="space-y-2.5">
             {[
               { icon: '⚡', text: 'Acceso instantáneo sin abrir el navegador' },
-              { icon: '📍', text: 'Pide tu mototaxi en segundos' },
+              { icon: '📍', text: 'Pide tu taxi en segundos' },
               { icon: '🔔', text: 'Recibe notificaciones de tus viajes' },
             ].map(({ icon, text }) => (
               <li key={text} className="flex items-center gap-3 text-sm text-gray-700">

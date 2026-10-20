@@ -318,12 +318,12 @@ function GoogleMapComponent({
     }
   }, [map, userLocation]);
 
-  // Marcador conductor (moto naranja)
+  // Marcador del conductor asignado (taxi)
   useEffect(() => {
     if (!map) return;
     if (!driverLocation) { driverMarkerRef.current && (driverMarkerRef.current.map = null); driverMarkerRef.current = null; return; }
     const el = document.createElement('div');
-    el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11.5" fill="white" stroke="#f97316" stroke-width="2"/><g transform="translate(4,6)"><circle cx="3" cy="9" r="2" fill="#374151"/><circle cx="13" cy="9" r="2" fill="#374151"/><path d="M5 9L7 4H9L11 9" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M7 4H8C8.5 4 9 4.3 9.3 4.7L11 7" stroke="#f97316" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="2" r="1.2" fill="#f97316"/></g></svg>`;
+    el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11.5" fill="white" stroke="#f97316" stroke-width="2"/><g transform="translate(4,6.5)"><rect x="5.5" y="0" width="5" height="2" rx="0.6" fill="#1f2937"/><path d="M3 5 L5 2.4 H11 L13 5 H15 a1 1 0 0 1 1 1 V8.6 H0 V6 a1 1 0 0 1 1 -1 Z" fill="#facc15" stroke="#1f2937" stroke-width="0.8" stroke-linejoin="round"/><path d="M5.6 3.2 H7.7 V5 H4.4 Z M8.3 3.2 H10.4 L11.6 5 H8.3 Z" fill="#bfdbfe"/><circle cx="3.6" cy="9" r="1.7" fill="#1f2937"/><circle cx="12.4" cy="9" r="1.7" fill="#1f2937"/></g></svg>`;
     if (!driverMarkerRef.current) {
       driverMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ map, position: driverLocation, content: el, title: 'Tu conductor' });
     } else {
@@ -333,7 +333,7 @@ function GoogleMapComponent({
     }
   }, [map, driverLocation]);
 
-  // Marcadores conductores cercanos — ícono de moto con pulso animado estilo InDrive
+  // Marcadores de taxis cercanos, con pulso animado
   useEffect(() => {
     if (!map) return;
     nearbyMarkersRef.current.forEach((m) => (m.map = null));
@@ -343,24 +343,16 @@ function GoogleMapComponent({
       el.style.cssText = 'position:relative;width:48px;height:48px;';
       el.innerHTML = `
         <style>
-          @keyframes moto-pulse {
+          @keyframes taxi-pulse {
             0%,100%{transform:scale(1);opacity:0.6}
             50%{transform:scale(1.6);opacity:0}
           }
         </style>
-        <div style="position:absolute;inset:-8px;border-radius:50%;background:rgba(249,115,22,0.15);animation:moto-pulse 2s ease-in-out infinite;"></div>
-        <div style="position:absolute;inset:-3px;border-radius:50%;background:rgba(249,115,22,0.1);animation:moto-pulse 2s ease-in-out infinite 0.4s;"></div>
+        <div style="position:absolute;inset:-8px;border-radius:50%;background:rgba(249,115,22,0.15);animation:taxi-pulse 2s ease-in-out infinite;"></div>
+        <div style="position:absolute;inset:-3px;border-radius:50%;background:rgba(249,115,22,0.1);animation:taxi-pulse 2s ease-in-out infinite 0.4s;"></div>
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" style="position:relative;z-index:1;">
           <circle cx="24" cy="24" r="22" fill="white" stroke="#f97316" stroke-width="2.5" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>
-          <g transform="translate(9,13)">
-            <circle cx="4.5" cy="15" r="3.5" fill="#1f2937" stroke="#f97316" stroke-width="1"/>
-            <circle cx="25.5" cy="15" r="3.5" fill="#1f2937" stroke="#f97316" stroke-width="1"/>
-            <path d="M8 15 L11 6 H16 L20 15" stroke="#f97316" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M13 6 H15C16 6 17 6.6 17.6 7.4L21 12" stroke="#f97316" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <path d="M8 15 H22" stroke="#6b7280" stroke-width="1.5" fill="none"/>
-            <circle cx="15" cy="3" r="2.2" fill="#f97316"/>
-            <circle cx="15" cy="3" r="1" fill="white"/>
-          </g>
+          <g transform="translate(8,13) scale(2)"><rect x="5.5" y="0" width="5" height="2" rx="0.6" fill="#1f2937"/><path d="M3 5 L5 2.4 H11 L13 5 H15 a1 1 0 0 1 1 1 V8.6 H0 V6 a1 1 0 0 1 1 -1 Z" fill="#facc15" stroke="#1f2937" stroke-width="0.8" stroke-linejoin="round"/><path d="M5.6 3.2 H7.7 V5 H4.4 Z M8.3 3.2 H10.4 L11.6 5 H8.3 Z" fill="#bfdbfe"/><circle cx="3.6" cy="9" r="1.7" fill="#1f2937"/><circle cx="12.4" cy="9" r="1.7" fill="#1f2937"/></g>
         </svg>`;
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map,

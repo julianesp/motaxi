@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import AppVersionCard from '@/components/admin/AppVersionCard';
+import ServiceStatusCard from '@/components/admin/ServiceStatusCard';
 import { apiClient } from '@/lib/api-client';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -175,6 +176,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Aviso de actualización de la app */}
+      <ServiceStatusCard />
       <AppVersionCard />
 
       {/* Ingresos */}
@@ -641,7 +643,7 @@ function BroadcastEmailSection() {
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-adm-fg text-sm font-medium">{u.full_name}</span>
-                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-adm-hover text-adm-fg2">{u.role === 'driver' ? '🚐 Conductor' : '👤 Pasajero'}</span>
+                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-adm-hover text-adm-fg2">{u.role === 'driver' ? '🚕 Conductor' : '👤 Pasajero'}</span>
                         </div>
                         <span className="text-adm-fg3 text-xs">{u.phone}</span>
                       </div>

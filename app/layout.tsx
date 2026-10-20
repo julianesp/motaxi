@@ -19,24 +19,17 @@ const inter = Inter({ subsets: ["latin"], display: "swap", preload: true });
 
 export const metadata: Metadata = {
   manifest: "/manifest.json",
-  title: "MoTaxi - Transporte en el Valle de Sibundoy, Putumayo",
+  title: "MoTaxi - Taxis de servicio público en el Alto Putumayo",
   description:
-    "Pide tu transporte en Sibundoy, Santiago, Colón y San Francisco (Putumayo, Colombia). Conectamos pasajeros con conductores cerca de ti. Rápido, seguro y económico.",
+    "Pide un taxi de servicio público en Sibundoy, Santiago, Colón y San Francisco (Putumayo, Colombia), con conductores afiliados a empresas de transporte habilitadas.",
+  // Solo taxis de servicio público: MoTaxi no ofrece motos, motocarros ni vehículos particulares
   keywords: [
-    // Keywords de moto comentadas temporalmente (moto deshabilitada)
-    // "mototaxi Valle de Sibundoy",
-    // "mototaxi Sibundoy",
-    // "mototaxi Alto Putumayo",
-    // "mototaxi alto putumayo",
-    // "mototaxi Santiago Putumayo",
-    // "mototaxi Colón Putumayo",
-    // "mototaxi San Francisco Putumayo",
-    // "moto taxi Putumayo",
-    "transporte Sibundoy",
-    // "taxi moto Putumayo",
-    // "mototaxista Valle de Sibundoy",
-    "transporte Valle de Sibundoy",
-    // "moto taxi Colombia",
+    "taxi Sibundoy",
+    "taxi Valle de Sibundoy",
+    "taxi Alto Putumayo",
+    "taxi Santiago Putumayo",
+    "taxi Colón Putumayo",
+    "taxi San Francisco Putumayo",
     "MoTaxi",
   ],
   metadataBase: new URL("https://motaxi.dev"),
@@ -49,9 +42,9 @@ export const metadata: Metadata = {
       "https://motaxi.dev/logo.png",
   },
   openGraph: {
-    title: "Motaxi - Tu medio de trabajo",
+    title: "MoTaxi - Tu taxi, a un toque",
     description:
-      "Motaxi - Tu medio de trabajo. Pide tu vehículo en el Alto Putumayo a conductores cerca de ti. Puedes proponer la tarifa.",
+      "Pide un taxi de servicio público en el Alto Putumayo, con conductores afiliados a empresas de transporte habilitadas. Conoces el valor total antes del viaje.",
     url: "https://motaxi.dev",
     siteName: "MoTaxi",
     images: [
@@ -59,7 +52,7 @@ export const metadata: Metadata = {
         url: "https://motaxi.dev/logo.png",
         width: 512,
         height: 512,
-        alt: "MoTaxi - Mototaxi Valle de Sibundoy",
+        alt: "MoTaxi - Taxis del Alto Putumayo",
       },
     ],
     locale: "es_CO",
@@ -67,9 +60,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Motaxi - Tu medio de trabajo",
+    title: "MoTaxi - Tu taxi, a un toque",
     description:
-      "Motaxi - Tu medio de trabajo. Pide tu vehículo en el Alto Putumayo a conductores cerca de ti. Puedes proponer la tarifa.",
+      "Pide un taxi de servicio público en el Alto Putumayo, con conductores afiliados a empresas de transporte habilitadas. Conoces el valor total antes del viaje.",
     images: [
       "https://motaxi.dev/logo.png",
     ],
@@ -107,7 +100,7 @@ export default function RootLayout({
                 "@type": "LocalBusiness",
                 name: "MoTaxi",
                 description:
-                  "Servicio de transporte en el Valle de Sibundoy, Putumayo, Colombia. Conectamos pasajeros con conductores en Sibundoy, Santiago, Colón y San Francisco.",
+                  "Plataforma que conecta pasajeros con taxis de servicio público de empresas de transporte habilitadas en Sibundoy, Santiago, Colón y San Francisco (Putumayo, Colombia).",
                 url: "https://motaxi.dev",
                 logo: "https://motaxi.dev/logo.png",
                 image:
@@ -158,7 +151,7 @@ export default function RootLayout({
                     },
                   },
                 ],
-                serviceType: "Servicio de mototaxi",
+                serviceType: "Intermediación de taxis de servicio público",
                 priceRange: "$",
                 openingHours: "Mo-Su 00:00-23:59",
                 sameAs: [],

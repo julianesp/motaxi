@@ -5,8 +5,8 @@ import { useAuth } from "@/lib/auth-context";
 import apiClient from "@/lib/api-client";
 
 /**
- * Alerta para conductores registrados con moto: el servicio en moto aún no está
- * habilitado por los términos del Ministerio de Transporte. El texto viene del
+ * Alerta para conductores cuyo vehículo no es un taxi de servicio público (moto, motocarro,
+ * particular): MoTaxi solo opera con taxis de empresas habilitadas. El texto viene del
  * backend (`vehicle_notice` en /auth/me), el mismo que usa la app móvil.
  */
 export default function VehicleNoticeAlert() {
@@ -51,7 +51,7 @@ export default function VehicleNoticeAlert() {
       >
         <div className="text-4xl mb-3" aria-hidden>⚠️</div>
         <h2 id="vehicle-notice-title" className="text-lg font-bold text-gray-900 mb-2">
-          Servicio en moto aún no habilitado
+          Solo taxis de servicio público
         </h2>
         <p className="text-sm text-gray-600 leading-relaxed">{message}</p>
         <button

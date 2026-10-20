@@ -37,18 +37,17 @@ function ScreenHeader({ title }: { title: string }) {
 // ── Pasajero ──
 function PassengerService() {
   const opts = [
-    { icon: "🛻", label: "Piaggio", sub: "Mudanzas · carga" },
-    { icon: "🚐", label: "Van", sub: "Carga voluminosa" },
+    { icon: "🚕", label: "Taxi", sub: "Servicio público · empresa habilitada" },
   ];
   return (
     <div className="relative h-full bg-gray-50">
       <ScreenHeader title="MoTaxi · Pasajero" />
       <div className="p-3 space-y-2">
-        <p className="text-[11px] font-semibold text-gray-600">¿Cuál vehículo necesitas?</p>
+        <p className="text-[11px] font-semibold text-gray-600">Pide tu taxi</p>
         {opts.map((o, i) => (
           <div
             key={o.label}
-            className={`tut-rise flex items-center gap-3 rounded-xl border-2 bg-white px-3 py-2.5 ${i === 1 ? "tut-select border-gray-200" : "border-gray-200"}`}
+            className={`tut-rise flex items-center gap-3 rounded-xl border-2 bg-white px-3 py-2.5 ${i === 0 ? "tut-select border-gray-200" : "border-gray-200"}`}
             style={{ animationDelay: `${i * 70}ms` }}
           >
             <span className="text-2xl">{o.icon}</span>
@@ -91,9 +90,9 @@ function PassengerRoute() {
 
 function PassengerDrivers() {
   const drivers = [
-    { name: "Carlos M.", v: "🚐 Van", price: "$12.000", r: "4.9" },
-    { name: "Luis A.", v: "🛻 Piaggio", price: "$10.000", r: "4.8" },
-    { name: "Jorge P.", v: "🚐 Van", price: "$13.500", r: "4.7" },
+    { name: "Carlos M.", v: "🚕 Taxi", price: "$8.000", r: "4.9" },
+    { name: "Luis A.", v: "🚕 Taxi", price: "$7.500", r: "4.8" },
+    { name: "Jorge P.", v: "🚕 Taxi", price: "$8.500", r: "4.7" },
   ];
   return (
     <div className="relative h-full bg-gray-50">
@@ -130,7 +129,7 @@ function PassengerTrack() {
         <circle cx="170" cy="60" r="7" fill="#ef4444" />
         <circle cx="170" cy="60" r="12" fill="#ef4444" opacity=".2" />
       </svg>
-      <span className="tut-drive absolute text-xl" aria-hidden>🚐</span>
+      <span className="tut-drive absolute text-xl" aria-hidden>🚕</span>
       <div className="tut-rise absolute bottom-3 inset-x-3 rounded-xl bg-white shadow-md px-3 py-2 flex items-center gap-2">
         <span className="w-8 h-8 rounded-full bg-[#008000]/15 flex items-center justify-center">👤</span>
         <div className="flex-1">
@@ -312,7 +311,7 @@ const TUTORIALS: Record<Tab, { label: string; icon: string; steps: { title: stri
     label: "Pasajero",
     icon: "🧍",
     steps: [
-      { title: "Elige tu servicio", desc: "Selecciona el vehículo que necesitas: Piaggio o Van para cargas y trasteos.", Scene: PassengerService },
+      { title: "Pide tu taxi", desc: "Solicita un taxi de servicio público de una empresa de transporte habilitada.", Scene: PassengerService },
       { title: "Indica tu destino", desc: "Tu ubicación se toma por GPS. Escribe a dónde vas y busca conductores.", Scene: PassengerRoute },
       { title: "Escoge conductor y tarifa", desc: "Compara conductores, calificaciones y precio. Toca el que prefieras.", Scene: PassengerDrivers },
       { title: "Sigue el viaje en vivo", desc: "Mira en el mapa cómo se acerca tu conductor hasta llegar al destino.", Scene: PassengerTrack },
@@ -321,9 +320,9 @@ const TUTORIALS: Record<Tab, { label: string; icon: string; steps: { title: stri
   },
   driver: {
     label: "Conductor",
-    icon: "🚐",
+    icon: "🚕",
     steps: [
-      { title: "Actívate", desc: "Con tu perfil completo y SOAT al día, cambia tu estado a Disponible.", Scene: DriverOnline },
+      { title: "Actívate", desc: "Con tu empresa y tarjeta de operación verificadas y el SOAT al día, cambia tu estado a Disponible.", Scene: DriverOnline },
       { title: "Recibe solicitudes", desc: "Te llega una alerta con el recorrido y la tarifa. Tienes unos segundos.", Scene: DriverRequest },
       { title: "Acepta el viaje", desc: "Toca Aceptar y dirígete al punto de recogida del pasajero.", Scene: DriverAccept },
       { title: "Completa el viaje", desc: "Marca cada etapa: llegando, en viaje y completado.", Scene: DriverTrip },

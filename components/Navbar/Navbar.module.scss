@@ -78,18 +78,18 @@
   z-index: 9999;
 }
 
-.logoMotoTilt {
+.logoTaxiTilt {
   animation: logoTilt 0.2s ease-out forwards;
 }
 
-.logoMotoGo {
+.logoTaxiGo {
   animation: logoGo 0.4s ease-out forwards;
 }
 
-.logoMotoBounce {
+.logoTaxiBounce {
   animation: logoBounce 0.6s ease-in-out infinite;
 }
 
-.logoMotoReturn {
+.logoTaxiReturn {
   animation: logoReturn 0.4s ease-in forwards;
 }

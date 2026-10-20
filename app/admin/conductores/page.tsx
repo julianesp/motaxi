@@ -11,7 +11,12 @@ interface Driver {
   vehicle_plate: string;
   vehicle_model: string;
   vehicle_color: string;
+  vehicle_types: string | null;
   municipality: string;
+  // Empresa de transporte habilitada y tarjeta de operación (se cotejan antes de aprobar)
+  company_name: string | null;
+  company_nit: string | null;
+  operation_card_number: string | null;
   verification_status: 'pending' | 'approved' | 'rejected';
   is_available: number;
   rating: number;
@@ -67,8 +72,10 @@ export default function ConductoresPage() {
     try {
       await apiClient.put(`/admin/drivers/${id}/verify`);
       fetchDrivers();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      // El backend explica por qué no se puede aprobar (no es taxi o faltan datos de la empresa)
+      alert(err?.response?.data?.error ?? 'No se pudo aprobar al conductor.');
     } finally {
       setActionLoading(null);
     }
@@ -166,12 +173,22 @@ export default function ConductoresPage() {
                       <p className="text-adm-fg4 text-xs mt-1">Registrado: {formatDate(driver.user_created_at)}</p>
                     </div>
 
-                    {/* Vehículo */}
+                    {/* Vehículo y empresa de transporte */}
                     <div>
-                      <p className="text-adm-fg3 text-xs uppercase tracking-wide mb-1">Vehículo</p>
-                      <p className="text-adm-fg font-medium">{driver.vehicle_plate || '—'}</p>
+                      <p className="text-adm-fg3 text-xs uppercase tracking-wide mb-1">Taxi y empresa</p>
+                      <p className="text-adm-fg font-medium">
+                        {driver.vehicle_plate || '—'}
+                        {driver.vehicle_types !== 'taxi' && (
+                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-red-400/10 text-red-600 dark:text-red-400">
+                            {driver.vehicle_types || 'sin tipo'} · no admitido
+                          </span>
+                        )}
+                      </p>
                       <p className="text-adm-fg3">{driver.vehicle_model} {driver.vehicle_color}</p>
                       <p className="text-adm-fg3">{driver.municipality}</p>
+                      <p className="text-adm-fg mt-1">{driver.company_name || <span className="text-red-600 dark:text-red-400">Sin empresa</span>}</p>
+                      <p className="text-adm-fg3 text-xs">NIT: {driver.company_nit || '—'}</p>
+                      <p className="text-adm-fg3 text-xs">Tarjeta de operación: {driver.operation_card_number || '—'}</p>
                     </div>
 
                     {/* Estado suscripción */}
@@ -208,7 +225,7 @@ export default function ConductoresPage() {
 
                   {/* Acciones */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* VERIFICACIÓN MANUAL DESACTIVADA TEMPORALMENTE - auto-aprobación habilitada en el backend
+                    {/* Verificación manual: cotejar empresa habilitada y tarjeta de operación antes de aprobar */}
                     {driver.verification_status === 'pending' && (
                       <>
                         <button
@@ -227,7 +244,6 @@ export default function ConductoresPage() {
                         </button>
                       </>
                     )}
-                    */}
                     {driver.verification_status === 'approved' && (
                       <button
                         onClick={() => setRejectId(driver.id)}

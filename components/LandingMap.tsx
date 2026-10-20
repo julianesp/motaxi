@@ -79,13 +79,9 @@ export default function LandingMap() {
     driverMarkersRef.current.forEach((m) => (m.map = null));
     driverMarkersRef.current = [];
 
-    const vehicleIcons: Record<string, string> = {
-      // Moto deshabilitada temporalmente: moto: '🏍️', ambos: '🏍️'
-      taxi: '🚕', carro: '🚐', piaggio: '🛻',
-    };
-
     activeDrivers.forEach((driver) => {
-      const icon = vehicleIcons[driver.vehicle_types || 'carro'] ?? '🚐';
+      // MoTaxi solo opera con taxis de servicio público
+      const icon = '🚕';
       const dot = document.createElement('div');
       dot.style.cssText = `
         width: 28px; height: 28px;

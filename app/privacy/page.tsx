@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       <div className="max-w-3xl mx-auto px-4 py-24">
         <div className="bg-white bg-opacity-90 dark:bg-gray-900/90 rounded-2xl shadow-2xl border border-[#008000] border-opacity-30 p-8 md:p-12 text-black dark:text-gray-100">
           <h1 className="text-3xl font-bold text-[#008000] dark:text-[#42CE1D] mb-2">Política de Privacidad</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">Última actualización: 11 de septiembre de 2026</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">Última actualización: 19 de octubre de 2026</p>
 
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-3">1. Responsable del tratamiento y marco legal</h2>
@@ -47,8 +47,13 @@ export default function PrivacyPage() {
               <li>Número de teléfono</li>
               <li>Ubicación en tiempo real durante los viajes activos</li>
               <li>Ruta completa y puntos GPS de cada viaje (origen, destino y trayecto recorrido)</li>
-              <li>Historial de viajes y envíos solicitados o realizados</li>
+              <li>Historial de viajes solicitados o realizados</li>
               <li>Información de inicio de sesión con Google (si la usas)</li>
+              <li>
+                Si eres conductor: datos del taxi (placa, modelo, color), licencia de conducción,
+                SOAT, y la razón social y el NIT de tu empresa de transporte y el número de la
+                tarjeta de operación, para verificar que estás habilitado para prestar el servicio
+              </li>
             </ul>
           </section>
 
@@ -58,9 +63,10 @@ export default function PrivacyPage() {
               Usamos tu información exclusivamente para:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 pl-2">
-              <li>Dar visibilidad y conectar a usuarios con conductores en el Alto Putumayo</li>
+              <li>Conectar a pasajeros con taxis de empresas de transporte habilitadas en el Alto Putumayo</li>
+              <li>Verificar la empresa de transporte y la tarjeta de operación de cada conductor, y mostrar al pasajero el nombre del conductor, la placa y la empresa que presta el servicio</li>
               <li>Mostrar tu ubicación durante un servicio activo a la otra parte correspondiente (conductor o usuario)</li>
-              <li>Registrar y conservar la ruta de cada envío o servicio para tu historial y seguridad</li>
+              <li>Registrar y conservar la ruta de cada viaje para tu historial y seguridad</li>
               <li>Analizar patrones de demanda (de forma agregada y anónima) con inteligencia artificial</li>
               <li>Recomendar a los conductores zonas con alta demanda de servicios</li>
               <li>Enviar notificaciones relacionadas con tus viajes</li>
@@ -97,7 +103,7 @@ export default function PrivacyPage() {
               Este sistema:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 pl-2 mb-3">
-              <li>Identifica zonas geográficas con alta frecuencia de solicitudes de viajes y envíos</li>
+              <li>Identifica zonas geográficas con alta frecuencia de solicitudes de viajes</li>
               <li>Calcula horarios y momentos del día con mayor demanda de transporte</li>
               <li>Genera recomendaciones de posicionamiento para conductores (zonas calientes)</li>
               <li>Notifica a los conductores disponibles sobre sectores donde es más probable recibir servicios</li>

@@ -187,31 +187,12 @@ export default function PassengerHomePage() {
   const [isPanelMinimized, setIsPanelMinimized] = useState(false);
   const [isCheckingActiveTrip, setIsCheckingActiveTrip] = useState(false);
 
-  // Tipo de vehículo preferido por el pasajero
-  const [vehicleType, setVehicleType] = useState<
-    "moto" | "taxi" | "carro" | "piaggio" | "particular" | null
-  >(null);
-  const [vehicleCarouselIndex, setVehicleCarouselIndex] = useState(0);
-  const vehicleTouchStartX = useRef<number | null>(null);
-  const [showSwipeHint, setShowSwipeHint] = useState(true);
+  // MoTaxi solo intermedia viajes de pasajeros en taxis de servicio público
+  // afiliados a empresas de transporte habilitadas.
   const [showSafetyWarning, setShowSafetyWarning] = useState(false);
-
-  // Modo de solicitud: viaje normal o envío de paquete
-  // Moto deshabilitada temporalmente (sin autorización): el modo "delivery" solo
-  // tenía moto, así que el modo inicial pasa a ser "cargo" (Piaggio / Van).
-  const [tripMode, setTripMode] = useState<"ride" | "delivery" | "cargo">(
-    "cargo",
-  );
-  const [deliveryNote, setDeliveryNote] = useState("");
+  // Indicaciones opcionales para el conductor (punto de referencia, equipaje...)
+  const [driverNote, setDriverNote] = useState("");
   const [homePickup, setHomePickup] = useState(false);
-
-  // Campos de envío
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientPhone, setRecipientPhone] = useState("");
-  const [packageSize, setPackageSize] = useState<"small" | "medium" | "large">("small");
-  const [packagePhotoKey, setPackagePhotoKey] = useState<string | null>(null);
-  const [packagePhotoPreview, setPackagePhotoPreview] = useState<string | null>(null);
-  const [isUploadingPackagePhoto, setIsUploadingPackagePhoto] = useState(false);
 
   // Estado para conductores disponibles y favoritos
   const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
@@ -433,11 +414,7 @@ export default function PassengerHomePage() {
         const { driversAPI } = await import("@/lib/api-client");
         const lat = currentLocation?.lat || 1.1656;
         const lng = currentLocation?.lng || -77.0;
-        const data = await driversAPI.getNearbyDrivers(
-          lat,
-          lng,
-          vehicleType || undefined,
-        );
+        const data = await driversAPI.getNearbyDrivers(lat, lng);
         setNearbyDrivers(data.drivers || []);
       } catch (error) {
         // Silencioso - no interrumpir la experiencia
@@ -447,7 +424,7 @@ export default function PassengerHomePage() {
     fetchNearbyDrivers();
     const interval = setInterval(fetchNearbyDrivers, 10000);
     return () => clearInterval(interval);
-  }, [user, currentLocation?.lat, currentLocation?.lng, vehicleType]);
+  }, [user, currentLocation?.lat, currentLocation?.lng]);
 
   const handleLocationChange = (newLocation: { lat: number; lng: number }) => {
     setCurrentLocation(newLocation);
@@ -534,42 +511,6 @@ export default function PassengerHomePage() {
     setPassengerCustomPrice(next);
   };
 
-  const handlePackagePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    if (file.size > 5 * 1024 * 1024) {
-      Swal.fire({ icon: 'warning', title: 'Imagen muy grande', text: 'Máximo 5MB.', confirmButtonColor: '#008000' });
-      return;
-    }
-    // Vista previa local inmediata
-    const reader = new FileReader();
-    reader.onloadend = () => setPackagePhotoPreview(reader.result as string);
-    reader.readAsDataURL(file);
-
-    // Subir al backend
-    setIsUploadingPackagePhoto(true);
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-      const token = document.cookie.match(/authToken=([^;]+)/)?.[1];
-      const fd = new FormData();
-      fd.append('photo', file);
-      const res = await fetch(`${API_URL}/trips/package-photo`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: fd,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPackagePhotoKey(data.image_key);
-      }
-    } catch {
-      // silencioso — la foto es opcional
-    } finally {
-      setIsUploadingPackagePhoto(false);
-    }
-  };
-
   const handleRequestTrip = async () => {
     if (
       !pickup.latitude ||
@@ -581,16 +522,6 @@ export default function PassengerHomePage() {
         icon: "warning",
         title: "Faltan datos",
         text: "Por favor, selecciona la ubicación de recogida y el destino.",
-        confirmButtonColor: "#008000",
-      });
-      return;
-    }
-
-    if (!vehicleType) {
-      Swal.fire({
-        icon: "info",
-        title: "Elige tu vehículo",
-        text: "Selecciona el tipo de vehículo antes de solicitar.",
         confirmButtonColor: "#008000",
       });
       return;
@@ -645,43 +576,22 @@ export default function PassengerHomePage() {
         dropoff_longitude: destination.longitude,
         dropoff_address: destination.address,
         distance_km: parseFloat(distance.toFixed(2)),
-        estimated_fare: estimatedFare,
-        trip_type: tripMode,
+        // El servidor suma el recargo de domicilio a estimated_fare: se envía sin él para
+        // que el total cobrado sea exactamente el que se le mostró al pasajero.
+        estimated_fare: homePickup ? estimatedFare - HOME_PICKUP_SURCHARGE : estimatedFare,
+        trip_type: "ride",
         home_pickup: homePickup,
-        ...(tripMode === "delivery" && deliveryNote.trim()
-          ? { delivery_note: deliveryNote.trim() }
-          : {}),
-        ...(tripMode === "delivery" ? {
-          recipient_name: recipientName.trim() || undefined,
-          recipient_phone: recipientPhone.trim() || undefined,
-          package_size: packageSize,
-          package_photo_key: packagePhotoKey || undefined,
-        } : {}),
+        ...(driverNote.trim() ? { delivery_note: driverNote.trim() } : {}),
         ...(selectedDriver ? { preferred_driver_id: selectedDriver.id } : {}),
       });
 
       // Éxito: solicitud creada
       await Swal.fire({
         icon: "success",
-        title:
-          tripMode === "delivery"
-            ? "¡Envío solicitado!"
-            : tripMode === "cargo"
-              ? "¡Trasteo solicitado!"
-              : "¡Solicitud enviada!",
-        text:
-          tripMode === "delivery"
-            ? "Tu solicitud de envío está visible en el tablero de conductores. Un conductor irá a recoger el objeto."
-            : tripMode === "cargo"
-              ? "Tu solicitud de carga está visible en el tablero de conductores. Un conductor con vehículo de carga aceptará tu trasteo."
-              : "Tu solicitud está ahora visible en el tablero de conductores. Espera mientras un conductor acepta tu viaje.",
+        title: "¡Taxi solicitado!",
+        text: "Tu solicitud ya la ven los taxis disponibles de las empresas de transporte habilitadas. Espera mientras un conductor la acepta.",
         confirmButtonColor: "#008000",
-        confirmButtonText:
-          tripMode === "delivery"
-            ? "Seguir envío"
-            : tripMode === "cargo"
-              ? "Seguir trasteo"
-              : "Seguir viaje",
+        confirmButtonText: "Seguir viaje",
         timer: 3000,
         timerProgressBar: true,
       });
@@ -1124,308 +1034,17 @@ export default function PassengerHomePage() {
                   ...
                 </button> */}
 
-                {/* Toggle: Envío / Cargas y Trasteos — VIAJE EN TAXI OCULTO: pendiente Cootransvalle */}
-                <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-                  {/* <button
-                    type="button"
-                    onClick={() => { setTripMode("ride"); setVehicleType("taxi"); setVehicleCarouselIndex(0); }}
-                    ...Viaje en taxi oculto...
-                  </button> */}
-                  {/* Envío deshabilitado temporalmente: solo operaba con moto (sin autorización)
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTripMode("delivery");
-                      setVehicleType("moto");
-                      setVehicleCarouselIndex(0);
-                      setHomePickup(false);
-                    }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                      tripMode === "delivery"
-                        ? "bg-white text-[#008000] shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <span>📦</span>
-                    <span>Envío</span>
-                  </button> */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTripMode("cargo");
-                      setVehicleType("piaggio");
-                      setVehicleCarouselIndex(0);
-                      setHomePickup(false);
-                    }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                      tripMode === "cargo"
-                        ? "bg-white text-[#008000] shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <span>🚛</span>
-                    <span>Trasteos y cargas</span>
-                  </button>
+                {/* MoTaxi solo intermedia viajes en taxis de servicio público de empresas habilitadas */}
+                <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
+                  <span className="shrink-0 mt-0.5">🚕</span>
+                  <span>
+                    Viaje en <strong>taxi de servicio público</strong>. MoTaxi conecta tu solicitud
+                    con taxis afiliados a empresas de transporte habilitadas; el servicio lo presta
+                    la empresa del conductor.
+                  </span>
                 </div>
 
-                {/* Explicación del modo */}
-                {tripMode === "delivery" && (
-                  <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
-                    <span className="shrink-0 mt-0.5">ℹ️</span>
-                    <span>
-                      El conductor <strong>no transporta personas</strong>. Solo
-                      irá a recoger tu objeto y lo entregará en el destino
-                      indicado.
-                    </span>
-                  </div>
-                )}
-                {tripMode === "cargo" && (
-                  <div className="flex items-start gap-2 bg-[#008000]/10 border border-[#008000]/30 rounded-xl px-3 py-2 text-xs text-[#008000]">
-                    <span className="shrink-0 mt-0.5">ℹ️</span>
-                    <span>
-                      Servicio de <strong>cargas y trasteos</strong>. Disponible
-                      con Piaggio o Van para mudanzas y carga voluminosa.
-                    </span>
-                  </div>
-                )}
-
-                <h2 className="text-lg font-bold text-gray-800 mb-1">
-                  {tripMode === "delivery"
-                    ? "¿A dónde va el paquete?"
-                    : tripMode === "cargo"
-                      ? "¿A dónde va la carga?"
-                      : "¿A dónde vas?"}
-                </h2>
-
-                {/* Selector de tipo de vehículo */}
-                <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-600">
-                    ¿Cuál vehículo necesitas?
-                  </p>
-                  {(() => {
-                    const vehicleOptsMap = {
-                      ride: [
-                        // TAXI OCULTO: pendiente confirmación de Cootransvalle para habilitar
-                        // { value: "taxi" as const, icon: "🚕", label: "Taxi", sub: "Formal · seguro" },
-                        // Moto deshabilitada temporalmente (sin autorización de operación)
-                        // {
-                        //   value: "moto" as const,
-                        //   icon: "🏍️",
-                        //   label: "Mototaxi",
-                        //   sub: "Rápido · económico",
-                        // },
-                      ],
-                      delivery: [
-                        // Moto deshabilitada temporalmente (sin autorización de operación)
-                        // {
-                        //   value: "moto" as const,
-                        //   icon: "🏍️",
-                        //   label: "Mototaxi",
-                        //   sub: "Solo objetos · rápido",
-                        // },
-                      ],
-                      cargo: [
-                        {
-                          value: "piaggio" as const,
-                          icon: "🛻",
-                          label: "Piaggio",
-                          sub: "Mudanzas · carga",
-                        },
-                        {
-                          value: "carro" as const,
-                          icon: "🚐",
-                          label: "Van",
-                          sub: "Carga voluminosa",
-                        },
-                      ],
-                    };
-                    const vehicleOpts = vehicleOptsMap[tripMode];
-                    return (
-                      <div className="space-y-1">
-                        <div
-                          className="relative flex items-center"
-                          style={{ height: "90px" }}
-                        >
-                          {/* Flecha izquierda */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setVehicleCarouselIndex(
-                                (i) =>
-                                  (i - 1 + vehicleOpts.length) %
-                                  vehicleOpts.length,
-                              )
-                            }
-                            className="absolute left-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-l-2xl shadow-sm transition-colors"
-                            aria-label="Anterior"
-                          >
-                            <svg
-                              className="w-4 h-4 text-gray-500"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M15 19l-7-7 7-7"
-                              />
-                            </svg>
-                          </button>
-
-                          {/* Carrusel */}
-                          <div
-                            className="flex-1 overflow-hidden mx-8 relative"
-                            style={{ height: "90px" }}
-                            onTouchStart={(e) => {
-                              vehicleTouchStartX.current = e.touches[0].clientX;
-                            }}
-                            onTouchEnd={(e) => {
-                              if (vehicleTouchStartX.current === null) return;
-                              const diff =
-                                vehicleTouchStartX.current -
-                                e.changedTouches[0].clientX;
-                              if (Math.abs(diff) > 30) {
-                                setShowSwipeHint(false);
-                                if (diff > 0) {
-                                  setVehicleCarouselIndex(
-                                    (i) => (i + 1) % vehicleOpts.length,
-                                  );
-                                } else {
-                                  setVehicleCarouselIndex(
-                                    (i) =>
-                                      (i - 1 + vehicleOpts.length) %
-                                      vehicleOpts.length,
-                                  );
-                                }
-                              }
-                              vehicleTouchStartX.current = null;
-                            }}
-                          >
-                            {vehicleOpts.map((opt, i) => {
-                              const total = vehicleOpts.length;
-                              let norm = i - vehicleCarouselIndex;
-                              if (norm > total / 2) norm -= total;
-                              if (norm < -total / 2) norm += total;
-                              const isActive = norm === 0;
-                              const isVisible = Math.abs(norm) <= 1;
-                              const translateX = norm * 110;
-                              const scale = isActive ? 1 : 0.75;
-                              const opacity = isActive ? 1 : 0.4;
-                              const isSelected = vehicleType === opt.value;
-                              return (
-                                <div
-                                  key={opt.value}
-                                  onClick={() => {
-                                    if (!isActive) {
-                                      setVehicleCarouselIndex(i);
-                                      setVehicleType(opt.value);
-                                    } else {
-                                      setVehicleType(
-                                        isSelected ? null : opt.value,
-                                      );
-                                    }
-                                  }}
-                                  style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: "50%",
-                                    width: "120px",
-                                    marginLeft: "-60px",
-                                    height: "86px",
-                                    transform: `translateX(${translateX}%) scale(${scale})`,
-                                    transition:
-                                      "transform 0.3s ease, opacity 0.3s ease",
-                                    opacity,
-                                    zIndex: isActive ? 10 : 5,
-                                    cursor: "pointer",
-                                    pointerEvents: isVisible ? "auto" : "none",
-                                  }}
-                                  className={`flex flex-col items-center justify-center rounded-2xl border-2 transition-colors ${
-                                    isSelected
-                                      ? "border-[#008000] bg-green-50 shadow-md"
-                                      : "border-gray-200 bg-white"
-                                  }`}
-                                >
-                                  <span className="text-2xl mb-0.5">
-                                    {opt.icon}
-                                  </span>
-                                  <span
-                                    className={`text-xs font-bold ${isSelected ? "text-[#008000]" : "text-gray-700"}`}
-                                  >
-                                    {opt.label}
-                                  </span>
-                                  <span className="text-xs text-gray-400">
-                                    {opt.sub}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* Flecha derecha */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setVehicleCarouselIndex(
-                                (i) => (i + 1) % vehicleOpts.length,
-                              )
-                            }
-                            className="absolute right-0 z-20 h-full w-8 flex items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 rounded-r-2xl shadow-sm transition-colors"
-                            aria-label="Siguiente"
-                          >
-                            <svg
-                              className="w-4 h-4 text-gray-500"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-
-                        {/* Hint swipe */}
-                        {showSwipeHint && (
-                          <>
-                            <style>{`
-                            @keyframes swipe-hint {
-                              0%   { transform: translateX(18px); opacity: 0; }
-                              15%  { opacity: 1; }
-                              85%  { opacity: 1; }
-                              100% { transform: translateX(-18px); opacity: 0; }
-                            }
-                            .swipe-hint-finger {
-                              animation: swipe-hint 1.4s ease-in-out 2;
-                              animation-fill-mode: forwards;
-                            }
-                          `}</style>
-                            <div
-                              className="flex items-center justify-center gap-1.5 mt-1"
-                              onAnimationEnd={() => setShowSwipeHint(false)}
-                            >
-                              <span
-                                className="swipe-hint-finger text-lg select-none"
-                                style={{ display: "inline-block" }}
-                              >
-                                👆
-                              </span>
-                              <span className="text-xs text-gray-400">
-                                desliza para ver más
-                              </span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
+                <h2 className="text-lg font-bold text-gray-800 mb-1">¿A dónde vas?</h2>
 
                 {/* Pickup Input */}
                 <div className="space-y-2">
@@ -1656,8 +1275,8 @@ export default function PassengerHomePage() {
                   )}
                 </div>
 
-                {/* Opción de recogida a domicilio — solo en modo viaje */}
-                {tripMode === "ride" && (
+                {/* Opción de recogida a domicilio */}
+                {(
                   <label className="flex items-start gap-3 cursor-pointer select-none bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3">
                     <input
                       type="checkbox"
@@ -1680,112 +1299,20 @@ export default function PassengerHomePage() {
                   </label>
                 )}
 
-                {/* Detalles completos del envío */}
-                {tripMode === "delivery" && (
-                  <div className="bg-[#008000]/10 border border-[#008000]/30 rounded-2xl p-3 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span>📦</span>
-                      <span className="text-sm font-semibold text-[#008000]">Detalles del envío</span>
-                    </div>
-
-                    {/* Tamaño del paquete */}
-                    <div>
-                      <p className="text-xs font-medium text-gray-600 mb-1.5">Tamaño del paquete</p>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {([
-                          { value: "small", label: "Pequeño", sub: "Cabe en una mochila", emoji: "🎁" },
-                          { value: "medium", label: "Mediano", sub: "Caja normal", emoji: "📦" },
-                          { value: "large", label: "Grande", sub: "Difícil de cargar", emoji: "🗃️" },
-                        ] as const).map(opt => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setPackageSize(opt.value)}
-                            className={`flex flex-col items-center py-2 px-1 rounded-xl border-2 text-center transition-all ${
-                              packageSize === opt.value
-                                ? "border-[#008000] bg-white"
-                                : "border-transparent bg-white/60"
-                            }`}
-                          >
-                            <span className="text-xl">{opt.emoji}</span>
-                            <span className={`text-xs font-semibold mt-0.5 ${packageSize === opt.value ? "text-[#008000]" : "text-gray-600"}`}>{opt.label}</span>
-                            <span className="text-[10px] text-gray-400">{opt.sub}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Destinatario */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-xs font-medium text-gray-600 mb-1">Nombre del destinatario</p>
-                        <input
-                          type="text"
-                          value={recipientName}
-                          onChange={e => setRecipientName(e.target.value)}
-                          placeholder="Ej: Juan Pérez"
-                          className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 placeholder-gray-400"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-600 mb-1">Teléfono del destinatario</p>
-                        <input
-                          type="tel"
-                          value={recipientPhone}
-                          onChange={e => setRecipientPhone(e.target.value)}
-                          placeholder="Ej: 3001234567"
-                          className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 placeholder-gray-400"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Nota del paquete */}
-                    <div>
-                      <p className="text-xs font-medium text-gray-600 mb-1">Descripción <span className="font-normal text-gray-400">(opcional)</span></p>
-                      <textarea
-                        value={deliveryNote}
-                        onChange={(e) => setDeliveryNote(e.target.value)}
-                        placeholder="Ej: Frágil · color azul · llama al llegar"
-                        rows={2}
-                        maxLength={300}
-                        className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-[#008000]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 resize-none placeholder-gray-400"
-                      />
-                      <p className="text-xs text-gray-400 text-right">{deliveryNote.length}/300</p>
-                    </div>
-
-                    {/* Foto del paquete */}
-                    <div>
-                      <p className="text-xs font-medium text-gray-600 mb-1">Foto del paquete <span className="font-normal text-gray-400">(opcional)</span></p>
-                      {packagePhotoPreview ? (
-                        <div className="relative">
-                          <img src={packagePhotoPreview} alt="Paquete" className="w-full h-32 object-cover rounded-xl" />
-                          {isUploadingPackagePhoto && (
-                            <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
-                              <svg className="animate-spin w-6 h-6 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => { setPackagePhotoPreview(null); setPackagePhotoKey(null); }}
-                            className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center"
-                          >
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                          </button>
-                        </div>
-                      ) : (
-                        <label className="flex items-center justify-center gap-2 bg-white border border-dashed border-[#008000]/40 rounded-xl py-3 cursor-pointer hover:bg-white/80 transition-colors">
-                          <svg className="w-5 h-5 text-[#008000]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                          </svg>
-                          <span className="text-xs text-[#008000] font-medium">Tomar o seleccionar foto</span>
-                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePackagePhotoSelect} />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* Indicaciones opcionales para el conductor */}
+                <div>
+                  <p className="text-xs font-medium text-gray-600 mb-1">
+                    Indicaciones para el conductor <span className="font-normal text-gray-400">(opcional)</span>
+                  </p>
+                  <textarea
+                    value={driverNote}
+                    onChange={(e) => setDriverNote(e.target.value)}
+                    placeholder="Ej: Estoy frente a la iglesia · llevo una maleta"
+                    rows={2}
+                    maxLength={200}
+                    className="w-full px-3 py-2 text-sm text-gray-800 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008000]/30 resize-none placeholder-gray-400"
+                  />
+                </div>
 
                 {/* Panel de tarifa estilo InDrive - solo cuando hay origen y destino */}
                 {!!(
@@ -1852,15 +1379,7 @@ export default function PassengerHomePage() {
                                 <div className="flex items-center gap-1.5">
                                   {driver.vehicle_types && (
                                     <span className="text-base flex-shrink-0">
-                                      {(
-                                        {
-                                          // moto: "🏍️", // deshabilitada temporalmente
-                                          taxi: "🚕",
-                                          carro: "🚐",
-                                          piaggio: "🛻",
-                                          particular: "🚗",
-                                        } as Record<string, string>
-                                      )[driver.vehicle_types] ?? "🚗"}
+                                      🚕
                                     </span>
                                   )}
                                   <span className="text-sm font-semibold text-gray-800 truncate">
@@ -2024,18 +1543,8 @@ export default function PassengerHomePage() {
                       </svg>
                       <span>Solicitando...</span>
                     </span>
-                  ) : tripMode === "delivery" ? (
-                    "📦 Solicitar envío"
-                  ) : tripMode === "cargo" ? (
-                    vehicleType === "carro" ? (
-                      "🚐 Solicitar Van"
-                    ) : (
-                      "🛻 Solicitar Piaggio"
-                    )
-                  ) : vehicleType === "taxi" ? (
-                    "🚕 Solicitar taxi"
                   ) : (
-                    "Solicitar viaje"
+                    "🚕 Pedir taxi"
                   )}
                 </button>
               </>
@@ -2123,29 +1632,8 @@ export default function PassengerHomePage() {
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {driverDetailDriver.vehicle_types && (
                     <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">
-                      <span>
-                        {(
-                          {
-                            // moto: "🏍️", // deshabilitada temporalmente
-                            taxi: "🚕",
-                            carro: "🚐",
-                            piaggio: "🛻",
-                            particular: "🚗",
-                          } as Record<string, string>
-                        )[driverDetailDriver.vehicle_types] ?? "🚗"}
-                      </span>
-                      <span>
-                        {(
-                          {
-                            // moto: "Mototaxi", // deshabilitada temporalmente
-                            taxi: "Taxi",
-                            carro: "Carro / Van",
-                            piaggio: "Piaggio",
-                            particular: "Particular",
-                          } as Record<string, string>
-                        )[driverDetailDriver.vehicle_types] ??
-                          driverDetailDriver.vehicle_types}
-                      </span>
+                      <span>🚕</span>
+                      <span>Taxi de servicio público</span>
                     </span>
                   )}
                   {driverDetailDriver.night_only === 1 && (

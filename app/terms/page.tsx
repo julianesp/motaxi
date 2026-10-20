@@ -22,7 +22,7 @@ export default function TermsPage() {
             Términos y Condiciones
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
-            Última actualización: 11 de septiembre de 2026
+            Última actualización: 19 de octubre de 2026
           </p>
 
           <section className="mb-8">
@@ -45,16 +45,16 @@ export default function TermsPage() {
 
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-3">
-              2. Naturaleza del servicio: MoTaxi es una plataforma de visibilidad
+              2. Naturaleza del servicio: MoTaxi es un intermediario tecnológico
             </h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               MoTaxi es una plataforma tecnológica cuyo único objeto es{" "}
               <strong>
-                dar visibilidad y facilitar el contacto directo
+                conectar a los pasajeros con taxis de servicio público
               </strong>{" "}
-              entre personas que necesitan un servicio de mensajería, domicilios,
-              carga o transporte y conductores independientes que lo ofrecen en
-              el Alto Putumayo (Colombia).
+              afiliados a <strong>empresas de transporte legalmente constituidas y
+              habilitadas</strong> en el Alto Putumayo (Colombia). El servicio de
+              transporte lo presta la empresa a la que está afiliado el conductor.
             </p>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               MoTaxi <strong>no es una empresa de transporte</strong>, no presta
@@ -64,13 +64,13 @@ export default function TermsPage() {
               <strong>intermediario tecnológico de contacto</strong>.
             </p>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              La prestación del servicio de transporte, cuando aplique, se rige
-              por el Estatuto Nacional de Transporte (Ley 336 de 1996), el
-              Decreto Único Reglamentario del Sector Transporte (Decreto 1079 de
-              2015) y el Código Nacional de Tránsito (Ley 769 de 2002). La
-              responsabilidad de cumplir dicha normativa recae exclusivamente en
-              el conductor y, cuando corresponda, en la empresa de transporte
-              habilitada a la que esté vinculado.
+              La prestación del servicio de transporte se rige por el Estatuto
+              Nacional de Transporte (Ley 336 de 1996), el Decreto Único
+              Reglamentario del Sector Transporte (Decreto 1079 de 2015), la
+              Resolución 2163 de 2016 del Ministerio de Transporte y el Código
+              Nacional de Tránsito (Ley 769 de 2002). La responsabilidad de
+              cumplir dicha normativa en la prestación del servicio recae en la
+              empresa de transporte habilitada y en el conductor afiliado a ella.
             </p>
           </section>
 
@@ -79,7 +79,7 @@ export default function TermsPage() {
               3. Cobertura geográfica
             </h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              MoTaxi da visibilidad únicamente a servicios prestados en los
+              MoTaxi conecta únicamente servicios prestados en los
               municipios del <strong>Alto Putumayo</strong> (Valle de Sibundoy:
               Sibundoy, Santiago, Colón y San Francisco), Colombia. La plataforma
               no está destinada a operar en ninguna otra zona del país. Cualquier
@@ -89,29 +89,24 @@ export default function TermsPage() {
 
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-3">
-              4. Tipos de servicio y uso de la motocicleta
+              4. Servicio y vehículos admitidos
             </h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              A través de MoTaxi se pueden dar visibilidad a los siguientes
-              servicios:
+              A través de MoTaxi solo se solicitan <strong>viajes de pasajeros en
+              taxi</strong>. Únicamente pueden operar:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 pl-2">
               <li>
-                <strong>Motocicleta:</strong> exclusivamente para{" "}
-                <strong>
-                  envío de paquetes, encomiendas, domicilios y mensajería
-                </strong>
-                . La motocicleta <strong>no se utiliza para el transporte de
-                pasajeros</strong>. MoTaxi no facilita ni promueve el mototaxismo
-                de personas, actividad no autorizada por la normativa de
-                transporte colombiana.
-              </li>
-              <li>
-                <strong>Piaggio / Piayo, Van y automóvil:</strong> para carga,
-                mudanzas, trasteos y, cuando el vehículo y el conductor cuenten
-                con la habilitación correspondiente, transporte de personas.
+                <strong>Taxis de servicio público (placa blanca)</strong>{" "}
+                afiliados a una empresa de transporte habilitada y con{" "}
+                <strong>tarjeta de operación</strong> vigente.
               </li>
             </ul>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-3">
+              <strong>No pueden operar</strong> en MoTaxi las motocicletas, los
+              motocarros (Piaggio / Piayo) ni los vehículos particulares. MoTaxi no
+              ofrece envíos de paquetes, domicilios, mensajería, trasteos ni carga.
+            </p>
           </section>
 
           <section className="mb-8">
@@ -119,40 +114,40 @@ export default function TermsPage() {
               5. Obligaciones y responsabilidad del conductor
             </h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Al registrarse en MoTaxi, cada conductor declara bajo su exclusiva
-              responsabilidad que:
+              Al registrarse en MoTaxi, cada conductor declara bajo su
+              responsabilidad, y acredita ante MoTaxi, que:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 pl-2">
               <li>
                 Posee licencia de conducción vigente y de la categoría exigida
-                para el vehículo que opera.
+                para conducir un taxi de servicio público.
               </li>
               <li>
                 Su vehículo cuenta con SOAT y revisión técnico-mecánica vigentes.
               </li>
               <li>
-                Cuando el servicio corresponda a transporte de pasajeros o de
-                carga sujeto a habilitación (por ejemplo automóviles, vans o
-                vehículos tipo Piaggio destinados a transporte público), cuenta
-                con la <strong>tarjeta de operación</strong> y demás permisos
-                exigidos, o está vinculado a una empresa de transporte
-                debidamente habilitada por el Ministerio de Transporte y sujeta a
-                la vigilancia de la Superintendencia de Transporte.
+                Conduce un taxi de servicio público (placa blanca) afiliado a una
+                empresa de transporte debidamente habilitada y sujeta a la
+                vigilancia de la Superintendencia de Transporte, cuya razón social
+                y NIT registra en la plataforma, y cuenta con la{" "}
+                <strong>tarjeta de operación</strong> vigente del vehículo.
               </li>
               <li>
                 Conoce y cumple la normativa de tránsito y transporte aplicable
                 en su municipio y en el Alto Putumayo.
               </li>
               <li>
-                Es el único responsable de la legalidad, seguridad y ejecución
-                del servicio que presta. MoTaxi no otorga, tramita ni sustituye
-                ninguna habilitación, permiso o tarjeta de operación.
+                Junto con su empresa, es responsable de la legalidad, seguridad y
+                ejecución del servicio que presta. MoTaxi no otorga, tramita ni
+                sustituye ninguna habilitación, permiso o tarjeta de operación.
               </li>
             </ul>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-3">
-              MoTaxi podrá suspender o eliminar la cuenta de cualquier conductor
-              que no acredite los documentos exigidos o que preste servicios sin
-              los permisos legales correspondientes.
+              MoTaxi verifica la empresa y la tarjeta de operación antes de
+              permitir que un conductor reciba solicitudes, y podrá suspender o
+              eliminar la cuenta de cualquier conductor que no acredite los
+              documentos exigidos o que preste servicios sin los permisos legales
+              correspondientes.
             </p>
           </section>
 
@@ -174,11 +169,12 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-3">7. Pagos</h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              MoTaxi no procesa, retiene ni intermedia pagos entre conductores y
-              usuarios. El método y monto de pago por cada servicio es acordado
-              directa y libremente entre las partes. MoTaxi no asume ninguna
-              responsabilidad sobre las transacciones económicas realizadas entre
-              usuarios.
+              Antes de confirmar cada viaje, la plataforma le muestra al pasajero
+              el <strong>valor total</strong> del servicio, y ese es el valor que
+              se cobra; solo puede cambiar si el pasajero acepta de forma expresa
+              una contraoferta del conductor antes del viaje. El pasajero paga
+              directamente al conductor por el medio que acuerden. MoTaxi no
+              procesa, retiene ni intermedia pagos.
             </p>
           </section>
 
@@ -205,8 +201,9 @@ export default function TermsPage() {
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 pl-2">
               <li>Usar la plataforma para actividades ilegales</li>
               <li>
-                Ofrecer o solicitar transporte de personas en motocicleta
-                (mototaxismo)
+                Ofrecer servicios con motocicletas, motocarros o vehículos
+                particulares, o con un taxi sin empresa habilitada ni tarjeta de
+                operación
               </li>
               <li>Acosar, amenazar o agredir a otros usuarios</li>
               <li>Crear cuentas falsas o suplantar identidades</li>
@@ -225,11 +222,10 @@ export default function TermsPage() {
               10. Limitación de responsabilidad
             </h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              Al ser MoTaxi únicamente una plataforma de visibilidad y contacto,
-              no es responsable por accidentes, lesiones, pérdidas, daños,
-              incumplimientos ni por la legalidad del servicio prestado por los
-              conductores. La relación entre conductores y usuarios es directa y
-              autónoma. MoTaxi tampoco es responsable por interrupciones del
+              Al ser MoTaxi un intermediario tecnológico, el servicio de transporte
+              y sus riesgos (accidentes, lesiones, pérdidas, daños o
+              incumplimientos) son responsabilidad de la empresa de transporte
+              que lo presta y de su conductor, en los términos de la ley. MoTaxi tampoco es responsable por interrupciones del
               servicio causadas por fallas técnicas, de conectividad o de
               terceros.
             </p>

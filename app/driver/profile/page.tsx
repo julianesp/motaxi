@@ -30,6 +30,9 @@ interface DriverInfo {
   rural_fare?: number;
   per_km_fare?: number;
   vehicle_types?: string;
+  company_name?: string | null;
+  company_nit?: string | null;
+  operation_card_number?: string | null;
 }
 
 export default function DriverProfilePage() {
@@ -150,8 +153,11 @@ export default function DriverProfilePage() {
     intercity_fare: '' as number | string,
     rural_fare: '' as number | string,
     per_km_fare: '' as number | string,
-    // Moto deshabilitada temporalmente: el valor por defecto pasa de 'moto' a 'carro'
-    vehicle_types: 'carro' as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular',
+    // Solo taxis de servicio público; '' si el vehículo registrado no es un taxi
+    vehicle_types: '' as 'taxi' | '',
+    company_name: '',
+    company_nit: '',
+    operation_card_number: '',
     usual_hours: '',
     usual_origin: '',
     usual_destination: '',
@@ -221,7 +227,10 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || 5000,
           rural_fare: driver.rural_fare || 4000,
           per_km_fare: driver.per_km_fare || 500,
-          vehicle_types: driver.vehicle_types || 'carro',
+          vehicle_types: driver.vehicle_types || '',
+          company_name: driver.company_name ?? null,
+          company_nit: driver.company_nit ?? null,
+          operation_card_number: driver.operation_card_number ?? null,
         });
 
         // Inicializar formData del conductor
@@ -241,7 +250,10 @@ export default function DriverProfilePage() {
           intercity_fare: driver.intercity_fare || '',
           rural_fare: driver.rural_fare || '',
           per_km_fare: driver.per_km_fare || '',
-          vehicle_types: (driver.vehicle_types as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular') || 'carro',
+          vehicle_types: driver.vehicle_types === 'taxi' ? 'taxi' : '',
+          company_name: driver.company_name || '',
+          company_nit: driver.company_nit || '',
+          operation_card_number: driver.operation_card_number || '',
           usual_hours: driver.usual_hours || '',
           usual_origin: driver.usual_origin || '',
           usual_destination: driver.usual_destination || '',
@@ -618,8 +630,11 @@ export default function DriverProfilePage() {
       }
 
       // Preparar datos con valores por defecto para campos vacíos
+      const { vehicle_types, ...formWithoutType } = driverFormData;
       const dataToSend = {
-        ...driverFormData,
+        ...formWithoutType,
+        // Solo se envía el tipo si el conductor confirmó que es un taxi
+        ...(vehicle_types ? { vehicle_types } : {}),
         base_fare: (typeof driverFormData.base_fare === 'number' ? driverFormData.base_fare : (driverFormData.base_fare === '' ? 2000 : parseInt(driverFormData.base_fare))) as number,
         intercity_fare: (typeof driverFormData.intercity_fare === 'number' ? driverFormData.intercity_fare : (driverFormData.intercity_fare === '' ? 5000 : parseInt(driverFormData.intercity_fare))) as number,
         rural_fare: (typeof driverFormData.rural_fare === 'number' ? driverFormData.rural_fare : (driverFormData.rural_fare === '' ? 4000 : parseInt(driverFormData.rural_fare))) as number,
@@ -962,14 +977,10 @@ export default function DriverProfilePage() {
                         Tipo de vehículo
                       </label>
                       {isEditing ? (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           {([
-                            // Moto deshabilitada temporalmente (sin autorización de operación)
-                            // { value: 'moto', label: '🏍️', desc: 'Mototaxi' },
-                            { value: 'taxi', label: '🚕', desc: 'Taxi' },
-                            { value: 'carro', label: '🚐', desc: 'Carro / Van' },
-                            { value: 'piaggio', label: '🛻', desc: 'Piaggio' },
-                            { value: 'particular', label: '🚗', desc: 'Particular' },
+                            // Motos, motocarros y particulares no pueden operar en MoTaxi
+                            { value: 'taxi', label: '🚕', desc: 'Taxi de servicio público' },
                           ] as const).map((opt) => (
                             <button
                               key={opt.value}
@@ -989,11 +1000,41 @@ export default function DriverProfilePage() {
                       ) : (
                         <div className="flex items-center">
                           <span className="text-gray-900">
-                            {({ taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio', particular: '🚗 Particular' } as Record<string, string>)[driverInfo.vehicle_types ?? ''] ?? '🚐 Vehículo'}
+                            {driverInfo.vehicle_types === 'taxi'
+                              ? '🚕 Taxi de servicio público'
+                              : '⚠️ Vehículo no admitido: MoTaxi solo trabaja con taxis de servicio público'}
                           </span>
                         </div>
                       )}
                     </div>
+
+                    {/* Empresa de transporte habilitada (la verifica el admin) */}
+                    {([
+                      { key: 'company_name', label: 'Empresa de transporte (razón social)', placeholder: 'Ej: Cooperativa de Transportadores del Valle' },
+                      { key: 'company_nit', label: 'NIT de la empresa', placeholder: 'Ej: 800123456-7' },
+                      { key: 'operation_card_number', label: 'N.º de la tarjeta de operación', placeholder: 'Como aparece en la tarjeta del vehículo' },
+                    ] as const).map((f) => (
+                      <div key={f.key} className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{f.label}</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={driverFormData[f.key]}
+                            onChange={(e) => setDriverFormData({ ...driverFormData, [f.key]: e.target.value })}
+                            placeholder={f.placeholder}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
+                          />
+                        ) : (
+                          <span className="text-gray-900">{driverInfo[f.key] || 'No registrado'}</span>
+                        )}
+                      </div>
+                    ))}
+                    {isEditing && (
+                      <p className="mb-4 text-xs text-gray-500">
+                        Si cambias la empresa o la tarjeta de operación, tu cuenta pasa a revisión hasta que el
+                        equipo de MoTaxi verifique los datos.
+                      </p>
+                    )}
 
                     {/* Vehicle Model */}
                     <div className="mb-4">
@@ -1005,7 +1046,7 @@ export default function DriverProfilePage() {
                           type="text"
                           value={driverFormData.vehicle_model}
                           onChange={(e) => setDriverFormData({ ...driverFormData, vehicle_model: e.target.value })}
-                          placeholder="Ej: Yamaha FZ 150"
+                          placeholder="Ej: Hyundai Atos"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                         />
                       ) : (
@@ -1028,7 +1069,7 @@ export default function DriverProfilePage() {
                           type="text"
                           value={driverFormData.vehicle_color}
                           onChange={(e) => setDriverFormData({ ...driverFormData, vehicle_color: e.target.value })}
-                          placeholder="Ej: Rojo"
+                          placeholder="Ej: Amarillo"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                         />
                       ) : (
@@ -1691,7 +1732,7 @@ export default function DriverProfilePage() {
             <div className="mt-3 bg-white rounded-xl shadow-md p-4">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-[#008000]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">🚐</span>
+                  <span className="text-xl">🚕</span>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-800">Fotos de mi vehículo</p>

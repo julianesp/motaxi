@@ -94,24 +94,24 @@ export default function Navbar() {
 
     // Fase 1: inclinarse 45°
     el.classList.remove(
-      styles.logoMotoReturn,
-      styles.logoMotoGo,
-      styles.logoMotoBounce,
+      styles.logoTaxiReturn,
+      styles.logoTaxiGo,
+      styles.logoTaxiBounce,
     );
     void el.offsetWidth;
-    el.classList.add(styles.logoMotoTilt);
+    el.classList.add(styles.logoTaxiTilt);
 
     // Fase 2: arrancar hasta el centro
     bounceTimeoutRef.current = setTimeout(() => {
-      el.classList.remove(styles.logoMotoTilt);
+      el.classList.remove(styles.logoTaxiTilt);
       void el.offsetWidth;
-      el.classList.add(styles.logoMotoGo);
+      el.classList.add(styles.logoTaxiGo);
 
       // Fase 3: saltar en el centro + humo
       bounceTimeoutRef.current = setTimeout(() => {
-        el.classList.remove(styles.logoMotoGo);
+        el.classList.remove(styles.logoTaxiGo);
         void el.offsetWidth;
-        el.classList.add(styles.logoMotoBounce);
+        el.classList.add(styles.logoTaxiBounce);
         startSmoke();
       }, 410);
     }, 210);
@@ -128,9 +128,9 @@ export default function Navbar() {
 
     stopSmoke();
 
-    el.classList.remove(styles.logoMotoGo, styles.logoMotoBounce);
+    el.classList.remove(styles.logoTaxiGo, styles.logoTaxiBounce);
     void el.offsetWidth;
-    el.classList.add(styles.logoMotoReturn);
+    el.classList.add(styles.logoTaxiReturn);
   };
 
   return (

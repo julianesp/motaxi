@@ -151,7 +151,8 @@ export const tripsAPI = {
     distance_km: number;
     estimated_fare: number;
     preferred_driver_id?: string;
-    trip_type?: 'ride' | 'delivery' | 'cargo';
+    // Solo viajes de pasajeros en taxi; delivery_note = indicaciones para el conductor
+    trip_type?: 'ride';
     delivery_note?: string;
     home_pickup?: boolean;
   }) => {
@@ -249,8 +250,11 @@ export const driversAPI = {
     vehicle_model?: string;
     vehicle_color?: string;
     vehicle_plate?: string;
-    vehicle_types?: 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular';
+    vehicle_types?: 'taxi';
     license_number?: string;
+    company_name?: string;
+    company_nit?: string;
+    operation_card_number?: string;
     base_fare?: number;
     intercity_fare?: number;
     rural_fare?: number;
@@ -283,10 +287,9 @@ export const driversAPI = {
     return response.data;
   },
 
-  getNearbyDrivers: async (lat: number, lng: number, vehicle_type?: string) => {
-    const response = await apiClient.get('/drivers/nearby', {
-      params: vehicle_type ? { lat, lng, vehicle_type } : { lat, lng }
-    });
+  // Solo devuelve taxis de servicio público disponibles
+  getNearbyDrivers: async (lat: number, lng: number) => {
+    const response = await apiClient.get('/drivers/nearby', { params: { lat, lng } });
     return response.data;
   },
 

@@ -49,22 +49,9 @@ function initials(full: string): string {
   return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
 }
 
-// Etiqueta y emoji del tipo de vehículo que maneja el conductor
-function vehicleLabel(t?: string | null): { emoji: string; text: string } {
-  switch (t) {
-    case "taxi":
-      return { emoji: "🚕", text: "Taxi" };
-    case "carro":
-    case "particular":
-      return { emoji: "🚗", text: "Carro" };
-    case "piaggio":
-      return { emoji: "🛺", text: "Piaggio" };
-    // Moto deshabilitada temporalmente (sin autorización de operación):
-    // case "moto":
-    //   return { emoji: "🏍️", text: "Moto" };
-    default:
-      return { emoji: "🚗", text: "Vehículo" };
-  }
+// MoTaxi solo opera con taxis de servicio público (el backend solo lista taxis)
+function vehicleLabel(_t?: string | null): { emoji: string; text: string } {
+  return { emoji: "🚕", text: "Taxi" };
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
@@ -180,8 +167,8 @@ export default function RegisteredDriversBubbles() {
           Conductores registrados
         </h2>
         <p className="mt-2 text-white/70 max-w-xl mx-auto">
-          Estos son los mototaxistas verificados que operan en el Valle de
-          Sibundoy
+          Taxistas verificados de empresas de transporte habilitadas del Alto
+          Putumayo
         </p>
       </div>
 

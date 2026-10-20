@@ -68,7 +68,11 @@ export default function DriverHomePage() {
     vehicle_plate: string;
     license_number: string;
     municipality: string;
-    vehicle_types: 'moto' | 'taxi' | 'carro' | 'piaggio' | '';
+    // Solo taxis de servicio público; '' mientras el conductor no lo confirme
+    vehicle_types: 'taxi' | '';
+    company_name: string;
+    company_nit: string;
+    operation_card_number: string;
   }>({
     vehicle_model: '',
     vehicle_color: '',
@@ -76,6 +80,9 @@ export default function DriverHomePage() {
     license_number: '',
     municipality: '',
     vehicle_types: '',
+    company_name: '',
+    company_nit: '',
+    operation_card_number: '',
   });
   const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
 
@@ -199,7 +206,10 @@ export default function DriverHomePage() {
             vehicle_plate: clean(response.driver.vehicle_plate),
             license_number: clean(response.driver.license_number),
             municipality: response.driver.municipality || '',
-            vehicle_types: response.driver.vehicle_types || '',
+            vehicle_types: response.driver.vehicle_types === 'taxi' ? 'taxi' : '',
+            company_name: response.driver.company_name || '',
+            company_nit: response.driver.company_nit || '',
+            operation_card_number: response.driver.operation_card_number || '',
           });
 
           // TODO: Reactivar cuando haya suficientes conductores y pasajeros registrados.
@@ -208,16 +218,15 @@ export default function DriverHomePage() {
           // setHasMissingVehicleInfo(isPending(response.driver.vehicle_plate) || isPending(response.driver.license_number));
           setHasMissingVehicleInfo(false);
 
-          // Advertir a conductores con vehículo no permitido (carro particular)
-          const tipoNoPermitido = ['particular', 'carro'];
-          if (tipoNoPermitido.includes(response.driver.vehicle_types || '')) {
+          // Solo taxis de servicio público: cualquier otro vehículo registrado ya no se admite
+          if (response.driver.vehicle_types && response.driver.vehicle_types !== 'taxi') {
             const { default: Swal } = await import('sweetalert2');
             await Swal.fire({
               icon: 'warning',
               title: '⚠️ Vehículo no admitido',
-              html: `Tu vehículo registrado (<strong>${response.driver.vehicle_types === 'particular' ? 'Automóvil particular' : 'Carro / Van'}</strong>) ya no está admitido en MoTaxi.<br><br>Debes actualizar tu tipo de vehículo a <strong>Mototaxi</strong> o <strong>Piaggio</strong> para seguir recibiendo viajes.`,
+              html: `MoTaxi ahora solo trabaja con <strong>taxis de servicio público (placa blanca)</strong> afiliados a una empresa de transporte habilitada. Las motos, los motocarros y los vehículos particulares no pueden operar.<br><br>Si conduces un taxi, registra sus datos, tu empresa y tu tarjeta de operación.`,
               confirmButtonColor: '#008000',
-              confirmButtonText: 'Actualizar mi vehículo',
+              confirmButtonText: 'Registrar mi taxi',
               allowOutsideClick: false,
               allowEscapeKey: false,
             });
@@ -413,11 +422,12 @@ export default function DriverHomePage() {
   const handleCompleteProfile = async () => {
     // Validar campos obligatorios
     if (!profileData.vehicle_types || !profileData.vehicle_model || !profileData.vehicle_color ||
-        !profileData.vehicle_plate) {
+        !profileData.vehicle_plate || !profileData.company_name.trim() || !profileData.company_nit.trim() ||
+        !profileData.operation_card_number.trim()) {
       Swal.fire({
         icon: 'warning',
         title: 'Campos incompletos',
-        text: 'Por favor selecciona el tipo de vehículo y completa todos los campos.',
+        text: 'Completa los datos del taxi, la empresa de transporte y la tarjeta de operación.',
         confirmButtonColor: '#008000',
       });
       return;
@@ -435,8 +445,8 @@ export default function DriverHomePage() {
 
       await Swal.fire({
         icon: 'success',
-        title: '¡Perfil completado!',
-        text: 'Ahora puedes activarte como conductor.',
+        title: '¡Datos enviados!',
+        text: 'Tu cuenta quedó en revisión: verificaremos tu empresa de transporte y tu tarjeta de operación y te avisaremos cuando puedas activarte.',
         confirmButtonColor: '#008000',
         timer: 3000,
         timerProgressBar: true,
@@ -971,41 +981,12 @@ export default function DriverHomePage() {
                               </div>
                             )}
 
-                            {/* Badge de envío de paquete */}
-                            {trip.trip_type === 'delivery' && (() => {
-                              const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-                              const sizeLabel: Record<string, string> = { small: '🎁 Pequeño', medium: '📦 Mediano', large: '🗃️ Grande' };
-                              return (
-                                <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 mb-3 space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-lg">📦</span>
-                                    <span className="text-xs font-bold text-orange-700 uppercase tracking-wide">Envío de paquete</span>
-                                    {trip.package_size && (
-                                      <span className="ml-auto text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">{sizeLabel[trip.package_size] ?? trip.package_size}</span>
-                                    )}
-                                  </div>
-                                  {trip.package_photo_key && (
-                                    <img src={`${API_URL}/images/${trip.package_photo_key}`} alt="Paquete" className="w-full h-28 object-cover rounded-lg" />
-                                  )}
-                                  {(trip.recipient_name || trip.recipient_phone) && (
-                                    <div className="flex items-center gap-3 bg-white rounded-lg px-2 py-1.5">
-                                      <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                      </svg>
-                                      <div className="text-xs">
-                                        {trip.recipient_name && <p className="font-semibold text-gray-800">{trip.recipient_name}</p>}
-                                        {trip.recipient_phone && (
-                                          <a href={`tel:${trip.recipient_phone}`} className="text-orange-600 font-medium">{trip.recipient_phone}</a>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                  {trip.delivery_note && (
-                                    <p className="text-xs text-orange-600 line-clamp-2">{trip.delivery_note}</p>
-                                  )}
-                                </div>
-                              );
-                            })()}
+                            {/* Indicaciones del pasajero para el conductor */}
+                            {trip.delivery_note && (
+                              <div className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 mb-3">
+                                <p className="text-xs text-gray-700 line-clamp-2">📝 {trip.delivery_note}</p>
+                              </div>
+                            )}
 
                             {/* Badge de recogida a domicilio */}
                             {trip.home_pickup === 1 && (
@@ -1409,7 +1390,7 @@ export default function DriverHomePage() {
                 {onboardingStep === 1 && (
                   <div className="text-center space-y-5">
                     <div className="w-20 h-20 bg-gradient-to-br from-[#008000] to-[#008000] rounded-full flex items-center justify-center mx-auto shadow-lg">
-                      <span className="text-4xl">🚐</span>
+                      <span className="text-4xl">🚕</span>
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Bienvenido, {user?.full_name?.split(' ')[0]}!</h2>
@@ -1419,7 +1400,7 @@ export default function DriverHomePage() {
                     </div>
                     <div className="bg-gray-50 rounded-xl p-4 text-left space-y-3">
                       {[
-                        { icon: '🚐', text: 'Datos de tu vehículo' },
+                        { icon: '🚕', text: 'Tu taxi, tu empresa y tu tarjeta de operación' },
                         { icon: '📍', text: 'Tu municipio' },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center gap-3">
@@ -1473,8 +1454,8 @@ export default function DriverHomePage() {
                   <div className="space-y-5">
                     <div>
                       <div className="text-3xl mb-2">🚗</div>
-                      <h2 className="text-xl font-bold text-gray-900">Datos de tu vehículo</h2>
-                      <p className="text-gray-500 text-sm">Esta información aparece a los pasajeros para identificarte.</p>
+                      <h2 className="text-xl font-bold text-gray-900">Tu taxi y tu empresa</h2>
+                      <p className="text-gray-500 text-sm">Solo taxis de servicio público (placa blanca) afiliados a una empresa de transporte habilitada. El equipo de MoTaxi verifica estos datos.</p>
                     </div>
                     <div className="space-y-4">
                       {/* Tipo de vehículo */}
@@ -1482,13 +1463,10 @@ export default function DriverHomePage() {
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Tipo de vehículo <span className="text-red-500">*</span>
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           {([
-                            // Moto deshabilitada temporalmente (sin autorización de operación)
-                            // { value: 'moto' as const, icon: '🏍️', label: 'Mototaxi' },
-                            { value: 'piaggio' as const, icon: '🛻', label: 'Piaggio' },
-                            { value: 'taxi' as const, icon: '🚖', label: 'Taxi' },
-                            { value: 'carro' as const, icon: '🚐', label: 'Van / Carro' },
+                            // Motos, motocarros y particulares no pueden operar en MoTaxi
+                            { value: 'taxi' as const, icon: '🚕', label: 'Taxi de servicio público' },
                           ]).map((type) => (
                             <button
                               key={type.value}
@@ -1516,7 +1494,7 @@ export default function DriverHomePage() {
                           type="text"
                           value={profileData.vehicle_model}
                           onChange={(e) => setProfileData({ ...profileData, vehicle_model: e.target.value })}
-                          placeholder="Ej: Boxer 100, Discover 125..."
+                          placeholder="Ej: Hyundai Atos, Chevrolet Spark..."
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#008000] text-gray-900 transition-colors"
                         />
                       </div>
@@ -1528,7 +1506,7 @@ export default function DriverHomePage() {
                           type="text"
                           value={profileData.vehicle_color}
                           onChange={(e) => setProfileData({ ...profileData, vehicle_color: e.target.value })}
-                          placeholder="Ej: Rojo, Negro, Azul..."
+                          placeholder="Ej: Amarillo"
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#008000] text-gray-900 transition-colors"
                         />
                       </div>
@@ -1545,6 +1523,24 @@ export default function DriverHomePage() {
                           maxLength={6}
                         />
                       </div>
+                      {([
+                        { key: 'company_name', label: 'Razón social de la empresa', placeholder: 'Ej: Cooperativa de Transportadores del Valle' },
+                        { key: 'company_nit', label: 'NIT de la empresa', placeholder: 'Ej: 800123456-7' },
+                        { key: 'operation_card_number', label: 'N.º de la tarjeta de operación', placeholder: 'Como aparece en la tarjeta del vehículo' },
+                      ] as const).map((f) => (
+                        <div key={f.key}>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                            {f.label} <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={profileData[f.key]}
+                            onChange={(e) => setProfileData({ ...profileData, [f.key]: e.target.value })}
+                            placeholder={f.placeholder}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#008000] text-gray-900 transition-colors"
+                          />
+                        </div>
+                      ))}
                     </div>
                     <div className="flex gap-3 pt-2">
                       <button
@@ -1558,8 +1554,9 @@ export default function DriverHomePage() {
                       </button>
                       <button
                         onClick={() => {
-                          if (!profileData.vehicle_types || !profileData.vehicle_model || !profileData.vehicle_color || !profileData.vehicle_plate) {
-                            Swal.fire({ icon: 'warning', title: 'Completa los campos', text: 'Selecciona el tipo de vehículo e ingresa todos los datos para continuar.', confirmButtonColor: '#008000' });
+                          if (!profileData.vehicle_types || !profileData.vehicle_model || !profileData.vehicle_color || !profileData.vehicle_plate ||
+                              !profileData.company_name.trim() || !profileData.company_nit.trim() || !profileData.operation_card_number.trim()) {
+                            Swal.fire({ icon: 'warning', title: 'Completa los campos', text: 'Confirma que conduces un taxi e ingresa los datos del taxi, la empresa y la tarjeta de operación.', confirmButtonColor: '#008000' });
                             return;
                           }
                           setOnboardingStep(3);
@@ -1599,12 +1596,14 @@ export default function DriverHomePage() {
                       <div className="space-y-1 text-sm text-gray-700">
                         {profileData.vehicle_types && (
                           <div className="flex justify-between"><span className="text-gray-500">Tipo:</span><span className="font-medium capitalize">{
-                            ({ taxi: '🚕 Taxi', carro: '🚐 Carro / Van', piaggio: '🛻 Piaggio' } as Record<string, string>)[profileData.vehicle_types] || profileData.vehicle_types
+                            profileData.vehicle_types === 'taxi' ? '🚕 Taxi de servicio público' : profileData.vehicle_types
                           }</span></div>
                         )}
                         <div className="flex justify-between"><span className="text-gray-500">Modelo:</span><span className="font-medium">{profileData.vehicle_model}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Color:</span><span className="font-medium">{profileData.vehicle_color}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Placa:</span><span className="font-medium uppercase">{profileData.vehicle_plate}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Empresa:</span><span className="font-medium">{profileData.company_name}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Tarjeta de operación:</span><span className="font-medium">{profileData.operation_card_number}</span></div>
                       </div>
                     </div>
                     <div className="flex gap-3 pt-2">

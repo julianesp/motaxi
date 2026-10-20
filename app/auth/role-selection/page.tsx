@@ -79,7 +79,7 @@ export default function RoleSelectionPage() {
               <ul className="text-xs text-gray-500 space-y-1 text-left w-full">
                 <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Genera ingresos</li>
                 <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Horarios flexibles</li>
-                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Moto o carro</li>
+                <li className="flex items-center gap-1"><span className="text-[#008000]">✓</span> Taxi de empresa habilitada</li>
               </ul>
               {selectedRole === "driver" && (
                 <span className="text-xs font-semibold text-[#42CE1D]">Seleccionado ✓</span>

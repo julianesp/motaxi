@@ -44,19 +44,17 @@ export default function CompleteProfilePage() {
         await usersAPI.switchRole("driver");
         // 3. Guardar tipo de vehículo
         if (vtype) {
-          await driversAPI.updateProfile({ vehicle_types: vtype as 'moto' | 'taxi' | 'carro' | 'piaggio' | 'particular' });
+          await driversAPI.updateProfile({ vehicle_types: vtype as 'taxi' });
         }
-        // Los conductores de taxi requieren confirmación previa de Cootransvalle
-        if (vtype === "taxi") {
-          await Swal.fire({
-            icon: "info",
-            title: "Registro recibido",
-            html: "Tu cuenta de <strong>conductor de taxi</strong> quedó registrada. Sin embargo, <strong>los viajes en taxi estarán habilitados una vez Cootransvalle confirme el permiso correspondiente</strong>.<br/><br/>Te avisaremos cuando puedas empezar a recibir solicitudes.",
-            confirmButtonText: "Entendido",
-            confirmButtonColor: "#008000",
-            allowOutsideClick: false,
-          });
-        }
+        // Solo taxis de empresas habilitadas: la cuenta queda en revisión del admin
+        await Swal.fire({
+          icon: "info",
+          title: "Registro recibido",
+          html: "Tu cuenta de <strong>conductor de taxi</strong> quedó en revisión. Registra en tu perfil los datos del taxi, la <strong>empresa de transporte</strong> a la que estás afiliado (razón social y NIT) y tu <strong>tarjeta de operación</strong>.<br/><br/>Te avisaremos cuando verifiquemos tus datos y puedas recibir solicitudes.",
+          confirmButtonText: "Entendido",
+          confirmButtonColor: "#008000",
+          allowOutsideClick: false,
+        });
         router.push("/auth/en-tramite");
       } else {
         router.push("/passenger");
@@ -78,10 +76,8 @@ export default function CompleteProfilePage() {
   };
 
   const vehicleOptions = [
-    // Moto deshabilitada temporalmente (sin autorización de operación)
-    // { value: "moto", label: "Moto", emoji: "🏍️" },
-    { value: "piaggio", label: "Piaggio", emoji: "🛺" },
-    { value: "carro", label: "Van / Carro", emoji: "🚐" },
+    // Solo taxis de servicio público (placa blanca) de empresas habilitadas
+    { value: "taxi", label: "Taxi de servicio público", emoji: "🚕" },
   ];
 
   return (
@@ -118,7 +114,7 @@ export default function CompleteProfilePage() {
               <div className="grid grid-cols-2 gap-2">
                 {([
                   { value: "passenger", label: "Pasajero", emoji: "🧍" },
-                  { value: "driver", label: "Conductor", emoji: "🚐" },
+                  { value: "driver", label: "Conductor de taxi", emoji: "🚕" },
                 ] as { value: Role; label: string; emoji: string }[]).map((r) => (
                   <button
                     key={r.value}
@@ -168,7 +164,11 @@ export default function CompleteProfilePage() {
 
         {step === 2 && (
           <form onSubmit={handleStep2} className="space-y-5">
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-sm text-gray-400">
+              MoTaxi solo trabaja con taxis de placa blanca afiliados a una empresa de transporte
+              habilitada. Motos, motocarros y vehículos particulares no pueden operar.
+            </p>
+            <div className="grid grid-cols-1 gap-2">
               {vehicleOptions.map((v) => (
                 <button
                   key={v.value}

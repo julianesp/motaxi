@@ -1,7 +1,7 @@
 {
   "name": "MoTaxi",
   "short_name": "MoTaxi",
-  "description": "Transporte rápido y seguro en el Valle de Sibundoy",
+  "description": "Taxis de servicio público en el Alto Putumayo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

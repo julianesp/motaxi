@@ -26,7 +26,7 @@ function RegisterForm() {
     confirmPassword: "",
     email: "",
     role: roleParam || ("passenger" as UserRole),
-    vehicle_types: "",
+    vehicle_types: "taxi",
   });
 
   const [loading, setLoading] = useState(false);
@@ -138,17 +138,15 @@ function RegisterForm() {
       if (registeredUser.email === "admin@neurai.dev") {
         router.push("/admin");
       } else if (registeredUser.role === "driver") {
-        // Los conductores de taxi requieren confirmación previa de Cootransvalle
-        if (formData.vehicle_types === "taxi") {
-          await Swal.fire({
-            icon: "info",
-            title: "Registro recibido",
-            html: "Tu cuenta de <strong>conductor de taxi</strong> quedó registrada. Sin embargo, <strong>los viajes en taxi estarán habilitados una vez Cootransvalle confirme el permiso correspondiente</strong>.<br/><br/>Te avisaremos cuando puedas empezar a recibir solicitudes.",
-            confirmButtonText: "Entendido",
-            confirmButtonColor: "#008000",
-            allowOutsideClick: false,
-          });
-        }
+        // Solo taxis de empresas habilitadas: la cuenta queda en revisión del admin
+        await Swal.fire({
+          icon: "info",
+          title: "Registro recibido",
+          html: "Tu cuenta de <strong>conductor de taxi</strong> quedó en revisión. Registra en tu perfil los datos del taxi, la <strong>empresa de transporte</strong> a la que estás afiliado (razón social y NIT) y tu <strong>tarjeta de operación</strong>.<br/><br/>Te avisaremos cuando verifiquemos tus datos y puedas recibir solicitudes.",
+          confirmButtonText: "Entendido",
+          confirmButtonColor: "#008000",
+          allowOutsideClick: false,
+        });
         router.push("/driver");
       } else {
         router.push("/passenger");
@@ -267,12 +265,10 @@ function RegisterForm() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tipo de vehículo
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     {[
-                      // Moto deshabilitada temporalmente (sin autorización de operación)
-                      // { value: "moto", label: "Moto", emoji: "🏍️" },
-                      { value: "piaggio", label: "Piaggio", emoji: "🛺" },
-                      { value: "carro", label: "Van / Carro", emoji: "🚐" },
+                      // Solo taxis de servicio público (placa blanca) de empresas habilitadas
+                      { value: "taxi", label: "Taxi de servicio público", emoji: "🚕" },
                     ].map((v) => (
                       <button
                         key={v.value}
@@ -289,6 +285,10 @@ function RegisterForm() {
                       </button>
                     ))}
                   </div>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    MoTaxi solo trabaja con taxis de placa blanca afiliados a una empresa de
+                    transporte habilitada. Motos, motocarros y vehículos particulares no pueden operar.
+                  </p>
                 </div>
               )}
 

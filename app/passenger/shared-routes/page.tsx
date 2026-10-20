@@ -52,12 +52,9 @@ interface SharedRoute {
   usual_destination: string | null;
 }
 
+// Solo taxis de servicio público operan en MoTaxi
 const VEHICLE_LABELS: Record<string, string> = {
-  // moto: '🏍️ Mototaxi', // deshabilitada temporalmente
   taxi: '🚕 Taxi',
-  carro: '🚐 Carro / Van',
-  piaggio: '🛻 Piaggio',
-  particular: '🚗 Particular',
 };
 
 interface RequestModal {
